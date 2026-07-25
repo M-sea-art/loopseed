@@ -1,7 +1,7 @@
 {
   "name": "loopseed",
-  "version": "0.1.0",
-  "description": "Explicit, goal-driven, evidence-feedback loops for Codex.",
+  "version": "0.2.0",
+  "description": "Minimal natural-language seeds for plan-bound, exploration-driven Codex loops.",
   "author": {
     "name": "M-sea-art",
     "url": "https://github.com/M-sea-art"
@@ -12,15 +12,19 @@
   "keywords": [
     "codex",
     "agent",
-    "goal-loop",
+    "autonomy",
+    "goal-mode",
+    "exploration",
     "verification",
+    "hooks",
     "skill"
   ],
   "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "LoopSeed",
-    "shortDescription": "Goal-driven loops with evidence and precise stopping.",
-    "longDescription": "An explicitly invoked Codex Skill that closes the highest-value verifiable gap, delegates only when useful, and stops with direct evidence or a precise blocker.",
+    "shortDescription": "Plan-bound autonomous loops for Codex.",
+    "longDescription": "Use a minimal natural-language goal to start an exploration, action, evidence, and recovery loop that escalates Codex mechanisms only when useful.",
     "developerName": "M-sea-art",
     "category": "Productivity",
     "capabilities": [
@@ -29,7 +33,8 @@
     ],
     "websiteURL": "https://github.com/M-sea-art/loopseed",
     "defaultPrompt": [
-      "$loopseed Complete this goal, verify real progress, and continue until done or precisely blocked."
+      "/goal $loopseed Follow the project's current plan and complete the active milestone with direct evidence.",
+      "$loopseed Complete this goal through the smallest evidence-driven loop; continue until verified or truly blocked."
     ]
   }
 }

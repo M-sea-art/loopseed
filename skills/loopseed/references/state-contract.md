@@ -1,34 +1,66 @@
 # Progressive state contract
 
-Create a target project's root `.loopseed.md` only after at least one escalation has actually occurred:
+Create a target project's root `.loopseed.md` only when at least one condition is true:
 
-- a native helper was dispatched and needs integration state;
-- work must continue in another Codex task;
-- a recoverable blocker needs a durable relay.
+- work must continue in another task or session;
+- a helper needs durable integration state;
+- trusted hooks or scheduled recovery need a state signal;
+- a recoverable external wait needs a relay.
 
-Do not create it merely because product writes are allowed. Never create it for simple single-task work, read-only, docs-only, audit-only, no-write, or a named-path-only request that excludes it.
+Do not create it for simple single-task, read-only, docs-only, audit-only, no-write, or excluded-path work.
 
 Use this bounded structure:
 
-```markdown
+````markdown
 # LoopSeed State
 
-- version: 0.1.0
-- status: ACTIVE
+```loopseed-state
+version=0.2.0
+status=ACTIVE
+next=one concise, verifiable next action
+```
 
-## Root goal and acceptance
+## Root goal
 
-<sanitized goal and observable completion conditions>
+<sanitized goal>
 
-## Recent direct evidence
+## Plan authority
+
+- <named plan, milestone, specification, or user instruction>
+
+## Acceptance
+
+- <observable condition>
+- <observable condition>
+
+## Latest direct evidence
 
 - <at most three short evidence summaries>
 
-## Next gap or blocker
+## Current route
 
-<one next verifiable result or exact recoverable blocker>
-```
+<current approach and why it is still worth trying>
 
-Allowed statuses are `ACTIVE`, `VERIFIED`, `BLOCKED`, and `RELAY_REQUIRED`.
+## True blocker
 
-Redact credentials, usernames, private absolute paths, customer data, proprietary excerpts, and chain of thought. Replace stale evidence instead of appending history. Update the file only after a verified milestone, changed blocker, relay decision, or terminal result. A state label never substitutes for direct acceptance evidence.
+None
+````
+
+Allowed statuses:
+
+- `ACTIVE` — acceptance is not yet verified and a useful route remains;
+- `VERIFIED` — every acceptance condition has direct evidence;
+- `BLOCKED` — an exact irreplaceable permission, input, authority decision, or irreversible-risk gate exists;
+- `ABORTED` — the owner explicitly stopped the run.
+
+Rules:
+
+1. `status=VERIFIED` is allowed only after direct acceptance evidence.
+2. `status=BLOCKED` requires the exact missing item and exact unblock condition in **True blocker**.
+3. Failure, poor quality, uncertainty, or a failed route keep the state `ACTIVE`.
+4. Update only after new evidence, a changed route, a changed blocker, or a terminal result.
+5. Replace stale evidence instead of appending history.
+6. Keep `next` to one safe line; never place secrets, credentials, private absolute paths, customer data, proprietary excerpts, or chain of thought in the file.
+7. A state value is a control signal, never proof.
+
+The bundled hooks look only for this project-root file and act only when `status=ACTIVE`. The Stop hook requests at most one continuation per turn; Goal mode or a separately configured scheduled task provides durable continuation beyond that fuse.
