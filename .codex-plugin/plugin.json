@@ -1,0 +1,35 @@
+{
+  "name": "loopseed",
+  "version": "0.1.0",
+  "description": "Explicit, goal-driven, evidence-feedback loops for Codex.",
+  "author": {
+    "name": "M-sea-art",
+    "url": "https://github.com/M-sea-art"
+  },
+  "homepage": "https://github.com/M-sea-art/loopseed",
+  "repository": "https://github.com/M-sea-art/loopseed",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "agent",
+    "goal-loop",
+    "verification",
+    "skill"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "LoopSeed",
+    "shortDescription": "Goal-driven loops with evidence and precise stopping.",
+    "longDescription": "An explicitly invoked Codex Skill that closes the highest-value verifiable gap, delegates only when useful, and stops with direct evidence or a precise blocker.",
+    "developerName": "M-sea-art",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/M-sea-art/loopseed",
+    "defaultPrompt": [
+      "$loopseed Complete this goal, verify real progress, and continue until done or precisely blocked."
+    ]
+  }
+}

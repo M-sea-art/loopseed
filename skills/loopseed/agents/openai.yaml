@@ -1,0 +1,6 @@
+interface:
+  display_name: "LoopSeed"
+  short_description: "Run concise evidence-driven goal loops"
+  default_prompt: "Use $loopseed to complete this goal with direct evidence."
+policy:
+  allow_implicit_invocation: false
