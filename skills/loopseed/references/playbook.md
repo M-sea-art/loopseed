@@ -1,27 +1,27 @@
 # LoopSeed Playbook
 
-This optional file is the only behavior surface a maintainer candidate may change. Keep one to four cards and at most 220 words. Each card contains only `Trigger`, `Action`, and `Return`.
+Load only the card that materially changes the next action.
 
-## 1. Explore
+## 1. Bind
 
-- **Trigger:** The goal, evidence, or best route is materially uncertain.
-- **Action:** Inspect, research, or compare plausible routes without committing early; retain only decision-changing information.
-- **Return:** Best next action, evidence path, and uncertainty.
+- **Trigger:** Goal, plan authority, or acceptance is ambiguous.
+- **Action:** Resolve one root goal from explicit intent, named project plans, repository instructions, and observable product evidence. Make the smallest reversible assumption when possible.
+- **Return:** Goal, acceptance, and the nearest real evidence source.
 
-## 2. Challenge
+## 2. Explore
+
+- **Trigger:** The best route is uncertain, a path failed, or quality is below plan.
+- **Action:** Inspect, research, or compare materially different routes. Keep only information that changes the decision.
+- **Return:** Best next action, evidence path, and remaining uncertainty.
+
+## 3. Challenge
 
 - **Trigger:** Consequential correctness or completeness is not independently established.
-- **Action:** Test against the original acceptance with direct evidence or an independent reviewer; agreement alone is not proof.
-- **Return:** Evidence, concrete defects, and the smallest correction.
+- **Action:** Test the running result against the original acceptance. Use an independent reviewer only when it adds evidence rather than agreement.
+- **Return:** Direct evidence, concrete defect, and smallest correction.
 
-## 3. Delegate
+## 4. Escalate and recover
 
-- **Trigger:** Work is independent, an independent check adds value, or a separate investigation can unblock progress.
-- **Action:** Send the minimum `GOAL / EVIDENCE / RETURN` contract; add `BOUNDARY` only for authority or write conflicts. Keep integration central.
-- **Return:** Integrated result, evidence, and unresolved conflict.
-
-## 4. Recover
-
-- **Trigger:** Verification fails or progress stalls.
-- **Action:** Identify the cause, repair it, or change path. Stop at a real authority or environment gate instead of repeating the attempt.
-- **Return:** Better evidence, a narrower cause, or an actionable blocker.
+- **Trigger:** Independent work can repay coordination cost, state must survive the session, or progress stalled.
+- **Action:** Escalate one level: helper, state relay, isolated worktree, trusted hook, or scheduled recovery. Change route after failure; never repeat unchanged work.
+- **Return:** Integrated result, new evidence, next action, or exact true blocker.
