@@ -1,27 +1,43 @@
 ---
 name: loopseed
-description: Explicit goal-driven execution for Codex. Use only when the user invokes `$loopseed` followed by a goal and wants autonomous progress, direct verification, useful delegation, and an honest completion or blocker.
+description: Run a plan-bound, exploration-driven Codex loop from a minimal user goal. Use only when the user explicitly invokes `$loopseed` and wants autonomous progress until direct evidence verifies completion or an exact true blocker.
 ---
 
 # LoopSeed
 
-Use this Skill only for an explicit `$loopseed <goal>` invocation. Treat everything after `$loopseed` as the root goal. If no goal follows, ask for it and stop. Do not activate from similar wording, an old state file, or another task.
+Use only for an explicit `$loopseed <goal>` invocation. Treat the remaining natural language as the root goal. If no goal is present, ask for only that goal.
 
-Bind the goal, derive observable acceptance from the user's words and the project, and keep both within the user's authority. Observe the closest real UI, command, test, artifact, file, or source before choosing work.
+Bind one root goal and observable acceptance to this authority order:
 
-Choose the most valuable verifiable next action. Choose tools and route autonomously. Delegate two or more independent, non-conflicting tasks to native helpers; keep integration central. Make the smallest coherent authorized change, then verify the affected path directly. Continue from evidence; after failure, repair the cause or take a materially different path instead of repeating an unchanged attempt.
+1. the user's explicit current instruction;
+2. project plans, milestones, product specifications, or reference files the user names;
+3. repository instructions such as `AGENTS.md`;
+4. tests and the running product as evidence.
 
-Use [playbook.md](references/playbook.md) only when exploration, independent challenge, delegation, or recovery would materially help. If native helpers are unavailable, continue in the main task.
+The current implementation is evidence, not authority when it conflicts with the plan.
 
-Create a root `.loopseed.md` only after a helper is actually dispatched and needs integration state, work must continue in another task, or a recoverable blocker needs a relay. At that point read [state-contract.md](references/state-contract.md). Never create it for simple single-task work, read-only, docs-only, audit-only, no-write, or an excluded named path. The state file is not completion evidence.
+Perform a lightweight activation handshake before substantial work: identify the planning authority, the closest real verifier, and which Codex mechanisms are actually exposed in the current surface. Select the lowest runtime level that can close the goal, verify that any selected mechanism is genuinely active, and degrade to the main-thread loop when it is unavailable. Do not spend the task building orchestration for its own sake.
 
-When delegating, avoid conflicting writers and send only:
+Run the smallest useful loop:
 
-```text
-GOAL: one observable result
-EVIDENCE: what proves it
-RETURN: change, evidence, or blocker
-BOUNDARY: only when authority or write conflict requires it
-```
+1. **Explore:** inspect the closest real project state, identify the most important unknown or gap, and compare materially different routes when needed.
+2. **Act:** take the highest-value reversible action available with current tools and authority.
+3. **Observe:** run the affected path and collect direct output, tests, UI, screenshots, artifacts, or other real evidence.
+4. **Verify:** compare evidence with the same acceptance conditions.
+5. **Adapt:** if not verified, repair the cause or change route; do not repeat an unchanged failed attempt.
 
-Stop when acceptance is directly verified, a real gate blocks progress, or no valuable verifiable action remains. Report the outcome, evidence, changed scope or zero writes, and remaining risk. An ordinary `$loopseed` invocation does not authorize modifying LoopSeed itself.
+Default to one main thread and one writer. Load [playbook.md](references/playbook.md) only when uncertainty, independent review, delegation, or recovery materially helps. Delegate only independent work whose expected benefit exceeds coordination and token cost; prefer read-heavy exploration, tests, triage, and review. Keep integration central, and isolate parallel writers with worktrees when available.
+
+Use Codex mechanisms progressively, not ceremonially. Attempt to activate the smallest useful native mechanism when the current surface exposes it, then verify activation from the surface or its direct behavior. Never claim Goal mode, subagents, hooks, worktrees, scheduled tasks, or permissions are active unless confirmed. If the invocation is already inside Goal mode, treat the goal text as both the objective and completion criteria. Use scheduled recovery only when work must wake later or poll an external event; do not add fixed-interval heartbeats while the active loop is making progress.
+
+Create a project-root `.loopseed.md` only when work must survive the current task/session, a helper needs integration state, or trusted hooks/scheduled recovery will use it. Then read [state-contract.md](references/state-contract.md) and [runtime-ladder.md](references/runtime-ladder.md). The state label is never completion evidence.
+
+Valid terminal states are only:
+
+- `VERIFIED`: every acceptance condition has direct evidence;
+- `BLOCKED`: an exact irreplaceable permission, input, authority decision, or irreversible-risk gate prevents progress;
+- `ABORTED`: the owner explicitly stops the run.
+
+Failure, low quality, an ugly interface, a failing test, uncertainty, or an exhausted first route are not blockers; explore and reroute.
+
+Report only the outcome, direct evidence, changed scope, remaining risk, and exact unblock condition when blocked. An ordinary `$loopseed` run does not authorize modifying LoopSeed itself.
