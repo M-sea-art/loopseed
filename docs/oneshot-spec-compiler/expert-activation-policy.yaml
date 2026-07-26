@@ -1,0 +1,69 @@
+# LOOPSEED One-Shot Spec Compiler v0.2 experiment
+# Goal: keep compiler intelligence while preserving One-Shot execution speed.
+
+policy:
+  principle:
+    - "Compiler should select experts, not replace execution agents."
+    - "Knowledge injection and parallel execution are separate layers."
+    - "Do not trade delivery speed for unnecessary governance."
+
+execution_modes:
+  fast_path:
+    description: "Default mode for clear goals and bounded tasks."
+    behavior:
+      - parse_intent
+      - activate_minimum_experts
+      - execute_parallel_when_independent
+      - lightweight_review
+
+  deep_path:
+    description: "Used only for complex product-level tasks."
+    behavior:
+      - full_generation_contract
+      - multi_agent_execution
+      - critic_loop
+      - extended_verification
+
+expert_roles:
+  visual_director:
+    default: executor
+    triggers:
+      - visual_rework
+      - environment_art
+      - style_consistency
+
+  ui_designer:
+    default: executor
+    triggers:
+      - interface_design
+      - interaction_readability
+
+  game_director:
+    default: reviewer
+    promote_to_executor_when:
+      - gameplay_system_changes
+      - new_core_loop_required
+
+  technical_architect:
+    default: reviewer
+    promote_to_executor_when:
+      - architecture_risk_detected
+      - performance_regression_detected
+
+scope_guard:
+  rules:
+    - "Only activate experts relevant to active goal scope."
+    - "Do not convert every benchmark into a full product rewrite."
+    - "Do not replace parallel execution with sequential analysis by default."
+    - "Verification depth must match task risk."
+
+repair_budget:
+  max_major_cycles: 3
+  priorities:
+    - goal_blocker
+    - user_visible_regression
+    - critical_runtime_failure
+  defer:
+    - unrelated_tooling_improvement
+    - speculative_optimization
+    - pre_existing_non_blocking_issue
