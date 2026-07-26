@@ -1,0 +1,25 @@
+brands:
+  call_of_duty:
+    invokes:
+      - cinematic_action
+      - mission_structure
+      - strong_feedback
+      - aaa_presentation
+
+  rimworld:
+    invokes:
+      - emergent_storytelling
+      - simulation_depth
+      - colony_management
+
+  cultist_simulator:
+    invokes:
+      - card_driven_systems
+      - hidden_combinations
+      - narrative_emergence
+
+rule:
+  brand_reference_is_not_copy:
+    true
+  extract_design_principles_only:
+    true
