@@ -1,0 +1,10 @@
+# LOOPSEED One-Shot Production Upgrade v0.3
+
+merge:
+  objective: preserve_original_intent
+
+  rules:
+    - "Workers produce artifacts, not competing final products."
+    - "Primary executor owns final integration."
+    - "Resolve conflicts by goal alignment."
+    - "Remove duplicate solutions before delivery."
