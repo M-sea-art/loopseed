@@ -1,0 +1,159 @@
+from __future__ import annotations
+
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = REPO_ROOT / "skills" / "loopseed" / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+from one_shotted_core import (  # noqa: E402
+    OneShottedError,
+    add_gate,
+    finalize,
+    initialize,
+    record_defect,
+    record_gate_result,
+    status,
+    transition,
+    validate,
+)
+
+
+class OneShottedTests(unittest.TestCase):
+    def make_root(self) -> tuple[tempfile.TemporaryDirectory[str], Path]:
+        temporary = tempfile.TemporaryDirectory()
+        root = Path(temporary.name)
+        (root / ".git").mkdir()
+        return temporary, root
+
+    def add_flow_gate(self, root: Path) -> None:
+        add_gate(
+            root,
+            "FLOW",
+            "Complete flow",
+            "The documented primary flow completes",
+            "lead",
+            "verifier",
+        )
+
+    def test_initialize_creates_bounded_control_plane(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            result = initialize(root, "Build a verified demo")
+            self.assertTrue(result["ok"])
+            target = root / ".loopseed" / "one-shotted"
+            self.assertTrue((target / "goal-contract.json").is_file())
+            self.assertTrue((target / "evidence.jsonl").is_file())
+            self.assertFalse((target / "final-report.json").exists())
+            self.assertEqual(status(root)["phase"], "BIND")
+
+    def test_gate_owner_cannot_be_verifier(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a demo")
+            with self.assertRaisesRegex(OneShottedError, "must be different"):
+                add_gate(root, "BUILD", "Build", "Build exits zero", "lead", "lead")
+
+    def test_only_declared_verifier_can_record_verdict(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a demo")
+            self.add_flow_gate(root)
+            with self.assertRaisesRegex(OneShottedError, "must be recorded by verifier"):
+                record_gate_result(root, "FLOW", "PASS", "lead", "It works")
+
+    def test_fail_enters_repair(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a demo")
+            self.add_flow_gate(root)
+            result = record_gate_result(root, "FLOW", "FAIL", "verifier", "Flow crashes")
+            self.assertEqual(result["phase"], "REPAIR")
+            self.assertEqual(status(root)["gate_counts"]["FAIL"], 1)
+
+    def test_finalize_requires_at_least_one_required_gate(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a demo")
+            with self.assertRaisesRegex(OneShottedError, "At least one required"):
+                finalize(root)
+
+    def test_finalize_requires_all_required_gates_pass(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a demo")
+            self.add_flow_gate(root)
+            with self.assertRaisesRegex(OneShottedError, "not PASS"):
+                finalize(root)
+
+    def test_successful_finalize_writes_verified_report(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a demo")
+            self.add_flow_gate(root)
+            record_gate_result(root, "FLOW", "PASS", "verifier", "Flow completed")
+            result = finalize(root)
+            self.assertEqual(result["status"], "VERIFIED")
+            self.assertTrue(validate(root, require_final=True)["ok"])
+            report = json.loads(Path(result["final_report"]).read_text(encoding="utf-8"))
+            self.assertEqual(report["verdict"], "VERIFIED")
+
+    def test_open_p1_defect_blocks_then_resolution_allows_finalize(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a demo")
+            self.add_flow_gate(root)
+            record_gate_result(root, "FLOW", "PASS", "verifier", "Flow completed")
+            record_defect(root, "VIS-1", "P1", "OPEN", "Unreadable state", "verifier")
+            with self.assertRaisesRegex(OneShottedError, "Open P0/P1"):
+                finalize(root)
+            record_defect(root, "VIS-1", "P1", "RESOLVED", "State is readable", "verifier")
+            self.assertEqual(finalize(root)["status"], "VERIFIED")
+
+    def test_two_no_progress_rounds_force_root_cause_replan(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a demo")
+            transition(root, phase="PLAN", next_action="Plan route A")
+            transition(root, phase="IMPLEMENT", next_action="Try route A")
+            first = transition(root, no_progress=True)
+            second = transition(root, no_progress=True)
+            self.assertFalse(first["reroute_required"])
+            self.assertTrue(second["reroute_required"])
+            self.assertEqual(second["phase"], "PLAN")
+            self.assertIn("materially different route", second["next_action"])
+
+    def test_blocked_requires_reason_and_unblock_condition(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a demo")
+            with self.assertRaisesRegex(OneShottedError, "requires both"):
+                transition(root, blocked_reason="Need credentials")
+            result = transition(
+                root,
+                blocked_reason="Deployment credentials are unavailable",
+                unblock_condition="Owner supplies scoped deployment credentials",
+            )
+            self.assertEqual(result["status"], "BLOCKED")
+
+    def test_validation_rejects_tampered_pass_without_evidence(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a demo")
+            self.add_flow_gate(root)
+            path = root / ".loopseed" / "one-shotted" / "acceptance.json"
+            acceptance = json.loads(path.read_text(encoding="utf-8"))
+            acceptance["gates"][0]["status"] = "PASS"
+            path.write_text(json.dumps(acceptance), encoding="utf-8")
+            report = validate(root)
+            self.assertFalse(report["ok"])
+            self.assertTrue(any("without verifier-authored PASS evidence" in item for item in report["errors"]))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/M-sea-art/loopseed/schemas/one-shotted/defect-event.schema.json",
+  "title": "LoopSeed One-Shotted Defect Event",
+  "type": "object",
+  "required": ["id", "run_id", "defect_id", "severity", "status", "summary", "actor", "created_at"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "defect_id": {"type": "string", "minLength": 1},
+    "severity": {"enum": ["P0", "P1", "P2", "P3"]},
+    "status": {"enum": ["OPEN", "RESOLVED"]},
+    "summary": {"type": "string", "minLength": 1},
+    "actor": {"type": "string", "minLength": 1},
+    "evidence_id": {"type": "string"},
+    "created_at": {"type": "string"}
+  },
+  "additionalProperties": true
+}

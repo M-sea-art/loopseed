@@ -1,113 +1,155 @@
 # LoopSeed
 
-**用最小自然语言，启动依赖项目规划、以探索驱动的 Codex 自治闭环。**
+**最小指令，最大有效自治；由证据决定停止。**
 
 [English](README.md)
 
-LoopSeed 不试图把完整工作流塞进一段巨型提示词。它用最小目标绑定项目真实规划，让 Codex 持续经历“探索、行动、观察、验证、换路与恢复”，直到实际证据满足验收条件。
+LoopSeed 是一个需要显式调用的 Codex Skill，用项目规划与直接证据驱动任务完成。0.3 新增 **One‑Shotted 模式**：用户只给出一次自然语言授权，系统即可自主完成规划、实现、独立验收、修复和终局判断，不需要用户不断重复“继续”。
 
-> **最小指令，最大有效自治；由证据决定停止。**
+## 两种模式
 
-## 核心定义
-
-```text
-项目规划 + 最小目标
-        ↓
-       探索
-        ↓
-       行动
-        ↓
-       观察
-        ↓
-       验证
-        ↓
-未完成 → 调整 / 换路 / 恢复
-        ↓
-已完成 → 携带直接证据停止
-```
-
-LoopSeed 追求的是**目标约束的自续航闭环**：在验收成立之前持续产生下一步，成立之后立即收敛。它不是对字面意义“无限运行”的承诺。
-
-## 推荐启动方式
-
-当前 Codex 界面支持 Goal mode 时：
+### 标准 LoopSeed
 
 ```text
-/goal $loopseed 按项目规划完成当前里程碑，以实际运行证据验收。
+$loopseed <目标>
 ```
 
-普通当前任务：
+使用足以闭环的最低成本循环：
 
 ```text
-$loopseed <你的目标>
+探索 → 行动 → 观察 → 验证 → 调整
 ```
 
-面对非简单任务时，LoopSeed 会先完成一次轻量启动握手：找到当前规划、选择最接近真实结果的验收器、确认当前 Codex 界面实际暴露了哪些机制，并选择足以闭环的最低运行层级。机制无法确认时降级执行，而不是假装已经启用。
+默认只有一个主线程、一个写入者和一个集成路径。只有证据证明值得时，才增加状态接力、子智能体、Worktree、Hooks 或定时恢复。
 
-LoopSeed 不会在未确认时声称 Goal、Hooks、子智能体、Worktree 或定时任务已经启用。
+### One‑Shotted 模式
 
-## 五分钟接入项目
+```text
+/goal $loopseed one-shotted <一句自然语言目标>
+```
 
-1. 只保留一个当前规划来源，例如 `PLAN.md`、明确命名的里程碑文件或用户当前指令。
-2. 在规划中写出可观察验收：测试、实际运行界面、截图、产物或完整用户流程。
-3. 先使用上面的最小 Seed；不要预先创建智能体、Worktree、定时任务或状态文件。
-4. 只有需要跨任务 / 会话接力或使用可选 Hooks 时，才创建 `.loopseed.md`。
+或：
 
-## 七条原则
+```text
+$loopseed one-shotted <一句自然语言目标>
+```
 
-1. **规划驱动**：用户明确目标与当前项目规划是上位依据；现有代码只是证据，不是产品定义。
-2. **每轮都探索**：未知、失败与质量差距会触发重新观察和替代路径，而不是停止。
-3. **默认单线程**：一个主线程、一个集成路径最省 Token，也最少冲突。
-4. **渐进升级**：只有收益大于协调成本时，才启用子智能体、状态接力、Worktree、Hooks 或定时任务。
-5. **唯一验收真值**：主循环、评审与停止逻辑共用同一组验收条件和直接证据。
-6. **事件驱动优先**：新证据、失败、检查点或外部完成触发下一轮；定时轮询只做恢复兜底。
-7. **低过程约束，高结果责任**：Codex 自行决定方法，项目规划与可观察成果决定是否完成。
+这里的“One‑Shotted”是**一次人类授权**，不是模型只回复一次。系统内部可以多轮规划、调用工具、分派真正独立的任务、运行测试、采集证据、修复缺陷、回滚回归并从状态恢复；但不再要求用户反复推动。
 
-## Codex 机制阶梯
+```text
+一次人类目标
+      ↓
+项目身份 + 架构合同
+      ↓
+可观察验收门槛
+      ↓
+规划 → 实现 → 独立验证
+             失败 ↓      ↓ 通过
+                修复 → 再验证
+                         ↓
+                      终局门
+```
 
-| 层级 | 机制 | 启用条件 |
-|---|---|---|
-| 0 | 主线程闭环 | 默认 |
-| 1 | `.loopseed.md` 接力 | 需要跨会话、跨任务或交接 |
-| 2 | 子智能体 | 可独立并行的探索、测试、排查或评审 |
-| 3 | Worktree | 多个写入者必须隔离实验 |
-| 4 | 受信任 Hooks | 活跃状态需要恢复上下文或防止过早停止 |
-| 5 | 定时任务 | 需要稍后唤醒、轮询外部事件或会话外恢复 |
+它复刻的是优秀“one-shot”项目真正有效的工程方法：提示词只负责点火；架构合同、所有权边界、可重复证据、独立批评者和严格停止条件，才让任务能够自我驱动。
 
-不要每次全开。最高效的结构是：
+## 为什么它不是臃肿的多智能体框架
 
-> **一个规划来源、一个根目标、一个验收真值、一个主写入者；证据证明值得时再升级。**
+LoopSeed 的宗旨是减少重复提示与协调成本，而不是追求智能体数量。
 
-## 可选 Hooks
+- 一个 Lead 负责集成；
+- 大规模实现前先声明验收门槛；
+- 实现者不能审核自己的 Gate；
+- Gate 失败必须进入 `REPAIR`，修复后重新验证；
+- 连续两轮无进展，强制回到根因诊断并换路；
+- 未解决的 P0/P1 缺陷禁止完成；
+- 只有 Finalizer 可以写入 `VERIFIED`；
+- 多写入者必须隔离，高耦合问题必须由单一负责人顺序收敛。
 
-仓库包含一组保守、限定作用域的 Hooks：
+## One‑Shotted 控制面
 
-- `SessionStart` 只在项目根目录存在活跃 `.loopseed.md` 时注入简短恢复指令；
-- `Stop` 只在状态仍为 `ACTIVE` 时请求一次续接；
-- 若 Codex 已标记 `stop_hook_active: true`，则允许本轮停止，避免递归续接和资源黑洞；
-- `VERIFIED`、`BLOCKED`、`ABORTED` 不会触发继续。
+内置的零依赖 CLI 会在目标项目中建立一个小型、可审计的控制面：
 
-插件 Hooks 需要用户在 Codex 中审查并信任。它们不会扩大权限、开放网络，也不能替代 Goal mode 或定时任务。
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py init \
+  --root . \
+  --goal "完成用户要求的完整垂直切片"
+```
 
-## 合法终态
+生成：
 
-- `VERIFIED`：所有验收条件都有直接证据；
-- `BLOCKED`：缺少不可替代的权限、输入、权威决策，或面临不可逆高风险；
-- `ABORTED`：Owner 明确终止。
+```text
+.loopseed/one-shotted/
+├── project-identity.md
+├── architecture-contract.md
+├── goal-contract.json
+├── acceptance.json
+├── expert-registry.json
+├── state.json
+├── evidence.jsonl
+├── defects.jsonl
+└── final-report.json       # 只有终局验证通过后才生成
+```
 
-以下都不是终态：首次方案失败、界面简陋、测试未过、尚需设计、暂时不知道下一步、第一条路径走不通。它们都应触发**重新探索与换路**。
+### 增加验收 Gate
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
+  --root . \
+  --id FLOW \
+  --title "完整用户流程" \
+  --criterion "新用户可以完成文档规定的主流程" \
+  --owner lead \
+  --verifier verifier
+```
+
+### 记录独立验收
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py record \
+  --root . \
+  --gate FLOW \
+  --result PASS \
+  --actor verifier \
+  --summary "完整主流程实际运行通过" \
+  --command "python tools/playtest.py"
+```
+
+### 终局判断
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py finalize --root .
+```
+
+以下任一条件不满足都会拒绝完成：至少存在一个必需 Gate；所有必需 Gate 均有指定 Verifier 写入的 PASS 证据；合同与证据引用一致；不存在仍开放的 P0/P1 缺陷。
+
+完整协议见 [One‑Shotted Mode](skills/loopseed/references/one-shotted-mode.md)。
+
+## Hooks
+
+现有 Hooks 保持保守：
+
+- `SessionStart` 只为 ACTIVE 状态恢复压缩上下文；
+- One‑Shotted JSON 状态优先于旧 `.loopseed.md`；
+- `Stop` 在验收未完成时只请求一次续接；
+- `stop_hook_active` 防止递归循环；
+- `VERIFIED`、`BLOCKED`、`ABORTED` 必定允许停止。
+
+Hooks 不会扩大权限、自动开放网络，也不会假装当前 Codex 表面具备不存在的机制。
 
 ## 本地验证
 
 ```bash
+python -m json.tool .codex-plugin/plugin.json >/dev/null
+find skills/loopseed/schemas skills/loopseed/templates -name '*.json' -print0 \
+  | xargs -0 -n1 python -m json.tool >/dev/null
+python -m compileall -q hooks skills/loopseed/scripts tests
 python -m unittest discover -s tests -v
-python -m json.tool .codex-plugin/plugin.json
-python -m json.tool hooks/hooks.json
 ```
 
-详见：
+## 关键文档
 
-- [状态协议](skills/loopseed/references/state-contract.md)
+- [One‑Shotted 模式](skills/loopseed/references/one-shotted-mode.md)
+- [状态合同](skills/loopseed/references/state-contract.md)
 - [运行机制阶梯](skills/loopseed/references/runtime-ladder.md)
 - [执行卡片](skills/loopseed/references/playbook.md)
 

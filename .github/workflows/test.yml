@@ -19,7 +19,18 @@ jobs:
         run: |
           python -m json.tool .codex-plugin/plugin.json > /dev/null
           python -m json.tool hooks/hooks.json > /dev/null
-      - name: Compile hooks
-        run: python -m compileall -q hooks
+          find skills/loopseed/schemas skills/loopseed/templates -name '*.json' -print0 \
+            | xargs -0 -n1 python -m json.tool > /dev/null
+      - name: Compile Python
+        run: python -m compileall -q hooks skills/loopseed/scripts tests
       - name: Run tests
         run: python -m unittest discover -s tests -v
+      - name: Smoke One-Shotted CLI
+        run: |
+          root="$(mktemp -d)"
+          mkdir "$root/.git"
+          python skills/loopseed/scripts/one_shotted.py init --root "$root" --goal "Ship a verified demo"
+          python skills/loopseed/scripts/one_shotted.py add-gate --root "$root" --id SMOKE --title Smoke --criterion "CLI completes" --owner lead --verifier verifier
+          python skills/loopseed/scripts/one_shotted.py record --root "$root" --gate SMOKE --result PASS --actor verifier --summary "CLI smoke passed"
+          python skills/loopseed/scripts/one_shotted.py finalize --root "$root"
+          python skills/loopseed/scripts/one_shotted.py validate --root "$root" --require-final

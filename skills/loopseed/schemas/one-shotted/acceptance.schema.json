@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/M-sea-art/loopseed/schemas/one-shotted/acceptance.schema.json",
+  "title": "LoopSeed One-Shotted Acceptance Gates",
+  "type": "object",
+  "required": ["schema_version", "run_id", "policy", "gates"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "run_id": {"type": "string", "minLength": 1},
+    "policy": {"type": "object"},
+    "gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "criterion", "required", "owner", "verifier", "status", "evidence_ids"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "title": {"type": "string"},
+          "criterion": {"type": "string", "minLength": 1},
+          "required": {"type": "boolean"},
+          "owner": {"type": "string", "minLength": 1},
+          "verifier": {"type": "string", "minLength": 1},
+          "status": {"enum": ["PENDING", "PASS", "FAIL", "BLOCKED"]},
+          "evidence_ids": {"type": "array", "items": {"type": "string"}}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

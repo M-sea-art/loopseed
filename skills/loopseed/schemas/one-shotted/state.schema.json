@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/M-sea-art/loopseed/schemas/one-shotted/state.schema.json",
+  "title": "LoopSeed One-Shotted State",
+  "type": "object",
+  "required": ["schema_version", "loopseed_version", "mode", "run_id", "status", "phase", "round", "no_progress_rounds", "next_action"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "loopseed_version": {"type": "string"},
+    "mode": {"const": "one-shotted"},
+    "run_id": {"type": "string", "minLength": 1},
+    "status": {"enum": ["ACTIVE", "VERIFIED", "BLOCKED", "ABORTED"]},
+    "phase": {"enum": ["BIND", "PLAN", "IMPLEMENT", "VERIFY", "REPAIR", "FINALIZE"]},
+    "round": {"type": "integer", "minimum": 0},
+    "no_progress_rounds": {"type": "integer", "minimum": 0},
+    "max_no_progress_rounds": {"type": "integer", "minimum": 1},
+    "next_action": {"type": "string"},
+    "true_blocker": {"type": ["object", "null"]}
+  },
+  "additionalProperties": true
+}
