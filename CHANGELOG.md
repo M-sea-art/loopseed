@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0
+
+- Added explicit `$loopseed one-shotted <goal>` autonomous completion mode.
+- Defined One-Shotted as one human authorization rather than one model response.
+- Added a dependency-free project-local control plane with goal, architecture, acceptance, expert, state, evidence, defect, and final-report contracts.
+- Added the `BIND → PLAN → IMPLEMENT → VERIFY ↔ REPAIR → FINALIZE` state machine.
+- Enforced independent gate verification: implementation owners cannot approve their own work.
+- Made gate failure enter `REPAIR` and required verifier-authored evidence before PASS.
+- Added fail-closed finalization, mandatory required gates, and P0/P1 defect blocking.
+- Added two-round no-progress detection that forces root-cause replanning and a materially different route.
+- Extended lifecycle hooks to resume One-Shotted state while preserving legacy `.loopseed.md` behavior.
+- Added JSON schemas, reusable templates, CLI tests, hook compatibility tests, and CI validation.
+
 ## 0.2.0
 
 - Reframed LoopSeed as a minimal natural-language activation protocol for plan-bound, exploration-driven Codex loops.
