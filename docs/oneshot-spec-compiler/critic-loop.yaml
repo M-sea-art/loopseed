@@ -1,0 +1,13 @@
+# LOOPSEED One-Shot Production Upgrade v0.3
+
+critic:
+  purpose: prevent premature completion
+
+  questions:
+    - "Did we satisfy the real user goal?"
+    - "Does this feel like a finished product?"
+    - "What is the largest visible weakness?"
+
+repair:
+  strategy: fix_biggest_gap_first
+  max_cycles: 3
