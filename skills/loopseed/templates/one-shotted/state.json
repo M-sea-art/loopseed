@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "loopseed_version": "0.3.0",
+  "mode": "one-shotted",
+  "run_id": "",
+  "status": "ACTIVE",
+  "phase": "BIND",
+  "round": 0,
+  "no_progress_rounds": 0,
+  "max_no_progress_rounds": 2,
+  "next_action": "",
+  "true_blocker": null,
+  "updated_at": ""
+}

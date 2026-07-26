@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/M-sea-art/loopseed/schemas/one-shotted/evidence-event.schema.json",
+  "title": "LoopSeed One-Shotted Evidence Event",
+  "type": "object",
+  "required": ["id", "run_id", "gate_id", "result", "actor", "summary", "created_at"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "gate_id": {"type": "string", "minLength": 1},
+    "result": {"enum": ["PASS", "FAIL"]},
+    "actor": {"type": "string", "minLength": 1},
+    "summary": {"type": "string", "minLength": 1},
+    "commands": {"type": "array", "items": {"type": "string"}},
+    "artifacts": {"type": "array", "items": {"type": "string"}},
+    "created_at": {"type": "string"}
+  },
+  "additionalProperties": true
+}

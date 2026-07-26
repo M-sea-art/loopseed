@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "loopseed_version": "0.3.0",
+  "mode": "one-shotted",
+  "run_id": "",
+  "root_goal": "",
+  "terminal_goal": "",
+  "authority": {
+    "user_instruction": "",
+    "project_plan": "",
+    "repository_instructions": []
+  },
+  "completion_policy": {
+    "required_gates_must_pass": true,
+    "open_p0_p1_forbidden": true,
+    "finalizer_only_sets_verified": true,
+    "true_blocker_requires_unblock_condition": true
+  },
+  "created_at": ""
+}
