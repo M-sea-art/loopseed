@@ -1,6 +1,6 @@
 interface:
   display_name: "LoopSeed"
-  short_description: "Start a plan-bound evidence loop from a minimal goal"
-  default_prompt: "$loopseed Follow the current project plan and complete the active milestone with direct evidence."
+  short_description: "Run minimal evidence loops or One-Shotted completion"
+  default_prompt: "$loopseed one-shotted Complete this goal from one authorization, with independent evidence before finalization."
 policy:
   allow_implicit_invocation: false

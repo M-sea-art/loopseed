@@ -1,120 +1,140 @@
 # LoopSeed
 
-**A minimal natural-language seed for plan-bound, exploration-driven Codex loops.**
+**Minimal instruction. Maximum useful autonomy. Evidence decides when to stop.**
 
 [简体中文](README.zh-CN.md)
 
-LoopSeed does not try to encode an entire workflow in a giant prompt. It gives Codex a clear goal, binds it to the project's real plan, and keeps the execution loop moving through exploration, action, observation, verification, and recovery.
+LoopSeed is an explicitly invoked Codex skill for plan-bound, evidence-driven execution. Version 0.3 adds **One-Shotted mode**: one human instruction can authorize a complete planning, implementation, independent verification, repair, and finalization run without requiring the user to repeatedly push the agent forward.
 
-> **Minimal instruction. Maximum useful autonomy. Evidence decides when to stop.**
+## Two modes
 
-## What LoopSeed means
-
-```text
-Project plan + minimal goal
-            ↓
-          Explore
-            ↓
-           Act
-            ↓
-         Observe
-            ↓
-          Verify
-            ↓
-   not done → adapt / reroute / resume
-            ↓
-   done → stop with direct evidence
-```
-
-LoopSeed is a **goal-bounded self-sustaining loop**: it should keep producing the next useful action before acceptance is verified, then converge immediately. It is not a promise of literal infinite execution.
-
-## Best invocation
-
-Use Goal mode when the current Codex surface supports it:
+### Standard LoopSeed
 
 ```text
-/goal $loopseed Follow the project's current plan and complete the active milestone with direct evidence.
+$loopseed <goal>
 ```
 
-A shorter natural-language example:
+Uses the cheapest sufficient loop:
 
 ```text
-/goal $loopseed 按项目规划完成当前里程碑，以实际运行证据验收。
+Explore → Act → Observe → Verify → Adapt
 ```
 
-For a normal current-task loop:
+It defaults to one thread, one writer, and one integration path. State, helpers, worktrees, hooks, and scheduled recovery are added only when they materially improve completion.
+
+### One-Shotted mode
 
 ```text
-$loopseed <your goal>
+/goal $loopseed one-shotted <one natural-language goal>
 ```
 
-On a non-trivial run, LoopSeed performs a small activation handshake: locate the current plan, choose the closest real verifier, inspect which Codex mechanisms are actually exposed, and select the cheapest sufficient runtime level. If a mechanism cannot be confirmed, it falls back instead of pretending.
+or:
 
-LoopSeed never claims Goal mode, hooks, subagents, worktrees, or scheduled tasks are active unless the current surface confirms them.
+```text
+$loopseed one-shotted <one natural-language goal>
+```
 
-## Five-minute project setup
+“One-Shotted” means **one human authorization**, not one model response. LoopSeed may internally plan, invoke tools, delegate independent work, test, capture evidence, repair defects, roll back regressions, and resume from state. The user should not need to repeatedly say “continue.”
 
-1. Keep one current planning source such as `PLAN.md`, a named milestone file, or an explicit user instruction.
-2. Define observable acceptance in that plan: tests, running UI, screenshots, artifacts, or a complete user flow.
-3. Start with the minimal seed above. Do not pre-create agents, worktrees, schedules, or state unless evidence shows they are needed.
-4. Add `.loopseed.md` only when the run must survive a task/session or use the optional hooks.
+```text
+one human goal
+      ↓
+Project Identity + Architecture Contract
+      ↓
+Observable Acceptance Gates
+      ↓
+Plan → Implement → Independent Verify
+                 FAIL ↓        ↓ PASS
+                    Repair → Verify
+                              ↓
+                         Final Gate
+```
 
-## Core operating principles
+The pattern is inspired by the strongest part of autonomous “one-shot” projects: the prompt starts the run, but contracts, ownership, repeatable evidence, independent criticism, and a fail-closed stop rule make it self-driving.
 
-1. **Plan-bound** — explicit user intent and current project planning are the authority; the existing implementation is evidence, not the product definition.
-2. **Explore every loop** — uncertainty, failed paths, and quality gaps trigger renewed observation and alternative routes, not premature stopping.
-3. **Single-thread by default** — one main thread and one integration path are cheapest and safest.
-4. **Escalate progressively** — use subagents, state relay, worktrees, hooks, or schedules only when their expected value exceeds coordination cost.
-5. **One completion truth** — acceptance criteria and direct evidence are shared by the main loop, reviewers, and stop logic.
-6. **Event-driven first** — act on new evidence, failures, checkpoints, and external completion; use time-based polling only as a recovery fallback.
-7. **Low process constraint, high outcome responsibility** — Codex chooses methods; the project plan and observable result constrain completion.
+## Why it is not a giant agent framework
 
-## Codex mechanism ladder
+LoopSeed’s purpose is to reduce redundant prompting and coordination, not maximize agent count.
 
-| Level | Mechanism | Use it when |
-|---|---|---|
-| 0 | Main-thread loop | Default for most work |
-| 1 | `.loopseed.md` relay | Work must survive a session, task, or handoff |
-| 2 | Subagents | Independent exploration, tests, triage, or review can run in parallel |
-| 3 | Worktrees | More than one writer must experiment safely |
-| 4 | Trusted lifecycle hooks | An active state needs resume context or a one-shot anti-early-stop fuse |
-| 5 | Scheduled task | Work must wake later, poll an external event, or recover after the active session ends |
+- One lead owns integration.
+- Acceptance is declared before substantial implementation.
+- A builder cannot approve its own gate.
+- Failed gates enter repair and must be reverified.
+- Two no-progress rounds force root-cause replanning.
+- Open P0/P1 defects block completion.
+- Only the finalizer can write `VERIFIED`.
+- Parallel writers require isolation; coupled concerns remain sequential.
 
-Do **not** turn every mechanism on for every task. The efficient pattern is one plan source, one root goal, one verifier, and one writer until evidence justifies escalation.
+## One-Shotted control plane
 
-## Optional hooks
+The bundled dependency-free CLI creates a project-local, auditable control surface:
 
-This plugin includes conservative, state-scoped hooks:
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py init \
+  --root . \
+  --goal "Build the complete requested vertical slice"
+```
 
-- `SessionStart` injects a short resume instruction only when the project root contains an active `.loopseed.md`.
-- `Stop` requests one continuation when the state is still `ACTIVE`.
-- If Codex reports `stop_hook_active: true`, the hook allows the turn to stop rather than creating recursive continuation.
-- `VERIFIED`, `BLOCKED`, and `ABORTED` states never trigger continuation.
+Generated files:
 
-Plugin hooks require explicit trust review in Codex. They do not expand permissions, grant network access, or replace Goal mode or scheduled tasks.
+```text
+.loopseed/one-shotted/
+├── project-identity.md
+├── architecture-contract.md
+├── goal-contract.json
+├── acceptance.json
+├── expert-registry.json
+├── state.json
+├── evidence.jsonl
+├── defects.jsonl
+└── final-report.json       # generated only after successful finalization
+```
 
-## State and valid terminal states
+### Add a gate
 
-LoopSeed creates `.loopseed.md` only when durable relay is useful. Valid terminal states are:
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
+  --root . \
+  --id FLOW \
+  --title "Complete user flow" \
+  --criterion "A fresh user can finish the documented primary flow" \
+  --owner lead \
+  --verifier verifier
+```
 
-- `VERIFIED` — all acceptance conditions have direct evidence.
-- `BLOCKED` — an exact, irreplaceable permission, input, authority decision, or irreversible-risk gate is missing.
-- `ABORTED` — the owner explicitly stopped the run.
+### Record an independent verdict
 
-A failed attempt, ugly UI, incomplete design, failing test, uncertain next step, or exhausted first approach is **not** a terminal state. It is a reason to explore and reroute.
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py record \
+  --root . \
+  --gate FLOW \
+  --result PASS \
+  --actor verifier \
+  --summary "The full primary flow completed without errors" \
+  --command "python tools/playtest.py"
+```
 
-See [the state contract](skills/loopseed/references/state-contract.md) and [runtime ladder](skills/loopseed/references/runtime-ladder.md).
+### Finalize
 
-## Efficiency model
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py finalize --root .
+```
 
-LoopSeed optimizes for:
+Finalization fails unless every required gate has verifier-authored PASS evidence, at least one required gate exists, contracts are consistent, and no P0/P1 defect is open.
 
-- fewer repeated prompts;
-- less main-thread context pollution;
-- fewer unnecessary agents;
-- fewer fixed-interval heartbeats;
-- direct verification instead of status prose;
-- bounded continuation instead of an uncontrolled resource loop.
+See [One-Shotted Mode](skills/loopseed/references/one-shotted-mode.md) for the complete workflow.
+
+## Lifecycle hooks
+
+Bundled hooks remain conservative:
+
+- `SessionStart` restores compact context only for an active state.
+- One-Shotted JSON state takes precedence over legacy `.loopseed.md`.
+- `Stop` requests one continuation while acceptance remains unresolved.
+- `stop_hook_active` prevents recursive continuation.
+- `VERIFIED`, `BLOCKED`, and `ABORTED` always allow stop.
+
+Hooks do not expand permissions, grant network access, or make unavailable Codex mechanisms real.
 
 ## Repository layout
 
@@ -124,30 +144,29 @@ skills/loopseed/
   SKILL.md
   agents/openai.yaml
   references/
+  schemas/one-shotted/
+  scripts/
+  templates/one-shotted/
 hooks/
-  hooks.json
-  common.py
-  session_start.py
-  stop_continue.py
 tests/
 ```
 
 ## Validate locally
 
 ```bash
+python -m json.tool .codex-plugin/plugin.json >/dev/null
+find skills/loopseed/schemas skills/loopseed/templates -name '*.json' -print0 \
+  | xargs -0 -n1 python -m json.tool >/dev/null
+python -m compileall -q hooks skills/loopseed/scripts tests
 python -m unittest discover -s tests -v
-python -m json.tool .codex-plugin/plugin.json
-python -m json.tool hooks/hooks.json
 ```
 
-## Codex references
+## Core references
 
-- [Long-running work and Goal mode](https://learn.chatgpt.com/codex/long-running-work)
-- [Subagents](https://learn.chatgpt.com/codex/agent-configuration/subagents)
-- [Hooks](https://learn.chatgpt.com/codex/hooks)
-- [Scheduled tasks](https://learn.chatgpt.com/codex/automations)
-- [Git worktrees](https://learn.chatgpt.com/codex/environments/git-worktrees)
-- [AGENTS.md](https://learn.chatgpt.com/codex/agent-configuration/agents-md)
+- [One-Shotted mode](skills/loopseed/references/one-shotted-mode.md)
+- [State contracts](skills/loopseed/references/state-contract.md)
+- [Runtime ladder](skills/loopseed/references/runtime-ladder.md)
+- [Playbook](skills/loopseed/references/playbook.md)
 
 ## License
 

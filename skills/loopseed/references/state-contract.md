@@ -1,66 +1,59 @@
-# Progressive state contract
+# LoopSeed state contracts
 
-Create a target project's root `.loopseed.md` only when at least one condition is true:
+LoopSeed keeps state only when durable relay is useful. State is a control signal, never proof.
 
-- work must continue in another task or session;
-- a helper needs durable integration state;
-- trusted hooks or scheduled recovery need a state signal;
-- a recoverable external wait needs a relay.
+## Standard mode
 
-Do not create it for simple single-task, read-only, docs-only, audit-only, no-write, or excluded-path work.
-
-Use this bounded structure:
+Use project-root `.loopseed.md` only when work must survive a task/session, a helper needs integration state, trusted hooks will resume it, or an external wait needs a relay.
 
 ````markdown
 # LoopSeed State
 
 ```loopseed-state
-version=0.2.0
+version=0.3.0
 status=ACTIVE
 next=one concise, verifiable next action
 ```
 
 ## Root goal
-
 <sanitized goal>
 
 ## Plan authority
-
-- <named plan, milestone, specification, or user instruction>
+- <named source>
 
 ## Acceptance
-
-- <observable condition>
 - <observable condition>
 
 ## Latest direct evidence
-
-- <at most three short evidence summaries>
+- <at most three compact items>
 
 ## Current route
-
-<current approach and why it is still worth trying>
+<current approach>
 
 ## True blocker
-
 None
 ````
 
-Allowed statuses:
+Allowed statuses are `ACTIVE`, `VERIFIED`, `BLOCKED`, and `ABORTED`. `BLOCKED` requires the exact missing item and exact unblock condition. Replace stale evidence rather than appending a diary.
 
-- `ACTIVE` — acceptance is not yet verified and a useful route remains;
-- `VERIFIED` — every acceptance condition has direct evidence;
-- `BLOCKED` — an exact irreplaceable permission, input, authority decision, or irreversible-risk gate exists;
-- `ABORTED` — the owner explicitly stopped the run.
+## One-Shotted mode
+
+One-Shotted mode uses `.loopseed/one-shotted/` and the bundled CLI rather than `.loopseed.md`. Its state is split into:
+
+- `goal-contract.json` — immutable root authorization and completion policy;
+- `acceptance.json` — gates, owners, independent verifiers, and evidence references;
+- `state.json` — current phase, status, round, and next action;
+- `evidence.jsonl` — append-only verifier verdicts;
+- `defects.jsonl` — append-only defect status events;
+- `final-report.json` — generated only by the finalizer.
+
+The One-Shotted JSON state takes precedence over legacy `.loopseed.md` for bundled hooks.
 
 Rules:
 
-1. `status=VERIFIED` is allowed only after direct acceptance evidence.
-2. `status=BLOCKED` requires the exact missing item and exact unblock condition in **True blocker**.
-3. Failure, poor quality, uncertainty, or a failed route keep the state `ACTIVE`.
-4. Update only after new evidence, a changed route, a changed blocker, or a terminal result.
-5. Replace stale evidence instead of appending history.
-6. Keep `next` to one safe line; never place secrets, credentials, private absolute paths, customer data, proprietary excerpts, or chain of thought in the file.
-7. A state value is a control signal, never proof.
-
-The bundled hooks look only for this project-root file and act only when `status=ACTIVE`. The Stop hook requests at most one continuation per turn; Goal mode or a separately configured scheduled task provides durable continuation beyond that fuse.
+1. Use the CLI for PASS, FAIL, defect, transition, and finalization events.
+2. Do not write `VERIFIED` manually.
+3. Do not make an implementation owner its own verifier.
+4. Keep `next_action` to one safe line.
+5. Never store credentials, private absolute paths, customer data, proprietary excerpts, or chain of thought.
+6. Stop hooks request at most one continuation per turn and never continue after `VERIFIED`, `BLOCKED`, or `ABORTED`.

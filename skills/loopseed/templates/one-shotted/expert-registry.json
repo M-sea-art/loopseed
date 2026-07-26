@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "run_id": "",
+  "default_topology": "single-lead",
+  "roles": [
+    {
+      "id": "lead",
+      "responsibility": "Own planning, implementation integration, and next-action selection.",
+      "write_scope": "authorized project scope"
+    },
+    {
+      "id": "verifier",
+      "responsibility": "Independently execute acceptance checks and record PASS or FAIL evidence.",
+      "write_scope": "evidence and defect ledgers only"
+    }
+  ],
+  "fanout_policy": "Add helpers only for independent work whose value exceeds coordination cost."
+}

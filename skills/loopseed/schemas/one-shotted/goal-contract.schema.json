@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/M-sea-art/loopseed/schemas/one-shotted/goal-contract.schema.json",
+  "title": "LoopSeed One-Shotted Goal Contract",
+  "type": "object",
+  "required": ["schema_version", "loopseed_version", "mode", "run_id", "root_goal", "terminal_goal", "authority", "completion_policy"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "loopseed_version": {"type": "string"},
+    "mode": {"const": "one-shotted"},
+    "run_id": {"type": "string", "minLength": 1},
+    "root_goal": {"type": "string", "minLength": 1},
+    "terminal_goal": {"type": "string", "minLength": 1},
+    "authority": {
+      "type": "object",
+      "required": ["user_instruction"],
+      "properties": {
+        "user_instruction": {"type": "string", "minLength": 1},
+        "project_plan": {"type": "string"},
+        "repository_instructions": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "completion_policy": {"type": "object"}
+  },
+  "additionalProperties": true
+}
