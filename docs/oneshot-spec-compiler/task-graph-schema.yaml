@@ -1,0 +1,17 @@
+# LOOPSEED One-Shot Production Upgrade v0.3
+# Task graph defines production tracks, not fixed expert personas.
+
+task_graph:
+  goal:
+    required: true
+
+  task:
+    fields:
+      - id
+      - purpose
+      - artifact
+      - acceptance
+      - dependencies
+
+  merge:
+    owner: primary_executor
