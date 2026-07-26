@@ -1,0 +1,25 @@
+# LOOPSEED One-Shot Production Upgrade v0.3
+# Fan-out accelerates delivery by parallelizing independent work.
+
+fanout:
+  enabled: true
+  purpose: accelerate_delivery
+
+  principle:
+    - "Fan out work, not personas."
+    - "Parallelize independent artifacts, not shared conflicts."
+    - "Keep one final integration owner."
+
+  trigger_conditions:
+    - independent_outputs
+    - parallel_execution_reduces_time
+    - clear_artifact_boundary
+
+  avoid_conditions:
+    - same_file_conflict
+    - duplicate_generation
+    - unclear_architecture
+
+  default:
+    final_owner: primary_executor
+    merge_required: true
