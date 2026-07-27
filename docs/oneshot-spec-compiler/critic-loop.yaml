@@ -1,34 +1,47 @@
-# LOOPSEED One-Shot Production Integrity Patch v0.3.1
+# LOOPSEED One-Shot Calibration Upgrade v0.4.0
 
-version: "0.3.1"
+version: "0.4.0"
 
 critic:
-  purpose: prevent_aligned_or_visual_premature_completion
+  purpose: prevent_calibration_drift_aligned_substitution_and_premature_completion
 
   gate_order:
+    - seed_intent_alignment
     - project_alignment
     - artifact_alignment
+    - implementation_strategy_alignment
     - stage_alignment
     - product_quality
     - runtime_verification
 
   alignment_questions:
+    - "Did the result preserve and strengthen the original seed intent rather than simplify it into an easier product?"
     - "Does the output belong to the bound project?"
     - "Is it the contracted artifact rather than an easier substitute?"
+    - "Does the selected implementation strategy actually serve the artifact and target stage?"
     - "Does observed evidence satisfy the target stage?"
 
   quality_questions:
-    - "Did we satisfy the real user goal?"
+    - "Did we satisfy the real user goal and calibrated product outcome?"
+    - "Is the core experience or job actually present?"
     - "What is the largest user-visible weakness?"
     - "Does the result meet every acceptance item?"
+
+  calibration_checks:
+    - no_second_confirmation_was_required_after_user_answer
+    - workers_did_not_reopen_project_planning
+    - reversible_low_level_choices_remained_executor_owned
+    - reference_roles_did_not_override_active_project
 
   evidence_rules:
     - running_without_errors_is_not_visual_acceptance
     - source_files_are_not_completion_evidence
     - visual_claims_require_visual_inspection
     - stage_claims_require_stage_specific_evidence
+    - stack_and_strategy_claims_require_build_or_runtime_evidence
 
   pass_condition:
+    - seed_intent_preserved
     - all_alignment_gates_pass
     - all_contract_acceptance_pass
     - no_blocking_evidence_gap
@@ -37,12 +50,17 @@ repair:
   strategy: fix_biggest_contract_gap_first
   max_cycles: 3
   rules:
+    - seed_intent_drift_requires_recompile_from_existing_user_authority
     - integrity_mismatch_requires_rebind_or_recompile
+    - reversible_strategy_details_may_be_repaired_without_user_interruption
+    - material_product_or_delivery_change_requires_existing_user_authority_or_block
     - visual_polish_cannot_repair_wrong_project
     - runtime_success_cannot_repair_wrong_artifact
     - never_report_complete_after_blocking_gate
 
 failure_codes:
+  calibration_drift: BLOCK_SEED_INTENT_DRIFT
   alignment: BLOCK_CRITIC_ALIGNMENT
+  strategy_mismatch: BLOCK_IMPLEMENTATION_STRATEGY
   premature_completion: BLOCK_PREMATURE_COMPLETION
   repair_budget_exhausted: BLOCK_REPAIR_BUDGET
