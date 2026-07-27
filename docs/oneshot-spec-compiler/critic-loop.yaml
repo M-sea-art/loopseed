@@ -1,13 +1,48 @@
-# LOOPSEED One-Shot Production Upgrade v0.3
+# LOOPSEED One-Shot Production Integrity Patch v0.3.1
+
+version: "0.3.1"
 
 critic:
-  purpose: prevent premature completion
+  purpose: prevent_aligned_or_visual_premature_completion
 
-  questions:
+  gate_order:
+    - project_alignment
+    - artifact_alignment
+    - stage_alignment
+    - product_quality
+    - runtime_verification
+
+  alignment_questions:
+    - "Does the output belong to the bound project?"
+    - "Is it the contracted artifact rather than an easier substitute?"
+    - "Does observed evidence satisfy the target stage?"
+
+  quality_questions:
     - "Did we satisfy the real user goal?"
-    - "Does this feel like a finished product?"
-    - "What is the largest visible weakness?"
+    - "What is the largest user-visible weakness?"
+    - "Does the result meet every acceptance item?"
+
+  evidence_rules:
+    - running_without_errors_is_not_visual_acceptance
+    - source_files_are_not_completion_evidence
+    - visual_claims_require_visual_inspection
+    - stage_claims_require_stage_specific_evidence
+
+  pass_condition:
+    - all_alignment_gates_pass
+    - all_contract_acceptance_pass
+    - no_blocking_evidence_gap
 
 repair:
-  strategy: fix_biggest_gap_first
+  strategy: fix_biggest_contract_gap_first
   max_cycles: 3
+  rules:
+    - integrity_mismatch_requires_rebind_or_recompile
+    - visual_polish_cannot_repair_wrong_project
+    - runtime_success_cannot_repair_wrong_artifact
+    - never_report_complete_after_blocking_gate
+
+failure_codes:
+  alignment: BLOCK_CRITIC_ALIGNMENT
+  premature_completion: BLOCK_PREMATURE_COMPLETION
+  repair_budget_exhausted: BLOCK_REPAIR_BUDGET
