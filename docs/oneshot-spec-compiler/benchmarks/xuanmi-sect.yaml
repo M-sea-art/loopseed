@@ -1,0 +1,62 @@
+# Isolated benchmark: 玄秘门派
+
+version: "0.3.1"
+
+benchmark:
+  id: xuanmi_sect_production_visual_rework
+
+  project_binding:
+    binding_id: bind_xuanmi_sect
+    project_id: xuanmi_sect
+    project_name: 玄秘门派
+    workspace:
+      root: fixture/xuanmi_sect
+    authoritative_sources:
+      - current_xuanmi_sect_goal
+      - xuanmi_sect_project_sources
+    reject_sources:
+      - wuxiang_zen_hall_prompt
+      - wuxiang_zen_hall_visual_contract
+      - wuxiang_zen_hall_acceptance_contract
+
+  artifact_contract:
+    contract_id: artifact_xuanmi_production_visual_rework
+    project_binding_id: bind_xuanmi_sect
+    artifact_type: production_grade_existing_game_visual_rework
+    deliverables:
+      - integrated_project_visual_rework
+      - project_local_art_direction
+      - verified_runnable_build
+    non_degradable:
+      - existing_game_identity
+      - established_project_structure
+      - production_grade_visual_intent
+    acceptance:
+      - build_launches
+      - visual_rework_is_integrated_into_existing_game
+      - representative_views_meet_project_quality_bar
+      - result_is_not_a_blockout
+    forbidden_substitutions:
+      - programmatic_3d_blockout
+      - geometry_only_scene
+      - technical_architecture_demo
+      - wuxiang_zen_hall_contract
+    required_evidence:
+      - runtime_smoke_test
+      - representative_visual_inspection
+      - acceptance_comparison
+
+  stage_target:
+    stage_target_id: stage_xuanmi_finished_candidate
+    project_binding_id: bind_xuanmi_sect
+    artifact_contract_id: artifact_xuanmi_production_visual_rework
+    name: finished_candidate
+    acceptance_axes:
+      - functionality
+      - visual_fidelity
+      - completeness
+      - stability
+
+  expected:
+    pass_only_with_matching_integrity_ref: true
+    reusable_by_other_projects: false
