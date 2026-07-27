@@ -1,0 +1,175 @@
+# LOOPSEED One-Shot Calibration Upgrade v0.4.0
+# Calibrate the shot without turning production into a multi-round agent workflow.
+
+version: "0.4.0"
+
+one_shot_definition:
+  meaning: one_calibrated_uninterrupted_production_run
+  not_required: exactly_one_user_message
+  invariants:
+    - seed_prompt_remains_semantic_anchor
+    - calibration_may_strengthen_but_not_replace_intent
+    - calibration_ends_before_production_execution
+    - user_answer_authorizes_the_full_production_run
+
+calibration:
+  mode: adaptive
+  purpose: amplify_and_align_seed_intent_before_integrity_lock
+  creates_new_agent_layer: false
+  creates_fourth_integrity_lock: false
+  write_during_calibration: false
+
+  discovery:
+    read_before_asking:
+      - current_explicit_user_goal
+      - target_repository_instructions
+      - target_repository_structure
+      - project_local_docs_and_assets
+      - current_branch_state
+      - available_build_test_and_run_commands
+    rule: infer_from_authoritative_evidence_before_requesting_user_input
+
+  planning:
+    project_plan:
+      fields:
+        - product_outcome
+        - core_experience_or_job
+        - bounded_scope
+        - non_goals
+        - deliverables
+        - acceptance
+        - verification
+      rule: produce_a_bounded_plan_for_one_production_run_not_a_long_lived_roadmap
+
+    stack_proposal:
+      fields:
+        - recommended_stack
+        - repository_fit
+        - artifact_fit
+        - stage_fit
+        - strategic_tradeoffs
+        - rejected_alternatives
+        - confidence
+      rules:
+        - prefer_project_native_stack_when_it_can_satisfy_the_contract
+        - recommend_before_asking_the_user_to_choose
+        - ask_only_when_stack_choice_changes_product_form_delivery_target_or_irreversible_cost
+        - keep_reversible_low_level_choices_executor_owned
+        - never_choose_an_easier_stack_by_downgrading_artifact_or_stage
+
+  route:
+    direct_shot:
+      when_all:
+        - project_identity_is_unambiguous
+        - artifact_type_is_clear
+        - stage_target_is_clear
+        - planning_scope_is_bounded
+        - stack_route_is_compatible_and_low_risk
+        - reference_roles_are_classified
+        - acceptance_is_observable
+        - no_material_question_would_change_the_result
+      behavior:
+        - compile_without_user_questions
+        - freeze_three_integrity_locks
+        - execute
+
+    calibrated_shot:
+      when_any:
+        - ambiguity_can_redirect_project_or_product_outcome
+        - scope_choice_changes_the_core_experience
+        - stack_choice_changes_product_form_or_delivery_target
+        - artifact_or_stage_can_be_miscompiled
+        - reference_role_can_contaminate_the_active_project
+        - repository_evidence_conflicts_with_seed_intent
+        - irreversible_or_high_risk_action_lacks_authority
+      behavior:
+        - present_inferred_state
+        - present_recommended_plan_and_stack
+        - ask_one_group_of_high_leverage_questions
+        - compile_from_user_answer
+        - freeze_three_integrity_locks
+        - execute_without_second_confirmation
+
+  interview:
+    max_rounds: 1
+    max_questions: 5
+    question_format:
+      - mutually_exclusive_options
+      - one_recommended_option
+      - concise_consequence_of_each_material_choice
+      - mapping_to_project_artifact_stage_or_strategy
+    ask_only_when:
+      - answer_changes_project_identity
+      - answer_changes_product_outcome_or_core_experience
+      - answer_changes_artifact_type_or_deliverables
+      - answer_changes_target_stage_or_acceptance
+      - answer_selects_a_material_stack_tradeoff
+      - answer_classifies_a_material_reference
+      - answer_defines_a_forbidden_substitution
+      - answer_changes_required_evidence
+    must_not_ask:
+      - facts_available_in_repository
+      - questions_already_answered_by_the_user
+      - reversible_engineering_details
+      - low_level_library_preferences_without_product_impact
+      - cosmetic_preferences_without_contract_impact
+      - questions_asked_only_to_appear_thorough
+    accepted_answers:
+      - explicit_option_selection
+      - all_recommended
+      - natural_language_equivalent
+    on_unresolved_hard_conflict: block_before_execution
+
+  seed_intent_preservation:
+    allowed:
+      - clarify_ambiguity
+      - prioritize_outcomes
+      - bound_scope_without_changing_the_product_identity
+      - strengthen_acceptance_and_evidence
+      - select_an_implementation_route_that_serves_the_goal
+    forbidden:
+      - replace_the_requested_product_with_an_easier_product
+      - lower_ambition_without_user_authority
+      - convert_visual_completion_into_blockout
+      - convert_a_game_into_a_scene_or_static_interface
+      - let_reference_material_override_the_active_project
+      - optimize_for_implementation_convenience_over_user_intent
+
+  reference_roles:
+    allowed:
+      - active_project
+      - transferable_principle
+      - negative_reference
+      - benchmark_only
+    rule: only_active_project_may_define_project_identity_and_contract
+
+  compiled_shot:
+    role: concise_human_readable_execution_brief
+    is_integrity_lock: false
+    required_fields:
+      - seed_intent
+      - product_outcome
+      - core_experience_or_job
+      - bounded_scope
+      - project_binding
+      - artifact_contract
+      - stage_target
+      - implementation_strategy
+      - reference_roles
+      - non_goals
+      - required_evidence
+    compiles_into:
+      - project_binding_id
+      - artifact_contract_id
+      - stage_target_id
+    after_compile:
+      - emit_frozen_production_brief
+      - do_not_request_second_confirmation
+      - begin_task_graph_and_execution
+
+failure_codes:
+  unresolved_calibration: BLOCK_CALIBRATION_UNRESOLVED
+  seed_intent_drift: BLOCK_SEED_INTENT_DRIFT
+  planning_substitution: BLOCK_PLANNING_SUBSTITUTION
+  stack_mismatch: BLOCK_STACK_MISMATCH
+  excessive_interview: BLOCK_CALIBRATION_BLOAT
