@@ -1,10 +1,44 @@
-# LOOPSEED One-Shot Production Upgrade v0.3
+# LOOPSEED One-Shot Production Integrity Patch v0.3.1
+
+version: "0.3.1"
 
 merge:
-  objective: preserve_original_intent
+  objective: preserve_locked_production_intent
+
+  input_gate:
+    require_identical:
+      - project_binding_id
+      - artifact_contract_id
+      - stage_target_id
+    reject:
+      - foreign_project_artifact
+      - forbidden_artifact_substitution
+      - stage_downgrade
+      - missing_acceptance_evidence
 
   rules:
     - "Workers produce artifacts, not competing final products."
     - "Primary executor owns final integration."
-    - "Resolve conflicts by goal alignment."
+    - "Resolve conflicts by locked contract precedence."
     - "Remove duplicate solutions before delivery."
+    - "Quarantine outputs that do not match the active project."
+
+  conflict_precedence:
+    - current_explicit_user_goal
+    - project_binding
+    - artifact_contract
+    - stage_target
+    - task_acceptance
+    - worker_proposal
+
+  output_gate:
+    require:
+      - unchanged_integrity_ref
+      - all_deliverables_accounted_for
+      - target_stage_evidence
+      - no_foreign_project_material
+
+failure_codes:
+  integrity_ref_mismatch: BLOCK_MERGE_INTEGRITY
+  foreign_artifact: BLOCK_MERGE_FOREIGN_PROJECT
+  incomplete_evidence: BLOCK_MERGE_EVIDENCE
