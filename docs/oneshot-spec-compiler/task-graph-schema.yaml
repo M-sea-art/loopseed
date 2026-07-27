@@ -1,16 +1,24 @@
-# LOOPSEED One-Shot Production Integrity Patch v0.3.1
-# Task graph defines production tracks, not fixed expert personas.
+# LOOPSEED One-Shot Calibration Upgrade v0.4.0
+# Task graph executes the compiled shot; it does not reopen product planning.
 
-version: "0.3.1"
+version: "0.4.0"
 
 task_graph:
   preconditions:
+    - calibration_resolved_by_direct_or_calibrated_shot
+    - compiled_shot_ready
     - project_binding_passed
     - artifact_contract_passed
     - stage_target_resolved
 
   goal:
     required: true
+    source: compiled_shot
+    must_preserve:
+      - seed_intent
+      - product_outcome
+      - core_experience_or_job
+      - bounded_scope
 
   integrity_ref:
     required:
@@ -18,6 +26,13 @@ task_graph:
       - artifact_contract_id
       - stage_target_id
     rule: inherited_unchanged_by_every_task
+
+  implementation_strategy:
+    source: artifact_contract
+    rules:
+      - tasks_may_choose_reversible_details_within_the_strategy
+      - tasks_may_not_switch_product_form_or_delivery_target
+      - material_strategy_change_requires_recompile_from_existing_user_authority
 
   task:
     fields:
@@ -31,14 +46,20 @@ task_graph:
     rules:
       - artifact_must_contribute_to_locked_deliverable
       - acceptance_must_contribute_to_target_stage
+      - purpose_must_contribute_to_seed_intent_and_product_outcome
       - task_must_not_reinterpret_integrity_ref
+      - task_must_not_reopen_calibration_or_delegate_low_level_choices_to_user
 
   blocked_when:
+    - calibration_unresolved
     - missing_integrity_ref
+    - seed_intent_drift
     - foreign_project_source
     - forbidden_artifact_substitution
+    - unauthorized_material_strategy_switch
     - implicit_stage_downgrade
 
   merge:
     owner: primary_executor
     requires_identical_integrity_ref: true
+    requires_seed_intent_preservation: true
