@@ -1,0 +1,62 @@
+# LOOPSEED One-Shot Production Integrity Patch v0.3.1
+
+version: "0.3.1"
+
+project_binding:
+  purpose: bind_execution_to_one_active_project
+
+  required:
+    - binding_id
+    - project_id
+    - project_name
+    - workspace
+    - authoritative_sources
+
+  workspace:
+    fields:
+      - repository
+      - branch
+      - root
+    rule: populated_fields_must_match_active_execution_context
+
+  resolution:
+    mode: infer_from_current_goal_and_project_local_evidence
+    require: unambiguous_identity
+    on_conflict: block_before_execution
+
+  authority_order:
+    - current_explicit_user_goal
+    - bound_project_authority
+    - bound_project_local_state
+    - explicitly_requested_transferable_principles
+
+  cross_project_sources:
+    default: reject
+    allow_only_when:
+      - user_explicitly_requests_transfer
+      - transferable_principles_are_named
+      - source_is_marked_reference_only
+    never_transfer:
+      - project_identity
+      - artifact_contract
+      - stage_target
+      - acceptance_contract
+      - benchmark_result
+
+  gates:
+    before_task_graph:
+      - project_id_resolved
+      - workspace_matches_project
+      - authoritative_sources_scoped_to_project
+      - no_unapproved_cross_project_contract
+
+  immutable_after_lock:
+    - binding_id
+    - project_id
+    - workspace
+    - authoritative_sources
+
+failure_codes:
+  unresolved_identity: BLOCK_PROJECT_UNRESOLVED
+  workspace_mismatch: BLOCK_WORKSPACE_MISMATCH
+  cross_project_contract: BLOCK_CROSS_PROJECT_CONTAMINATION
