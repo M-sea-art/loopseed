@@ -1,9 +1,23 @@
-# LOOPSEED One-Shot Production Upgrade v0.3
+# LOOPSEED One-Shot Production Integrity Patch v0.3.1
 # Task graph defines production tracks, not fixed expert personas.
 
+version: "0.3.1"
+
 task_graph:
+  preconditions:
+    - project_binding_passed
+    - artifact_contract_passed
+    - stage_target_resolved
+
   goal:
     required: true
+
+  integrity_ref:
+    required:
+      - project_binding_id
+      - artifact_contract_id
+      - stage_target_id
+    rule: inherited_unchanged_by_every_task
 
   task:
     fields:
@@ -11,7 +25,20 @@ task_graph:
       - purpose
       - artifact
       - acceptance
+      - evidence
       - dependencies
+      - integrity_ref
+    rules:
+      - artifact_must_contribute_to_locked_deliverable
+      - acceptance_must_contribute_to_target_stage
+      - task_must_not_reinterpret_integrity_ref
+
+  blocked_when:
+    - missing_integrity_ref
+    - foreign_project_source
+    - forbidden_artifact_substitution
+    - implicit_stage_downgrade
 
   merge:
     owner: primary_executor
+    requires_identical_integrity_ref: true
