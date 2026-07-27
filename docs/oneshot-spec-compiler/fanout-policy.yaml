@@ -1,9 +1,17 @@
-# LOOPSEED One-Shot Production Upgrade v0.3
-# Fan-out accelerates delivery by parallelizing independent work.
+# LOOPSEED One-Shot Production Integrity Patch v0.3.1
+# Fan-out accelerates delivery only after production integrity is locked.
+
+version: "0.3.1"
 
 fanout:
   enabled: true
   purpose: accelerate_delivery
+
+  preconditions:
+    - project_binding_passed
+    - artifact_contract_passed
+    - stage_target_resolved
+    - task_graph_has_integrity_ref
 
   principle:
     - "Fan out work, not personas."
@@ -14,12 +22,27 @@ fanout:
     - independent_outputs
     - parallel_execution_reduces_time
     - clear_artifact_boundary
+    - identical_integrity_ref
 
   avoid_conditions:
     - same_file_conflict
     - duplicate_generation
     - unclear_architecture
+    - unresolved_project_binding
+    - artifact_contract_conflict
+    - stage_target_conflict
+
+  worker_contract:
+    inherit_unchanged:
+      - project_binding_id
+      - artifact_contract_id
+      - stage_target_id
+    may_not:
+      - import_unapproved_cross_project_contract
+      - substitute_artifact_type
+      - lower_target_stage
 
   default:
     final_owner: primary_executor
     merge_required: true
+    foreign_output: quarantine
