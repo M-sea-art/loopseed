@@ -1,0 +1,91 @@
+# LOOPSEED One-Shot Calibration Upgrade v0.4.0
+
+version: "0.4.0"
+benchmark: oneshot_calibration
+purpose: verify_that_calibration_strengthens_one_shot_without_becoming_multi_round_planning
+
+cases:
+  - id: direct_shot_clear_contract
+    seed: "在现有 Phaser 项目中完成一个 8 分钟可玩的雪夜客栈经营 Demo，沿用当前分支技术栈并提供构建与完整通关证据。"
+    repository_evidence:
+      project_identity: clear
+      stack: phaser_typescript_vite
+      artifact: runnable_browser_game
+      stage: playable_demo
+    expected:
+      route: direct_shot
+      questions: 0
+      writes_before_lock: false
+      second_confirmation: false
+      preserves_seed_intent: true
+
+  - id: calibrated_shot_material_stack_tradeoff
+    seed: "做一个经营衰败门派、处理人情与生存压力的游戏。"
+    repository_evidence:
+      project_identity: clear
+      stack: unresolved_between_browser_demo_and_godot_desktop
+      artifact: ambiguous
+      stage: ambiguous
+    expected:
+      route: calibrated_shot
+      question_rounds: 1
+      max_questions: 5
+      proposes_recommended_plan_before_asking: true
+      proposes_recommended_stack_before_asking: true
+      asks_only_material_tradeoffs: true
+      user_answer_authorizes_execution: true
+
+  - id: reject_requirements_interview_bloat
+    seed: "做一个可玩的山中客栈管理游戏。"
+    repository_evidence:
+      project_identity: clear
+      existing_stack: project_native_and_sufficient
+    forbidden_behavior:
+      - ask_for_facts_present_in_repository
+      - ask_user_to_choose_from_many_equivalent_libraries
+      - ask_cosmetic_questions_without_contract_impact
+      - split_questions_across_multiple_rounds
+      - ask_for_confirmation_after_answers
+    expected:
+      max_question_rounds: 1
+      max_questions: 5
+      low_level_choices_remain_executor_owned: true
+
+  - id: preserve_seed_against_easy_substitute
+    seed: "做一个有完整经营循环和代表性视觉品质的东方门派 Demo。"
+    tempting_substitute: "几何体山院漫游场景"
+    expected:
+      route: calibrated_shot
+      preserve:
+        - management_game_identity
+        - complete_core_loop
+        - representative_visual_quality
+      reject:
+        - geometry_blockout_as_final
+        - scene_without_gameplay
+        - runnable_as_visual_completion
+      failure_code_on_drift: BLOCK_SEED_INTENT_DRIFT
+
+  - id: reference_role_is_not_project_identity
+    seed: "为新项目制作一个管理游戏，参考环世界的信息可读性，并以无相禅堂和玄秘门派作为污染测试。"
+    expected_reference_roles:
+      active_project: new_project
+      transferable_principle:
+        - rimworld_information_readability
+      benchmark_only:
+        - wuxiang_zen_hall
+        - xuanmi_sect
+    forbidden_transfer:
+      - foreign_project_identity
+      - foreign_artifact_contract
+      - foreign_stage_target
+      - foreign_acceptance_contract
+
+pass_conditions:
+  - clear_goals_skip_questions
+  - material_ambiguity_uses_at_most_one_question_round
+  - plan_and_stack_are_proposed_before_user_choice
+  - seed_intent_survives_calibration
+  - answers_compile_into_existing_three_locks
+  - no_second_confirmation_before_production
+  - no_new_agent_or_fourth_lock_is_required
