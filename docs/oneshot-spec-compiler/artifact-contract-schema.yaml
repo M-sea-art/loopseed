@@ -1,0 +1,52 @@
+# LOOPSEED One-Shot Production Integrity Patch v0.3.1
+
+version: "0.3.1"
+
+artifact_contract:
+  purpose: prevent_unrequested_artifact_substitution
+
+  required:
+    - contract_id
+    - project_binding_id
+    - artifact_type
+    - deliverables
+    - acceptance
+    - forbidden_substitutions
+    - required_evidence
+
+  deliverables:
+    rule: every_deliverable_has_acceptance_and_evidence
+
+  non_degradable:
+    description: qualities_that_must_survive_implementation_choices
+    default:
+      - project_identity
+      - requested_artifact_type
+      - explicit_user_constraints
+
+  substitution:
+    default: forbidden
+    allowed_only_when:
+      - user_explicitly_accepts_substitute
+      - substitute_preserves_non_degradable_requirements
+      - stage_target_remains_satisfied
+
+  evidence:
+    rules:
+      - runnable_evidence_proves_function_only
+      - visual_completion_requires_visual_evidence
+      - source_presence_does_not_prove_deliverable_quality
+      - every_acceptance_item_must_be_observed
+
+  immutable_after_lock:
+    - contract_id
+    - project_binding_id
+    - artifact_type
+    - non_degradable
+    - forbidden_substitutions
+
+failure_codes:
+  missing_contract: BLOCK_ARTIFACT_CONTRACT_MISSING
+  wrong_artifact_type: BLOCK_WRONG_ARTIFACT
+  forbidden_substitution: BLOCK_FORBIDDEN_SUBSTITUTION
+  insufficient_evidence: BLOCK_ARTIFACT_EVIDENCE
