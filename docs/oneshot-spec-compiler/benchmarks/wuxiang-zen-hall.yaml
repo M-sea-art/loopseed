@@ -1,0 +1,57 @@
+# Isolated benchmark: 无相禅堂
+
+version: "0.3.1"
+
+benchmark:
+  id: wuxiang_zen_hall_visual_rework
+
+  project_binding:
+    binding_id: bind_wuxiang_zen_hall
+    project_id: wuxiang_zen_hall
+    project_name: 无相禅堂
+    workspace:
+      root: fixture/wuxiang_zen_hall
+    authoritative_sources:
+      - current_wuxiang_zen_hall_goal
+      - wuxiang_zen_hall_project_sources
+    reject_sources:
+      - xuanmi_sect_prompt
+      - xuanmi_sect_visual_contract
+      - xuanmi_sect_acceptance_contract
+
+  artifact_contract:
+    contract_id: artifact_wuxiang_playable_visual_rework
+    project_binding_id: bind_wuxiang_zen_hall
+    artifact_type: playable_web_game_visual_rework
+    deliverables:
+      - playable_build
+      - cohesive_ui_and_character_rework
+      - cohesive_environment_rework
+    non_degradable:
+      - playability
+      - wuxiang_zen_hall_project_identity
+    acceptance:
+      - build_launches
+      - core_interactions_work
+      - visual_rework_matches_wuxiang_zen_hall
+    forbidden_substitutions:
+      - static_mockup_only
+      - unrelated_project_contract
+    required_evidence:
+      - runtime_smoke_test
+      - interaction_check
+      - visual_inspection
+
+  stage_target:
+    stage_target_id: stage_wuxiang_playable_demo
+    project_binding_id: bind_wuxiang_zen_hall
+    artifact_contract_id: artifact_wuxiang_playable_visual_rework
+    name: playable_demo
+    acceptance_axes:
+      - functionality
+      - visual_fidelity
+      - usability
+
+  expected:
+    pass_only_with_matching_integrity_ref: true
+    reusable_by_other_projects: false
