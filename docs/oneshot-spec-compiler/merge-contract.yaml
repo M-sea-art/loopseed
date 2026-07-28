@@ -1,9 +1,9 @@
-# LOOPSEED One-Shot Production Integrity Patch v0.3.1
+# LOOPSEED One-Shot Gauntlet Integration Patch v0.4.1
 
-version: "0.3.1"
+version: "0.4.1"
 
 merge:
-  objective: preserve_locked_production_intent
+  objective: preserve_locked_production_intent_and_restore_whole_product_coherence
 
   input_gate:
     require_identical:
@@ -15,6 +15,7 @@ merge:
       - forbidden_artifact_substitution
       - stage_downgrade
       - missing_acceptance_evidence
+      - unresolved_shared_state_conflict
 
   rules:
     - "Workers produce artifacts, not competing final products."
@@ -22,6 +23,7 @@ merge:
     - "Resolve conflicts by locked contract precedence."
     - "Remove duplicate solutions before delivery."
     - "Quarantine outputs that do not match the active project."
+    - "Merge establishes one runnable artifact; it does not by itself prove whole-product coherence."
 
   conflict_precedence:
     - current_explicit_user_goal
@@ -31,14 +33,60 @@ merge:
     - task_acceptance
     - worker_proposal
 
+  smoothing_pass:
+    mode: optional
+    purpose: remove_cross_part_seams_after_a_major_multi_builder_production_wave
+    trigger_when:
+      - multiple_independent_builders_changed_one_final_artifact
+      - local_outputs_pass_but_whole_product_coherence_is_unverified
+      - visual_interaction_language_or_state_transitions_may_be_inconsistent
+    skip_when:
+      - one_sequential_owner_already_controlled_the_complete_quality_surface
+      - deliverables_are_truly_independent_and_have_no_shared_user_experience
+      - no_material_cross_part_seam_is_observed
+    owner:
+      type: fresh_context_integrator
+      rules:
+        - inspect_the_complete_merged_artifact_directly
+        - may_edit_cross_part_seams_but_may_not_self_approve_the_following_quality_gate
+    inspect:
+      - complete_running_or_rendered_artifact
+      - locked_seed_intent_project_artifact_and_stage
+      - inspectable_bar
+      - locally_passed_acceptance_evidence
+      - cross_part_state_visual_audio_interaction_and_language_consistency
+    responsibilities:
+      - fix_cross_part_inconsistency
+      - resolve_integration_conflicts
+      - unify_visual_interaction_and_feedback_grammar
+      - repair_state_transition_and_timing_seams
+      - preserve_accepted_local_improvements
+    forbidden:
+      - redesign_the_product
+      - reopen_calibration
+      - change_integrity_ref
+      - substitute_artifact_type
+      - lower_stage_target
+      - expand_scope_without_existing_authority
+      - use_smoothing_to_hide_wrong_decomposition_or_unresolved_coupling
+    exit:
+      - merged_artifact_runs_or_renders_as_contracted
+      - previously_passed_required_gates_are_reverified_if_touched
+      - smoothing_changes_and_remaining_seams_are_recorded
+      - whole_product_fresh_critic_runs_next
+
   output_gate:
     require:
       - unchanged_integrity_ref
       - all_deliverables_accounted_for
       - target_stage_evidence
       - no_foreign_project_material
+      - whole_product_coherence_review_after_multiple_builders
 
 failure_codes:
   integrity_ref_mismatch: BLOCK_MERGE_INTEGRITY
   foreign_artifact: BLOCK_MERGE_FOREIGN_PROJECT
   incomplete_evidence: BLOCK_MERGE_EVIDENCE
+  unresolved_coupling: BLOCK_MERGE_COUPLING
+  smoothing_regression: BLOCK_SMOOTHING_REGRESSION
+  whole_product_coherence: BLOCK_WHOLE_PRODUCT_COHERENCE
