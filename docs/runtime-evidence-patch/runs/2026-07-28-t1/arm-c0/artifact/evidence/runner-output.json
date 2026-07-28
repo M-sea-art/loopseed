@@ -1,0 +1,38 @@
+{
+  "protocol": "C0 PROTOCOL_ONLY",
+  "runner": "node-vm deterministic DOM harness",
+  "execution": "PASS",
+  "browserEvidence": "BLOCKED",
+  "paths": [
+    {
+      "choices": ["poet", "healer", "courier"],
+      "lightAfterEachChoice": [7, 5, 2],
+      "ending": {
+        "id": "shared-dawn",
+        "title": "结局 · 众灯相承",
+        "text": "天亮时，诗贴在门上，药香留在炉边，黑伞替门槛挡住最后一阵雨。你没能照亮谁的整夜，却让三个人各自带走一小束光。从此客栈多了一条规矩：借出去的灯，会沿着山路回来。"
+      },
+      "ledger": [
+        {"night": 1, "choice": "poet", "traveler": "沈砚", "role": "失声诗人", "cost": 2, "lightAfter": 7},
+        {"night": 2, "choice": "healer", "traveler": "阿葵", "role": "抱药女孩", "cost": 2, "lightAfter": 5},
+        {"night": 3, "choice": "courier", "traveler": "无名", "role": "黑伞信使", "cost": 3, "lightAfter": 2}
+      ]
+    },
+    {
+      "choices": ["healer", "healer", "healer"],
+      "lightAfterEachChoice": [6, 4, 2],
+      "ending": {
+        "id": "medicine",
+        "title": "结局 · 百草回春",
+        "text": "天亮时，阿葵带药下山。数月后，她在客栈门前种满驱寒的药草。你曾偏给一人的暖意，最后被熬成许多碗热汤，送给每个淋雨的人。"
+      },
+      "ledger": [
+        {"night": 1, "choice": "healer", "traveler": "阿葵", "role": "抱药女孩", "cost": 3, "lightAfter": 6},
+        {"night": 2, "choice": "healer", "traveler": "阿葵", "role": "抱药女孩", "cost": 2, "lightAfter": 4},
+        {"night": 3, "choice": "healer", "traveler": "阿葵", "role": "抱药女孩", "cost": 2, "lightAfter": 2}
+      ]
+    }
+  ],
+  "assertions": 9,
+  "verdict": "STATIC_BEHAVIOR_PASS_BROWSER_CAPTURE_PENDING"
+}

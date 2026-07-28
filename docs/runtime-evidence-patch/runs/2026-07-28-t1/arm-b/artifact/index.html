@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>雨夜客栈：守灯人</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --night: #081520;
+      --storm: #173447;
+      --ink: #e9e2d1;
+      --muted: #94aeb8;
+      --warm: #ffc56e;
+      --ember: #f17f3d;
+      --gold: #f4d59a;
+      --wood: #241b18;
+      --line: rgba(241, 220, 179, .18);
+      --cold: #70a9c0;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #061019;
+      color: var(--ink);
+      font-family: "Songti SC", "STSong", "Noto Serif CJK SC", Georgia, serif;
+    }
+
+    button { font: inherit; }
+
+    body {
+      position: relative;
+      background:
+        radial-gradient(circle at 72% 18%, rgba(72, 116, 136, .18), transparent 26%),
+        linear-gradient(150deg, #0c2030, #07121c 72%);
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      box-shadow: inset 0 0 130px rgba(0, 0, 0, .72);
+      z-index: 20;
+    }
+
+    .game {
+      min-height: 100dvh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .topbar {
+      height: 104px;
+      z-index: 12;
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) auto minmax(280px, 1fr);
+      align-items: center;
+      padding: 18px 32px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(5, 13, 20, .94), rgba(5, 13, 20, .62));
+      backdrop-filter: blur(10px);
+    }
+
+    .brand { display: flex; align-items: center; gap: 15px; }
+
+    .seal {
+      width: 47px;
+      height: 55px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 197, 110, .5);
+      border-radius: 50% 50% 44% 44%;
+      color: var(--warm);
+      background: linear-gradient(180deg, rgba(255, 197, 110, .13), transparent);
+      box-shadow: 0 0 28px rgba(255, 159, 67, .18);
+      font-size: 24px;
+    }
+
+    h1 {
+      font-size: clamp(21px, 2.2vw, 31px);
+      letter-spacing: .18em;
+      margin: 0;
+      color: #f1e8d5;
+      font-weight: 600;
+    }
+
+    .eyebrow {
+      margin: 0 0 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--cold);
+      font-size: 10px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+
+    .nights {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      color: #6d8791;
+    }
+
+    .night-step {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border: 1px solid #49606a;
+      border-radius: 50%;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      transition: .35s ease;
+      position: relative;
+    }
+
+    .night-step + .night-step::before {
+      content: "";
+      position: absolute;
+      right: 100%;
+      width: 34px;
+      height: 1px;
+      background: #405660;
+    }
+
+    .night-step + .night-step { margin-left: 34px; }
+
+    .night-step.done {
+      color: #10202a;
+      border-color: var(--gold);
+      background: var(--gold);
+      box-shadow: 0 0 18px rgba(255, 197, 110, .28);
+    }
+
+    .night-step.active {
+      color: var(--warm);
+      border-color: var(--warm);
+      box-shadow: 0 0 18px rgba(255, 197, 110, .3), inset 0 0 10px rgba(255, 197, 110, .11);
+    }
+
+    .lamp-bank { justify-self: end; text-align: right; }
+    .lamp-label { color: var(--muted); font-size: 12px; letter-spacing: .15em; }
+    .flame-value { color: var(--gold); font: 600 15px/1 ui-monospace, monospace; margin-left: 7px; }
+
+    .flames {
+      display: flex;
+      justify-content: flex-end;
+      gap: 5px;
+      height: 25px;
+      margin-top: 7px;
+    }
+
+    .flame {
+      width: 13px;
+      height: 19px;
+      background: linear-gradient(180deg, #fff2a1 2%, #ffc75e 45%, #ef7136);
+      border-radius: 60% 40% 55% 45% / 70% 70% 30% 30%;
+      transform: rotate(5deg);
+      filter: drop-shadow(0 0 5px rgba(255, 171, 64, .75));
+      transition: .4s ease;
+    }
+
+    .flame.spent {
+      height: 10px;
+      align-self: end;
+      background: #263640;
+      filter: none;
+      opacity: .5;
+      border-radius: 50%;
+    }
+
+    .stage {
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+    }
+
+    .sky {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 16% 22%, rgba(106, 151, 165, .13), transparent 19%),
+        linear-gradient(180deg, #18394b 0%, #0d2533 58%, #091720 100%);
+    }
+
+    .moon {
+      position: absolute;
+      top: 8%;
+      left: 7%;
+      width: 105px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: rgba(187, 213, 213, .12);
+      box-shadow: 0 0 80px rgba(170, 206, 214, .14);
+    }
+
+    .mountains {
+      position: absolute;
+      inset: auto 0 0;
+      height: 56%;
+      background:
+        linear-gradient(145deg, transparent 42%, #0b1a22 43% 58%, transparent 59%) 0 0 / 42% 100%,
+        linear-gradient(215deg, transparent 45%, #0a1b24 46% 65%, transparent 66%) 60% 0 / 55% 100%;
+      opacity: .76;
+    }
+
+    .rain {
+      position: absolute;
+      inset: -25%;
+      z-index: 8;
+      pointer-events: none;
+      opacity: .38;
+      background-image: repeating-linear-gradient(112deg, transparent 0 22px, rgba(185, 225, 235, .75) 23px 24px, transparent 25px 47px);
+      background-size: 64px 78px;
+      animation: rainfall .78s linear infinite;
+      transform: skewX(-5deg);
+      mask-image: linear-gradient(90deg, #000, rgba(0,0,0,.4) 45%, #000);
+    }
+
+    @keyframes rainfall { to { background-position: -42px 78px; } }
+
+    .ground {
+      position: absolute;
+      inset: auto 0 0;
+      height: 20%;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(98, 148, 157, .19), transparent 16%),
+        radial-gradient(ellipse at 74% 50%, rgba(255, 165, 74, .09), transparent 23%),
+        linear-gradient(180deg, #0a1b22, #050d11);
+      border-top: 1px solid rgba(128, 172, 180, .13);
+    }
+
+    .inn {
+      position: absolute;
+      width: min(1120px, 89vw);
+      height: min(600px, calc(100% - 34px));
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+    }
+
+    .roof {
+      position: absolute;
+      width: 82%;
+      height: 85px;
+      left: 9%;
+      top: 3%;
+      background: linear-gradient(180deg, #15191c, #201a19 80%);
+      clip-path: polygon(5% 100%, 12% 28%, 44% 14%, 47% 0, 53% 0, 56% 14%, 88% 28%, 95% 100%);
+      box-shadow: 0 11px 0 rgba(6, 10, 12, .72);
+    }
+
+    .roof::after {
+      content: "";
+      position: absolute;
+      inset: 68% 3% 0;
+      border-top: 2px solid rgba(91, 109, 108, .35);
+    }
+
+    .house {
+      position: absolute;
+      left: 16%;
+      right: 16%;
+      top: 16%;
+      bottom: 4%;
+      border: 1px solid #4d3d32;
+      background:
+        linear-gradient(90deg, transparent 0 48%, rgba(10, 8, 8, .5) 49% 51%, transparent 52%),
+        repeating-linear-gradient(90deg, transparent 0 97px, rgba(87, 58, 42, .2) 98px 100px),
+        linear-gradient(180deg, #2a211c, #181311);
+      box-shadow: 0 28px 50px rgba(0, 0, 0, .5);
+    }
+
+    .house::before, .house::after {
+      content: "";
+      position: absolute;
+      top: -10px;
+      bottom: -8px;
+      width: 16px;
+      background: linear-gradient(90deg, #302117, #140e0b);
+      border: 1px solid #503a2b;
+    }
+    .house::before { left: 6%; }
+    .house::after { right: 6%; }
+
+    .sign {
+      position: absolute;
+      top: 9%;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 4;
+      padding: 8px 22px 10px;
+      color: #dec49a;
+      background: #1b130f;
+      border: 1px solid #6a4a2d;
+      box-shadow: 0 7px 14px rgba(0,0,0,.45);
+      letter-spacing: .35em;
+      font-size: 15px;
+    }
+
+    .lantern {
+      position: absolute;
+      top: 18%;
+      width: 31px;
+      height: 47px;
+      border: 2px solid #3a281c;
+      background: radial-gradient(circle, #fff5ac 0, #ffba4d 34%, #a63e22 86%);
+      border-radius: 8px 8px 15px 15px;
+      box-shadow: 0 0 34px 14px rgba(255, 159, 67, .22);
+      z-index: 5;
+      animation: breathe 2.6s ease-in-out infinite alternate;
+    }
+    .lantern.left { left: 30%; }
+    .lantern.right { right: 30%; animation-delay: -1.2s; }
+
+    @keyframes breathe { to { box-shadow: 0 0 44px 18px rgba(255, 159, 67, .34); } }
+
+    .rooms {
+      position: absolute;
+      left: 19%;
+      right: 19%;
+      top: 27%;
+      bottom: 10%;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .traveler {
+      position: relative;
+      min-width: 0;
+      background: linear-gradient(180deg, rgba(9, 27, 37, .84), rgba(7, 17, 23, .96));
+      border: 1px solid rgba(128, 175, 188, .28);
+      color: var(--ink);
+      cursor: pointer;
+      padding: 0;
+      border-radius: 3px 3px 12px 12px;
+      overflow: hidden;
+      transition: transform .22s ease, border-color .22s ease, box-shadow .3s ease;
+      text-align: left;
+    }
+
+    .traveler:hover:not(:disabled), .traveler:focus-visible {
+      transform: translateY(-5px);
+      border-color: var(--warm);
+      box-shadow: 0 0 0 1px rgba(255, 197, 110, .2), 0 18px 32px rgba(0, 0, 0, .35);
+      outline: none;
+    }
+
+    .traveler:disabled { cursor: default; }
+
+    .traveler.lit {
+      background: linear-gradient(180deg, rgba(82, 53, 27, .82), rgba(30, 20, 16, .96));
+      border-color: rgba(255, 197, 110, .68);
+      box-shadow: inset 0 0 48px rgba(255, 166, 75, .12), 0 0 40px rgba(255, 147, 59, .13);
+    }
+
+    .window {
+      position: relative;
+      height: 67%;
+      display: grid;
+      place-items: end center;
+      border-bottom: 3px solid #33271f;
+      background:
+        linear-gradient(90deg, transparent 49%, rgba(75, 98, 101, .35) 50% 51%, transparent 52%),
+        linear-gradient(180deg, transparent 48%, rgba(75, 98, 101, .27) 49% 51%, transparent 52%);
+    }
+
+    .lit .window {
+      background:
+        linear-gradient(90deg, transparent 49%, rgba(72, 47, 24, .4) 50% 51%, transparent 52%),
+        linear-gradient(180deg, transparent 48%, rgba(72, 47, 24, .35) 49% 51%, transparent 52%),
+        radial-gradient(circle at 50% 75%, rgba(255, 204, 106, .54), rgba(120, 68, 28, .18) 44%, transparent 73%);
+    }
+
+    .portrait {
+      height: 95%;
+      width: 86%;
+      filter: drop-shadow(0 8px 8px rgba(0,0,0,.32));
+      transition: filter .3s ease, transform .3s ease;
+    }
+
+    .lit .portrait {
+      filter: drop-shadow(0 8px 10px rgba(0,0,0,.36)) sepia(.18) brightness(1.16);
+      transform: translateY(-2px);
+    }
+
+    .traveler-info { padding: 12px 14px 13px; }
+
+    .name-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: baseline;
+      margin-bottom: 5px;
+    }
+
+    .name { color: #f1e8d7; letter-spacing: .16em; font-size: 16px; }
+    .role { font-size: 10px; color: #84a9b5; letter-spacing: .12em; }
+    .cost { color: var(--warm); font: 600 12px/1 ui-monospace, monospace; white-space: nowrap; }
+    .traveler p { margin: 0; color: #9bb0b5; font-size: 12px; line-height: 1.45; }
+
+    .choice-key {
+      position: absolute;
+      right: 9px;
+      top: 8px;
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(209, 230, 230, .25);
+      border-radius: 50%;
+      background: rgba(4, 13, 18, .58);
+      color: #b8d1d6;
+      font: 10px/1 ui-monospace, monospace;
+      z-index: 3;
+    }
+
+    .mist {
+      position: absolute;
+      z-index: 7;
+      pointer-events: none;
+      inset: auto -10% -4% -10%;
+      height: 30%;
+      background:
+        radial-gradient(ellipse at 22% 80%, rgba(113, 156, 164, .12), transparent 55%),
+        radial-gradient(ellipse at 72% 100%, rgba(128, 164, 170, .11), transparent 52%);
+      filter: blur(9px);
+      animation: drift 8s ease-in-out infinite alternate;
+    }
+    @keyframes drift { to { transform: translateX(5%); } }
+
+    .storybar {
+      min-height: 154px;
+      z-index: 14;
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(220px, .62fr) minmax(380px, 1.5fr) minmax(220px, .62fr);
+      gap: 24px;
+      align-items: center;
+      padding: 18px 34px;
+      background:
+        linear-gradient(180deg, rgba(17, 13, 12, .97), rgba(7, 10, 12, .99)),
+        repeating-linear-gradient(90deg, transparent 0 110px, rgba(255,255,255,.02) 111px);
+      border-top: 1px solid rgba(244, 213, 154, .22);
+      box-shadow: 0 -24px 60px rgba(0,0,0,.35);
+    }
+
+    .chapter { align-self: center; }
+    .chapter-index { color: var(--ember); font: 11px/1 ui-monospace, monospace; letter-spacing: .16em; }
+    .chapter h2 { margin: 8px 0 0; font-size: 23px; font-weight: 500; letter-spacing: .12em; }
+
+    .prompt {
+      margin: 0;
+      max-width: 710px;
+      font-size: clamp(14px, 1.4vw, 18px);
+      line-height: 1.8;
+      color: #d5cfc2;
+    }
+
+    .prompt strong { color: var(--gold); font-weight: 500; }
+
+    .continue-wrap { justify-self: end; text-align: right; }
+
+    .continue-btn, .restart-btn {
+      min-width: 150px;
+      min-height: 46px;
+      border: 1px solid rgba(255, 197, 110, .66);
+      border-radius: 2px;
+      color: #1a120b;
+      background: linear-gradient(180deg, #f7d79c, #d99d55);
+      padding: 10px 18px;
+      cursor: pointer;
+      letter-spacing: .12em;
+      box-shadow: 0 8px 24px rgba(0,0,0,.3);
+    }
+
+    .continue-btn:hover, .restart-btn:hover { filter: brightness(1.08); }
+    .hint { color: #71888f; font: 10px/1.5 ui-monospace, monospace; margin-top: 8px; }
+    .hidden { display: none !important; }
+
+    .ending {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: grid;
+      place-items: center;
+      background: rgba(3, 9, 13, .77);
+      backdrop-filter: blur(10px);
+      padding: 24px;
+    }
+
+    .ending-card {
+      width: min(690px, 92vw);
+      border: 1px solid rgba(255, 197, 110, .52);
+      background:
+        radial-gradient(circle at 50% 0, rgba(255, 190, 93, .13), transparent 36%),
+        linear-gradient(180deg, #182028, #0b1117);
+      box-shadow: 0 28px 100px rgba(0,0,0,.68), inset 0 0 70px rgba(255, 176, 72, .05);
+      padding: 40px 46px 34px;
+      text-align: center;
+      position: relative;
+    }
+
+    .ending-card::before {
+      content: "终 · 局";
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 7px 19px;
+      background: #101820;
+      border: 1px solid rgba(255, 197, 110, .52);
+      color: var(--warm);
+      font: 10px/1 ui-monospace, monospace;
+      letter-spacing: .3em;
+    }
+
+    .ending-flame {
+      margin: 2px auto 22px;
+      width: 38px;
+      height: 50px;
+      border-radius: 60% 40% 58% 42% / 75% 72% 28% 25%;
+      background: radial-gradient(circle at 55% 60%, #fff7b5, #f6b550 48%, #b83b27 80%);
+      filter: drop-shadow(0 0 22px rgba(255, 176, 72, .65));
+    }
+
+    .ending h2 { margin: 0; color: #f4e6c8; font-size: clamp(30px, 4vw, 45px); font-weight: 500; letter-spacing: .18em; }
+    .ending-copy { color: #bdc8c7; font-size: 16px; line-height: 1.9; margin: 18px auto 25px; max-width: 560px; }
+
+    .ending-ledger {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 0 0 26px;
+      flex-wrap: wrap;
+    }
+
+    .ending-ledger span {
+      border: 1px solid rgba(139, 177, 183, .24);
+      padding: 7px 12px;
+      color: #96b1b6;
+      font: 11px/1 ui-monospace, monospace;
+      background: rgba(4, 10, 14, .35);
+    }
+
+    .flash {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 25;
+      background: rgba(203, 231, 236, .36);
+      animation: flash .5s ease-out forwards;
+    }
+    @keyframes flash { to { opacity: 0; } }
+
+    @media (max-width: 760px) {
+      .topbar { height: 86px; padding: 12px 16px; grid-template-columns: 1fr auto; }
+      .brand .seal, .eyebrow, .nights { display: none; }
+      h1 { font-size: 20px; }
+      .inn { width: 110vw; height: calc(100% - 10px); }
+      .rooms { left: 10%; right: 10%; gap: 7px; }
+      .traveler-info { padding: 8px; }
+      .name { font-size: 13px; }
+      .role, .traveler p { display: none; }
+      .cost { font-size: 10px; }
+      .storybar { min-height: 164px; grid-template-columns: 1fr auto; padding: 14px 16px; gap: 10px; }
+      .chapter { display: none; }
+      .prompt { font-size: 13px; line-height: 1.55; }
+      .continue-btn { min-width: 110px; padding: 8px 10px; font-size: 12px; }
+      .hint { display: none; }
+      .ending-card { padding: 36px 22px 28px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
+    }
+  </style>
+</head>
+<body data-night="1" data-flame="9" data-ending="">
+  <main class="game" aria-live="polite">
+    <header class="topbar">
+      <div class="brand">
+        <div class="seal" aria-hidden="true">灯</div>
+        <div>
+          <p class="eyebrow">The Lantern Keeper · A three-night tale</p>
+          <h1>雨夜客栈：守灯人</h1>
+        </div>
+      </div>
+      <nav class="nights" aria-label="夜晚进度">
+        <span class="night-step active" data-step="1">壹</span>
+        <span class="night-step" data-step="2">贰</span>
+        <span class="night-step" data-step="3">叁</span>
+      </nav>
+      <div class="lamp-bank" aria-label="剩余灯火">
+        <span class="lamp-label">灯火余量</span><span class="flame-value" id="flame-value">9 / 9</span>
+        <div class="flames" id="flames" aria-hidden="true"></div>
+      </div>
+    </header>
+
+    <section class="stage" aria-label="暴雨中的归雁客栈，三名旅客在窗前等待灯火">
+      <div class="sky"></div>
+      <div class="moon"></div>
+      <div class="mountains"></div>
+      <div class="ground"></div>
+      <div class="inn" aria-hidden="true">
+        <div class="roof"></div>
+        <div class="house"></div>
+        <div class="sign">归雁客栈</div>
+        <div class="lantern left"></div>
+        <div class="lantern right"></div>
+      </div>
+
+      <div class="rooms" id="traveler-list">
+        <button class="traveler" data-id="healer" data-index="0" aria-label="把灯火分给采药人桑婆">
+          <span class="choice-key">1</span>
+          <div class="window">
+            <svg class="portrait" viewBox="0 0 190 210" role="img" aria-label="戴红围巾、背药篓的年长采药人桑婆">
+              <ellipse cx="95" cy="202" rx="66" ry="10" fill="#061015" opacity=".65"/>
+              <path d="M29 196q8-61 37-73h57q31 20 38 73z" fill="#293e3c"/>
+              <path d="M42 192q12-43 28-59l25 50 26-51q20 18 27 60z" fill="#34504b"/>
+              <path d="M58 131l37 53 37-54-15-11H73z" fill="#9f3f37"/>
+              <path d="M72 116q-5-23 2-42 8-22 28-19 28 5 22 37-3 24-18 35-19 10-34-11z" fill="#a98874"/>
+              <path d="M70 92q-10-41 27-48 32-2 33 36-13-12-21-20-17 17-39 20z" fill="#d0c4b5"/>
+              <path d="M70 81q6-34 30-35 26 3 30 34l-12-14-9-7-18 13z" fill="#3c3a3b"/>
+              <path d="M81 95q7 4 13 0M107 95q6 4 11-1" stroke="#2a2525" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <path d="M94 112q9 5 17-1" stroke="#594036" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              <path d="M31 127q-15 27-6 65h28l3-62z" fill="#47372b" stroke="#72543c" stroke-width="2"/>
+              <path d="M28 136h25M25 154h29M24 174h31" stroke="#7b5c43" stroke-width="2"/>
+              <g fill="#a7b671"><path d="M39 125q-8-18-1-27 13 15 1 27z"/><path d="M45 128q1-20 12-25 5 20-12 25z"/></g>
+            </svg>
+          </div>
+          <div class="traveler-info">
+            <div class="name-row"><span><span class="name">桑婆</span> <span class="role">采药人</span></span><span class="cost">耗 <b>2</b> 火</span></div>
+            <p>药篓浸透，却护着一包退热草。</p>
+          </div>
+        </button>
+
+        <button class="traveler" data-id="guard" data-index="1" aria-label="把灯火分给负伤戍卒陆七">
+          <span class="choice-key">2</span>
+          <div class="window">
+            <svg class="portrait" viewBox="0 0 190 210" role="img" aria-label="肩甲破损、额缠绷带的年轻戍卒陆七">
+              <ellipse cx="95" cy="202" rx="64" ry="10" fill="#061015" opacity=".65"/>
+              <path d="M28 198q8-58 42-76h49q34 18 43 76z" fill="#344453"/>
+              <path d="M50 187l14-54 30 20 28-21 21 55z" fill="#41586a"/>
+              <path d="M49 136l-20 8-13 42 38 3zM133 134l29 11 12 41-34 3z" fill="#536878" stroke="#6e7d87" stroke-width="3"/>
+              <path d="M74 124v17l20 12 22-13-1-21z" fill="#a97861"/>
+              <path d="M69 78q4-29 30-31 30 1 32 31l-8 38-26 17-23-15z" fill="#b47e66"/>
+              <path d="M67 80q-1-39 35-41 26 2 32 29l-15-12-20-6-19 18z" fill="#242b32"/>
+              <path d="M69 68l61 9-3 15-59-9z" fill="#d5c7b4"/>
+              <path d="M76 72l52 8" stroke="#9f3f37" stroke-width="4"/>
+              <path d="M79 99q7 4 13 0M107 99q7 4 13-1" stroke="#2a2525" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <path d="M93 118q9 5 18-1" stroke="#603a30" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              <path d="M119 132l17 64M69 134l-15 63" stroke="#b98d57" stroke-width="4"/>
+              <path d="M91 160h11v29H91z" fill="#a28a57"/><circle cx="96.5" cy="159" r="9" fill="#c3a76d"/>
+            </svg>
+          </div>
+          <div class="traveler-info">
+            <div class="name-row"><span><span class="name">陆七</span> <span class="role">负伤戍卒</span></span><span class="cost">耗 <b>3</b> 火</span></div>
+            <p>肩甲开裂，仍把短刀横在门前。</p>
+          </div>
+        </button>
+
+        <button class="traveler" data-id="child" data-index="2" aria-label="把灯火分给抱鸟笼的阿棠">
+          <span class="choice-key">3</span>
+          <div class="window">
+            <svg class="portrait" viewBox="0 0 190 210" role="img" aria-label="穿黄蓑衣、怀抱鸟笼的小旅客阿棠">
+              <ellipse cx="95" cy="202" rx="63" ry="10" fill="#061015" opacity=".65"/>
+              <path d="M38 198q5-57 40-76h36q32 22 39 76z" fill="#806b37"/>
+              <path d="M49 191l25-62 23 31 23-31 23 62z" fill="#a48842"/>
+              <path d="M74 120v17l22 18 21-19-2-21z" fill="#bc8d6d"/>
+              <path d="M67 74q8-27 31-27 29 1 31 31l-8 38-25 16-23-15z" fill="#c39170"/>
+              <path d="M65 80q-5-38 31-42 34 4 36 41l-16-15-17-14-20 17z" fill="#1e282d"/>
+              <path d="M61 80q7-35 35-41 30 6 38 41l-17-6-22-21-18 20z" fill="#bd943f"/>
+              <path d="M60 81h75" stroke="#dbc270" stroke-width="6"/>
+              <circle cx="84" cy="97" r="3" fill="#292322"/><circle cx="112" cy="97" r="3" fill="#292322"/>
+              <path d="M91 116q8 4 15 0" stroke="#6c4134" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              <path d="M110 144q31 4 32 48h-58q1-43 26-48z" fill="none" stroke="#5b4931" stroke-width="4"/>
+              <path d="M86 158h55M84 174h58M99 146v47M116 145v48M132 151v42" stroke="#765d35" stroke-width="2"/>
+              <path d="M103 174q6-10 14 0-1 7-7 7-6 0-7-7z" fill="#73a6ad"/>
+              <path d="M109 170q3-7 8-4" stroke="#aacacb" stroke-width="2" fill="none"/>
+            </svg>
+          </div>
+          <div class="traveler-info">
+            <div class="name-row"><span><span class="name">阿棠</span> <span class="role">寻亲小客</span></span><span class="cost">耗 <b>1</b> 火</span></div>
+            <p>怀里的空鸟笼，偶尔传出轻响。</p>
+          </div>
+        </button>
+      </div>
+
+      <div class="rain"></div>
+      <div class="mist"></div>
+    </section>
+
+    <footer class="storybar">
+      <div class="chapter">
+        <div class="chapter-index" id="chapter-index">NIGHT 01 / 03</div>
+        <h2 id="chapter-title">檐下来客</h2>
+      </div>
+      <p class="prompt" id="prompt">暴雨封山，灯油只够撑过三夜。<strong>今夜只能为一间客房添灯</strong>——你把温暖留给谁？</p>
+      <div class="continue-wrap">
+        <button class="continue-btn hidden" id="continue-btn">迎接下一夜</button>
+        <div class="hint" id="hint">点击旅客 · 或按 1 / 2 / 3</div>
+      </div>
+    </footer>
+  </main>
+
+  <section class="ending hidden" id="ending" role="dialog" aria-modal="true" aria-labelledby="ending-title">
+    <div class="ending-card">
+      <div class="ending-flame" aria-hidden="true"></div>
+      <p class="eyebrow">DAWN ARRIVES · YOUR CHOICES REMAIN</p>
+      <h2 id="ending-title">众灯成家</h2>
+      <p class="ending-copy" id="ending-copy"></p>
+      <div class="ending-ledger" id="ending-ledger"></div>
+      <button class="restart-btn" id="restart-btn">再守三夜</button>
+    </div>
+  </section>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const travelers = {
+        healer: {
+          name: "桑婆",
+          costs: [2, 3, 2],
+          consequences: [
+            "桑婆烘干退热草，替发烧的店小二熬下一碗药。",
+            "药香漫过长廊。她认出雨水里混着山洪将至的泥腥。",
+            "桑婆点亮药炉，把余下的草种分给了客栈。"
+          ]
+        },
+        guard: {
+          name: "陆七",
+          costs: [3, 2, 3],
+          consequences: [
+            "陆七借光缝好肩甲，当夜替你顶住被风撞开的门。",
+            "他在灯下摊开旧地图，圈出一条避开山洪的小路。",
+            "陆七守到天明，刀未出鞘，却让劫道者绕过了客栈。"
+          ]
+        },
+        child: {
+          name: "阿棠",
+          costs: [1, 2, 1],
+          consequences: [
+            "阿棠靠近灯芯，笼中那只冻僵的青鸟终于动了动。",
+            "青鸟在暖光里啼叫，竟引来檐下另一只衔信的鸟。",
+            "阿棠拆开鸟脚上的信：失散的家人正在山那头等她。"
+          ]
+        }
+      };
+
+      const chapters = [
+        { index: "NIGHT 01 / 03", title: "檐下来客", prompt: "暴雨封山，灯油只够撑过三夜。<strong>今夜只能为一间客房添灯</strong>——你把温暖留给谁？" },
+        { index: "NIGHT 02 / 03", title: "水漫石阶", prompt: "河声近了，风也更冷。昨夜的选择已改变客栈，<strong>今夜仍只能点亮一扇窗</strong>。" },
+        { index: "NIGHT 03 / 03", title: "黎明之前", prompt: "灯油见底，天边仍黑。最后一夜，<strong>你的这一盏灯会决定所有人的去路</strong>。" }
+      ];
+
+      const initialState = () => ({
+        night: 1,
+        flame: 9,
+        allocations: { healer: 0, guard: 0, child: 0 },
+        choices: [],
+        awaitingContinue: false,
+        ending: ""
+      });
+
+      let state = initialState();
+      const body = document.body;
+      const travelerButtons = [...document.querySelectorAll(".traveler")];
+      const flamesEl = document.getElementById("flames");
+      const flameValue = document.getElementById("flame-value");
+      const prompt = document.getElementById("prompt");
+      const chapterIndex = document.getElementById("chapter-index");
+      const chapterTitle = document.getElementById("chapter-title");
+      const continueBtn = document.getElementById("continue-btn");
+      const hint = document.getElementById("hint");
+      const ending = document.getElementById("ending");
+
+      function playChime(id) {
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          const ctx = new AudioCtx();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const base = id === "child" ? 420 : id === "healer" ? 310 : 240;
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(base, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(base * 1.45, ctx.currentTime + .28);
+          gain.gain.setValueAtTime(.0001, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(.055, ctx.currentTime + .03);
+          gain.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime + .42);
+          osc.connect(gain).connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + .45);
+          setTimeout(() => ctx.close(), 700);
+        } catch (_) {}
+      }
+
+      function renderFlames() {
+        flamesEl.innerHTML = "";
+        for (let i = 0; i < 9; i++) {
+          const flame = document.createElement("span");
+          flame.className = "flame" + (i >= state.flame ? " spent" : "");
+          flamesEl.appendChild(flame);
+        }
+        flameValue.textContent = `${state.flame} / 9`;
+      }
+
+      function render() {
+        body.dataset.night = String(state.night);
+        body.dataset.flame = String(state.flame);
+        body.dataset.ending = state.ending;
+        renderFlames();
+
+        document.querySelectorAll(".night-step").forEach((step) => {
+          const n = Number(step.dataset.step);
+          step.classList.toggle("done", n < state.night || Boolean(state.ending));
+          step.classList.toggle("active", n === state.night && !state.ending);
+        });
+
+        const chapter = chapters[Math.min(state.night - 1, 2)];
+        chapterIndex.textContent = chapter.index;
+        chapterTitle.textContent = chapter.title;
+
+        travelerButtons.forEach((button) => {
+          const id = button.dataset.id;
+          const cost = travelers[id].costs[Math.min(state.night - 1, 2)];
+          button.querySelector(".cost b").textContent = cost;
+          button.disabled = state.awaitingContinue || Boolean(state.ending) || cost > state.flame;
+          button.classList.toggle("lit", state.choices.at(-1)?.id === id && state.awaitingContinue);
+          button.setAttribute("aria-label", `把 ${cost} 格灯火分给${travelers[id].name}`);
+        });
+
+        if (!state.awaitingContinue && !state.ending) {
+          prompt.innerHTML = chapter.prompt;
+          continueBtn.classList.add("hidden");
+          hint.textContent = "点击旅客 · 或按 1 / 2 / 3";
+        }
+
+        window.__RAIN_INN_STATE__ = JSON.parse(JSON.stringify(state));
+      }
+
+      function makeChoice(id) {
+        if (state.awaitingContinue || state.ending) return;
+        const traveler = travelers[id];
+        const nightIndex = state.night - 1;
+        const cost = traveler.costs[nightIndex];
+        if (cost > state.flame) return;
+
+        state.flame -= cost;
+        state.allocations[id] += 1;
+        state.choices.push({ night: state.night, id, name: traveler.name, cost, flameAfter: state.flame });
+        state.awaitingContinue = true;
+        playChime(id);
+
+        prompt.innerHTML = `<strong>${traveler.name}的窗亮了。</strong>${traveler.consequences[nightIndex]} 灯火 ${state.flame + cost} → ${state.flame}。`;
+        hint.textContent = `本夜选择已落定 · ${traveler.name} +1`;
+
+        if (state.night === 3) {
+          continueBtn.classList.add("hidden");
+          travelerButtons.forEach((button) => button.disabled = true);
+          setTimeout(showEnding, 480);
+        } else {
+          continueBtn.textContent = `迎接第${state.night + 1}夜`;
+          continueBtn.classList.remove("hidden");
+        }
+        render();
+      }
+
+      function nextNight() {
+        if (!state.awaitingContinue || state.night >= 3) return;
+        state.night += 1;
+        state.awaitingContinue = false;
+        render();
+      }
+
+      function resolveEnding() {
+        const counts = state.allocations;
+        const distinct = Object.values(counts).filter(Boolean).length;
+
+        if (distinct === 3) {
+          return {
+            id: "shared-dawn",
+            title: "众灯成家",
+            copy: "三扇窗先后亮过。桑婆辨水势，陆七引众人走旧道，阿棠的青鸟飞在最前。黎明时，回望雨幕，归雁客栈没有谁被留在黑里。"
+          };
+        }
+        if (counts.healer >= 2) {
+          return {
+            id: "herbal-hearth",
+            title: "百草回春",
+            copy: "药炉守住了整夜的暖。洪水退后，桑婆没有离开；她在客栈门前种下药圃，从此每个淋雨的来客都能喝到一碗热汤。"
+          };
+        }
+        if (counts.guard >= 2) {
+          return {
+            id: "oath-at-gate",
+            title: "守门之誓",
+            copy: "灯照着旧地图，也照亮陆七的决定。黎明前他护送众人穿过险道，后来又回到门前——归雁客栈从此有了第二位守灯人。"
+          };
+        }
+        return {
+          id: "bird-guides-home",
+          title: "青鸟归巢",
+          copy: "最轻的一盏灯，照出最远的路。青鸟带阿棠越过雨山，也把她平安抵达的信衔回客栈。每逢雨夜，檐下总有鸟鸣报平安。"
+        };
+      }
+
+      function showEnding() {
+        const result = resolveEnding();
+        state.ending = result.id;
+        body.dataset.ending = result.id;
+        document.getElementById("ending-title").textContent = result.title;
+        document.getElementById("ending-copy").textContent = result.copy;
+        document.getElementById("ending-ledger").innerHTML = [
+          `桑婆 × ${state.allocations.healer}`,
+          `陆七 × ${state.allocations.guard}`,
+          `阿棠 × ${state.allocations.child}`,
+          `余火 ${state.flame} / 9`
+        ].map((item) => `<span>${item}</span>`).join("");
+        ending.classList.remove("hidden");
+        render();
+        document.getElementById("restart-btn").focus();
+      }
+
+      function restart() {
+        state = initialState();
+        ending.classList.add("hidden");
+        prompt.innerHTML = chapters[0].prompt;
+        travelerButtons.forEach((button) => button.classList.remove("lit"));
+        render();
+        travelerButtons[0].focus();
+      }
+
+      travelerButtons.forEach((button) => button.addEventListener("click", () => makeChoice(button.dataset.id)));
+      continueBtn.addEventListener("click", nextNight);
+      document.getElementById("restart-btn").addEventListener("click", restart);
+
+      document.addEventListener("keydown", (event) => {
+        if (state.ending && (event.key === "r" || event.key === "R")) restart();
+        if (event.key === "Enter" && state.awaitingContinue && state.night < 3) nextNight();
+        const index = Number(event.key) - 1;
+        if (index >= 0 && index < travelerButtons.length) travelerButtons[index].click();
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

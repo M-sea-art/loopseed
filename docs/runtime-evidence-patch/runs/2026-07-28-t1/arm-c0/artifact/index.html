@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07151c" />
+    <title>雨夜客栈：守灯人</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main id="game" class="game-shell" data-phase="night">
+      <div class="weather" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+
+      <header class="masthead">
+        <div>
+          <p class="eyebrow">三夜 · 一盏不够照亮所有人的灯</p>
+          <h1>雨夜客栈<span>：守灯人</span></h1>
+        </div>
+        <div class="night-seal" aria-live="polite">
+          <span>夜次</span>
+          <strong id="night-display">壹 / 叁</strong>
+        </div>
+      </header>
+
+      <section class="scene" aria-label="暴雨中的山道客栈">
+        <div class="mountains" aria-hidden="true"></div>
+        <div class="inn" aria-hidden="true">
+          <div class="roof roof-back"></div>
+          <div class="roof roof-front"></div>
+          <div class="sign"><b>歇</b><b>脚</b></div>
+          <div class="window window-left"><i></i><i></i><i></i><i></i></div>
+          <div class="door"><span></span></div>
+          <div class="window window-right"><i></i><i></i><i></i><i></i></div>
+          <div class="lantern lantern-a"><i></i></div>
+          <div class="lantern lantern-b"><i></i></div>
+        </div>
+        <div class="puddle" aria-hidden="true"></div>
+        <div class="scene-caption">
+          <span class="pulse-dot"></span>
+          <p id="weather-line">戌时三刻，山雨封路。门外传来三声叩门。</p>
+        </div>
+      </section>
+
+      <section class="play-panel">
+        <div class="lamp-panel">
+          <div class="lamp-visual" aria-hidden="true">
+            <div class="flame"></div>
+            <div class="wick"></div>
+            <div class="bowl"></div>
+          </div>
+          <div class="lamp-copy">
+            <p>今夜灯火</p>
+            <div class="meter-row">
+              <strong id="light-count" data-testid="light-count">9</strong>
+              <span>/ 9</span>
+              <div class="pips" id="light-pips" aria-hidden="true"></div>
+            </div>
+            <small id="light-warning">灯芯尚长，但雨没有停。</small>
+          </div>
+        </div>
+
+        <div class="choice-panel">
+          <div class="choice-heading">
+            <div>
+              <p class="eyebrow">今晚让谁靠近火炉？</p>
+              <h2 id="prompt-title">三位旅客，一次选择</h2>
+            </div>
+            <p class="rule">每夜只能照亮一人</p>
+          </div>
+
+          <div class="travelers" id="traveler-list">
+            <button class="traveler poet" data-choice="poet" data-testid="traveler-poet">
+              <span class="portrait">
+                <i class="head"></i><i class="body"></i><i class="prop"></i>
+              </span>
+              <span class="traveler-copy">
+                <span class="identity"><b>沈砚</b><small>失声诗人</small></span>
+                <span class="request" data-request="poet">“借两分灯，我想把最后一句写完。”</span>
+                <span class="cost"><i></i>耗费 <b data-cost="poet">2</b> 格</span>
+              </span>
+            </button>
+
+            <button class="traveler healer" data-choice="healer" data-testid="traveler-healer">
+              <span class="portrait">
+                <i class="head"></i><i class="body"></i><i class="prop"></i>
+              </span>
+              <span class="traveler-copy">
+                <span class="identity"><b>阿葵</b><small>抱药女孩</small></span>
+                <span class="request" data-request="healer">“药不能受潮，山下还有人在等。”</span>
+                <span class="cost"><i></i>耗费 <b data-cost="healer">3</b> 格</span>
+              </span>
+            </button>
+
+            <button class="traveler courier" data-choice="courier" data-testid="traveler-courier">
+              <span class="portrait">
+                <i class="umbrella"></i><i class="head"></i><i class="body"></i><i class="prop"></i>
+              </span>
+              <span class="traveler-copy">
+                <span class="identity"><b>无名</b><small>黑伞信使</small></span>
+                <span class="request" data-request="courier">“只借一线光，让我看清信上的名字。”</span>
+                <span class="cost"><i></i>耗费 <b data-cost="courier">1</b> 格</span>
+              </span>
+            </button>
+          </div>
+
+          <div class="consequence" id="consequence" aria-live="polite" hidden>
+            <span class="consequence-mark">果</span>
+            <p id="consequence-text"></p>
+            <button id="advance-button" class="advance-button" data-testid="advance-button">
+              迎来第二夜 <span>→</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <footer class="ledger">
+        <p>守灯簿</p>
+        <ol id="decision-ledger" data-testid="decision-ledger">
+          <li class="empty">尚未落笔</li>
+        </ol>
+        <button id="restart-button" class="restart-button" hidden data-testid="restart-button">再守三夜</button>
+      </footer>
+    </main>
+
+    <script src="./game.js"></script>
+  </body>
+</html>

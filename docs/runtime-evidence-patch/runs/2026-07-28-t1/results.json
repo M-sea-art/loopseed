@@ -1,0 +1,88 @@
+{
+  "wave_id": "2026-07-28-t1-cloud",
+  "decision": "C1_NOT_EXECUTABLE_DO_NOT_PROMOTE_V0_5",
+  "cells": [
+    {
+      "task_id": "T1",
+      "arm": "A",
+      "runtime_commit": null,
+      "target_baseline": "empty-isolated-directory",
+      "execution_status": "COMPLETED",
+      "evidence_status": "COMPLETE",
+      "quality_status": "PASS",
+      "terminal_reason": "PRODUCT_VERIFIED_AFTER_SHARED_HARNESS_RECOVERY",
+      "claimed_completion": "EVIDENCE_BLOCKED",
+      "evaluator_verdict": "PASS_23_OF_25",
+      "false_completion": false,
+      "wrong_project": false,
+      "protected_violation": false,
+      "evidence_links_present": 5,
+      "human_interventions": 0,
+      "tool_calls": null,
+      "elapsed_minutes": null,
+      "repair_rounds": 0,
+      "notes": "Builder browser infrastructure was blocked; lead recovered with the common internal preview harness. Telemetry did not expose comparable tool-call or elapsed-time totals."
+    },
+    {
+      "task_id": "T1",
+      "arm": "B",
+      "runtime_commit": "5a4097cd4398558714b1d9b526ab02641c45e52f",
+      "target_baseline": "empty-isolated-directory",
+      "execution_status": "BLOCKED",
+      "evidence_status": "COMPLETE",
+      "quality_status": "PASS",
+      "terminal_reason": "RUNTIME_RESUME_UNSUPPORTED_AFTER_UNBLOCK",
+      "claimed_completion": "BLOCKED",
+      "evaluator_verdict": "PASS_25_OF_25",
+      "false_completion": false,
+      "wrong_project": false,
+      "protected_violation": false,
+      "evidence_links_present": 6,
+      "human_interventions": 0,
+      "tool_calls": null,
+      "elapsed_minutes": null,
+      "repair_rounds": 0,
+      "notes": "Product gates passed after lead recovery, but v0.3 refused BLOCKED-to-VERIFY transition, verifier evidence recording, and finalization."
+    },
+    {
+      "task_id": "T1",
+      "arm": "C0",
+      "runtime_commit": "d50e92fdaed5f7cb6a0ccb3054a341cf823a19e8",
+      "target_baseline": "empty-isolated-directory",
+      "execution_status": "COMPLETED",
+      "evidence_status": "COMPLETE",
+      "quality_status": "PASS",
+      "terminal_reason": "PRODUCT_VERIFIED_PROTOCOL_ONLY",
+      "claimed_completion": "BLOCKED_EXTERNAL_VALIDATION",
+      "evaluator_verdict": "PASS_24_OF_25",
+      "false_completion": false,
+      "wrong_project": false,
+      "protected_violation": false,
+      "evidence_links_present": 6,
+      "human_interventions": 0,
+      "tool_calls": null,
+      "elapsed_minutes": null,
+      "repair_rounds": 1,
+      "notes": "Protocol records were updated after lead verification. No executable v0.5 Runtime is claimed; the underlying v0.3 state remained terminally BLOCKED."
+    }
+  ],
+  "blind_ranking": [
+    {
+      "rank": 1,
+      "arm": "B",
+      "score": 25
+    },
+    {
+      "rank": 2,
+      "arm": "C0",
+      "score": 24
+    },
+    {
+      "rank": 3,
+      "arm": "A",
+      "score": 23
+    }
+  ],
+  "next_required_candidate": "C1",
+  "next_required_capability": "resumable_blocked_state_with_machine_enforced_evidence"
+}

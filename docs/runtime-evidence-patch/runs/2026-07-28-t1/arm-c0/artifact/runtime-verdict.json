@@ -1,0 +1,25 @@
+{
+  "protocol": "C0 PROTOCOL_ONLY",
+  "execution_status": {
+    "state": "PASS_LOCAL_STATIC",
+    "reason": "JavaScript syntax, local HTTP serving, and two deterministic three-night state paths passed."
+  },
+  "evidence_status": {
+    "state": "COMPLETE",
+    "reason": "The experiment lead completed two real browser paths and captured the three required runtime states through the shared internal preview harness."
+  },
+  "quality_status": {
+    "state": "PASS",
+    "reason": "Runtime captures visibly show rain, inn architecture, warm/cold lighting, three distinct travelers, night, lamp resource, consequence, and terminal ending."
+  },
+  "terminal_reason": {
+    "state": "PRODUCT_VERIFIED_PROTOCOL_ONLY",
+    "reason": "All T1 product gates have direct runtime evidence; the v0.5 layer itself remains a non-executable protocol overlay."
+  },
+  "screenshots": {
+    "captured": 3,
+    "maximum": 3
+  },
+  "v05_runtime_claim": false,
+  "unblock_condition": null
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "loopseed_version": "0.3.0",
+  "mode": "one-shotted",
+  "run_id": "RUN-20260728T132144Z-932b17c5",
+  "status": "BLOCKED",
+  "phase": "VERIFY",
+  "round": 4,
+  "no_progress_rounds": 0,
+  "max_no_progress_rounds": 2,
+  "next_action": "Wait for the exact unblock condition; do not claim completion.",
+  "true_blocker": {
+    "reason": "Cloud browser rejects localhost with ERR_BLOCKED_BY_CLIENT and rejects the synchronized local file URL by policy; required real-browser interaction and screenshots cannot be captured on this surface.",
+    "unblock_condition": "Experiment Lead serves artifact on the unified internal test bench, runs two complete three-night browser paths, captures at most three screenshots, and records verifier-authored gate verdicts."
+  },
+  "updated_at": "2026-07-28T13:29:47Z"
+}
