@@ -1,7 +1,7 @@
-# LOOPSEED One-Shot Calibration Upgrade v0.4.0
+# LOOPSEED One-Shot Gauntlet Integration Patch v0.4.1
 # Task graph executes the compiled shot; it does not reopen product planning.
 
-version: "0.4.0"
+version: "0.4.1"
 
 task_graph:
   preconditions:
@@ -34,6 +34,15 @@ task_graph:
       - tasks_may_not_switch_product_form_or_delivery_target
       - material_strategy_change_requires_recompile_from_existing_user_authority
 
+  decomposition:
+    objective: create_the_smallest_coherent_improvement_units_that_can_be_judged_without_builder_explanation
+    rules:
+      - do_not_split_work_only_because_files_or_directories_differ
+      - preserve_shared_experience_quality_and_runtime_state_when_they_form_one_coupled_concern
+      - use_direct_execution_for_small_self_contained_tasks
+      - use_builder_critic_loops_only_where_quality_or_risk_justifies_them
+      - create_reference_acquisition_or_fixture_work_when_a_required_inspectable_bar_is_missing
+
   task:
     fields:
       - id
@@ -43,12 +52,23 @@ task_graph:
       - evidence
       - dependencies
       - integrity_ref
+      - improvement_unit
+      - independently_judgeable
+      - coupling_group
+    field_rules:
+      improvement_unit: names_one_coherent_product_or_quality_change
+      independently_judgeable: true_only_when_a_fresh_critic_can_inspect_the_output_directly_and_decide_without_builder_history
+      coupling_group: shared_nonempty_value_for_tasks_that_jointly_determine_one_experience_quality_or_runtime_state
     rules:
       - artifact_must_contribute_to_locked_deliverable
       - acceptance_must_contribute_to_target_stage
       - purpose_must_contribute_to_seed_intent_and_product_outcome
       - task_must_not_reinterpret_integrity_ref
       - task_must_not_reopen_calibration_or_delegate_low_level_choices_to_user
+      - independently_judgeable_false_blocks_parallel_builder_fanout
+      - tasks_in_the_same_coupling_group_use_one_sequential_owner_by_default
+      - read_only_investigation_may_parallelize_without_claiming_product_ownership
+      - builder_output_must_include_an_inspectable_artifact_or_runtime_state_not_only_a_summary
 
   blocked_when:
     - calibration_unresolved
@@ -58,8 +78,11 @@ task_graph:
     - forbidden_artifact_substitution
     - unauthorized_material_strategy_switch
     - implicit_stage_downgrade
+    - required_quality_bar_missing
+    - coupled_work_split_without_one_owner
 
   merge:
     owner: primary_executor
     requires_identical_integrity_ref: true
     requires_seed_intent_preservation: true
+    requires_whole_product_review_after_multiple_builders: true
