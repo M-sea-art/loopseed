@@ -1,9 +1,9 @@
-# LOOPSEED One-Shot Calibration Upgrade v0.4.0
+# LOOPSEED One-Shot Gauntlet Integration Patch v0.4.1
 
-version: "0.4.0"
+version: "0.4.1"
 
 critic:
-  purpose: prevent_calibration_drift_aligned_substitution_and_premature_completion
+  purpose: prevent_drift_substitution_premature_completion_and_unexamined_quality_gaps
 
   gate_order:
     - seed_intent_alignment
@@ -11,8 +11,33 @@ critic:
     - artifact_alignment
     - implementation_strategy_alignment
     - stage_alignment
+    - direct_quality_comparison
     - product_quality
     - runtime_verification
+
+  independence:
+    required_for_quality_verdict: true
+    rules:
+      - use_fresh_context_or_an_independent_verifier_session
+      - hide_builder_history_self_justification_and_summary_until_the_initial_verdict
+      - builder_cannot_approve_its_own_quality_gate
+      - critic_may_read_locked_contracts_but_must_not_inherit_builder_confidence
+
+  inspection:
+    required_inputs:
+      - actual_candidate_artifact_or_running_product
+      - relevant_inspectable_bar_when_required
+      - artifact_acceptance
+      - stage_target
+      - named_or_repeatable_verification_state_when_available
+    rules:
+      - inspect_the_actual_output_not_only_source_code_or_builder_report
+      - compare_equivalent_states_tasks_or_conditions
+      - use_blind_side_by_side_comparison_when_feasible
+      - disclose_when_blinding_or_direct_reference_access_is_not_feasible
+      - visual_claims_require_visual_inspection
+      - interaction_claims_require_runtime_or_playtest_inspection
+      - performance_claims_require_measurement_not_impression
 
   alignment_questions:
     - "Did the result preserve and strengthen the original seed intent rather than simplify it into an easier product?"
@@ -24,8 +49,21 @@ critic:
   quality_questions:
     - "Did we satisfy the real user goal and calibrated product outcome?"
     - "Is the core experience or job actually present?"
-    - "What is the largest user-visible weakness?"
-    - "Does the result meet every acceptance item?"
+    - "Compared directly with the inspectable bar, what is the largest material user-visible gap?"
+    - "Is that gap local and independently repairable, or part of a coupled quality surface?"
+    - "Does the result meet every completion-gate acceptance item?"
+
+  output:
+    required:
+      - verdict
+      - direct_evidence
+      - largest_material_gap
+      - coupling_assessment
+      - repair_target_or_pass_reason
+    rules:
+      - prioritize_one_largest_material_gap_per_cycle
+      - do_not_return_aesthetic_encouragement_as_a_verdict
+      - do_not_claim_benchmark_superiority_without_direct_comparison_evidence
 
   calibration_checks:
     - no_second_confirmation_was_required_after_user_answer
@@ -36,19 +74,44 @@ critic:
   evidence_rules:
     - running_without_errors_is_not_visual_acceptance
     - source_files_are_not_completion_evidence
-    - visual_claims_require_visual_inspection
     - stage_claims_require_stage_specific_evidence
     - stack_and_strategy_claims_require_build_or_runtime_evidence
+    - quality_verdict_requires_candidate_and_reference_or_an_explicitly_declared_reference_limit
+
+  north_star_policy:
+    - inspectable_bar_drives_largest_gap_selection
+    - north_star_may_remain_above_the_current_stage_target
+    - north_star_comparison_never_overrides_the_completion_gate
 
   pass_condition:
     - seed_intent_preserved
     - all_alignment_gates_pass
     - all_contract_acceptance_pass
+    - completion_gate_has_stage_specific_evidence
     - no_blocking_evidence_gap
 
 repair:
-  strategy: fix_biggest_contract_gap_first
-  max_cycles: 3
+  strategy: fix_largest_material_gap_first
+
+  loop_control:
+    fixed_round_count_must_not_imply_completion: true
+    continue_when:
+      - completion_gate_not_passed
+      - a_material_repair_path_exists
+      - authorized_budget_remains
+    replan_when:
+      - two_consecutive_cycles_show_no_material_progress
+      - critic_identifies_wrong_decomposition_or_hidden_coupling
+    honest_stop_when:
+      - authorized_budget_exhausted
+      - no_material_improvement_after_root_cause_replan
+      - true_external_blocker
+      - user_requests_stop
+    stop_without_pass:
+      - preserve_best_known_non_regressed_build
+      - record_unmet_gates_and_stop_reason
+      - never_write_complete_or_verified
+
   rules:
     - seed_intent_drift_requires_recompile_from_existing_user_authority
     - integrity_mismatch_requires_rebind_or_recompile
@@ -56,11 +119,16 @@ repair:
     - material_product_or_delivery_change_requires_existing_user_authority_or_block
     - visual_polish_cannot_repair_wrong_project
     - runtime_success_cannot_repair_wrong_artifact
+    - coupled_gap_returns_to_one_sequential_owner
+    - previously_passed_required_gates_must_be_reverified_after_cross_cutting_repairs
     - never_report_complete_after_blocking_gate
 
 failure_codes:
   calibration_drift: BLOCK_SEED_INTENT_DRIFT
   alignment: BLOCK_CRITIC_ALIGNMENT
   strategy_mismatch: BLOCK_IMPLEMENTATION_STRATEGY
+  missing_direct_artifact: BLOCK_CRITIC_ARTIFACT_MISSING
+  missing_quality_bar: BLOCK_CRITIC_QUALITY_BAR_MISSING
+  critic_independence: BLOCK_CRITIC_INDEPENDENCE
   premature_completion: BLOCK_PREMATURE_COMPLETION
   repair_budget_exhausted: BLOCK_REPAIR_BUDGET
