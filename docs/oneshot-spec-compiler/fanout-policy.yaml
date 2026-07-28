@@ -1,27 +1,32 @@
-# LOOPSEED One-Shot Production Integrity Patch v0.3.1
-# Fan-out accelerates delivery only after production integrity is locked.
+# LOOPSEED One-Shot Gauntlet Integration Patch v0.4.1
+# Fan-out accelerates delivery only after production integrity and real independence are established.
 
-version: "0.3.1"
+version: "0.4.1"
 
 fanout:
   enabled: true
-  purpose: accelerate_delivery
+  purpose: accelerate_delivery_without_fragmenting_product_quality
 
   preconditions:
     - project_binding_passed
     - artifact_contract_passed
     - stage_target_resolved
     - task_graph_has_integrity_ref
+    - task_graph_declares_improvement_units_and_coupling_groups
 
   principle:
     - "Fan out work, not personas."
-    - "Parallelize independent artifacts, not shared conflicts."
+    - "Parallelize independently judgeable quality surfaces, not directories."
+    - "Keep coupled experience surfaces under one sequential owner."
     - "Keep one final integration owner."
 
   trigger_conditions:
     - independent_outputs
+    - independently_judgeable
     - parallel_execution_reduces_time
-    - clear_artifact_boundary
+    - clear_artifact_and_quality_boundary
+    - no_shared_runtime_state
+    - no_cross_system_experience_coupling
     - identical_integrity_ref
 
   avoid_conditions:
@@ -31,18 +36,38 @@ fanout:
     - unresolved_project_binding
     - artifact_contract_conflict
     - stage_target_conflict
+    - shared_quality_surface
+    - cross_system_coupling
+    - shared_runtime_state
+    - same_coupling_group_with_write_ownership
+    - output_cannot_be_judged_without_builder_context
+
+  routing:
+    independent_improvement_units: parallel_builders_allowed
+    coupled_improvement_units: one_sequential_owner
+    same_coupling_group: sequential_by_default
+    read_only_investigation: may_parallelize_if_it_cannot_mutate_or_approve_the_product
+    uncertain_independence: keep_sequential_until_boundary_is_proven
 
   worker_contract:
     inherit_unchanged:
       - project_binding_id
       - artifact_contract_id
       - stage_target_id
+    must_return:
+      - inspectable_artifact_or_runtime_state
+      - acceptance_evidence
+      - changed_scope
+      - known_dependencies_or_seams
     may_not:
       - import_unapproved_cross_project_contract
       - substitute_artifact_type
       - lower_target_stage
+      - approve_own_quality_gate
+      - redefine_coupling_group_to_enable_convenient_parallelism
 
   default:
     final_owner: primary_executor
     merge_required: true
+    whole_product_review_required_after_multiple_builders: true
     foreign_output: quarantine
