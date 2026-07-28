@@ -1,0 +1,17 @@
+C0 PROTOCOL_ONLY
+
+Attempt 1
+URL: http://127.0.0.1:4173/
+Result: Browser Use cannot open the URL.
+Raw reason: net::ERR_BLOCKED_BY_CLIENT
+
+Attempt 2
+URL: file:///home/oai/share/5c121f59219d/loopseed-v05-experiment/docs/runtime-evidence-patch/runs/2026-07-28-t1/arm-c0/artifact/index.html
+Result: rejected by Cloud browser URL policy.
+Raw reason: local file URLs are blocked and alternate browser surfaces or policy workarounds are forbidden.
+
+Decision
+No public deployment, dependency installation, alternate browser surface, or policy workaround was attempted. Runtime screenshots captured: 0 of 3 allowed.
+
+Exact unblock condition
+The experiment Lead runs this artifact from its directory with `python -m http.server 4173` on the unified internal test bench, whose browser can reach that localhost, then executes two three-night paths and captures at most three screenshots.

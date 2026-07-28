@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "loopseed_version": "0.3.0",
+  "mode": "one-shotted",
+  "run_id": "RUN-20260728T130932Z-07fe63d2",
+  "status": "BLOCKED",
+  "phase": "VERIFY",
+  "round": 4,
+  "no_progress_rounds": 0,
+  "max_no_progress_rounds": 2,
+  "next_action": "Wait for the exact unblock condition; do not claim completion.",
+  "true_blocker": {
+    "reason": "实际浏览器 LOOP 与 VISUAL 门禁缺少可访问本地 localhost/file 的统一内部测试台；当前通用云浏览器分别返回 net::ERR_BLOCKED_BY_CLIENT 与 URL policy block，且策略禁止替代浏览器绕过。",
+    "unblock_condition": "实验 Lead 在冻结后的统一内部测试台启动 artifact 本地静态服务器，按 runtime-evidence.md 完成三夜点击流并保存最多三张运行截图，由 runtime-verifier 为 LOOP 与 VISUAL 记录 PASS/FAIL。"
+  },
+  "updated_at": "2026-07-28T13:16:59Z"
+}

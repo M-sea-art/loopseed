@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="雨夜客栈：守灯人——在三个雨夜里分配仅有的灯火，为旅客选择一条回到黎明的路。"
+    />
+    <title>雨夜客栈：守灯人</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main id="game" aria-label="雨夜客栈：守灯人">
+      <section class="world" aria-label="雨夜客栈场景">
+        <svg
+          class="scene"
+          viewBox="0 0 1280 720"
+          role="img"
+          aria-labelledby="scene-title scene-desc"
+          preserveAspectRatio="xMidYMid slice"
+        >
+          <title id="scene-title">暴雨中的山间客栈</title>
+          <desc id="scene-desc">
+            冷蓝色暴雨包围着一座木造客栈，屋内三盏暖灯照着红披风信使、蓝帽小旅客和背琴老人。
+          </desc>
+          <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#07131f" />
+              <stop offset="0.55" stop-color="#10283a" />
+              <stop offset="1" stop-color="#071017" />
+            </linearGradient>
+            <linearGradient id="floor" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#1b1715" />
+              <stop offset="0.5" stop-color="#3a251b" />
+              <stop offset="1" stop-color="#191513" />
+            </linearGradient>
+            <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#433125" />
+              <stop offset="1" stop-color="#211915" />
+            </linearGradient>
+            <radialGradient id="warm-glow">
+              <stop offset="0" stop-color="#ffd67a" stop-opacity="0.78" />
+              <stop offset="0.35" stop-color="#f49b45" stop-opacity="0.24" />
+              <stop offset="1" stop-color="#f49b45" stop-opacity="0" />
+            </radialGradient>
+            <linearGradient id="wet-road" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#1a3443" />
+              <stop offset="1" stop-color="#081018" />
+            </linearGradient>
+            <filter id="blur12">
+              <feGaussianBlur stdDeviation="12" />
+            </filter>
+            <filter id="blur28">
+              <feGaussianBlur stdDeviation="28" />
+            </filter>
+            <filter id="shadow">
+              <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000" flood-opacity="0.45" />
+            </filter>
+            <pattern id="rain" width="52" height="52" patternUnits="userSpaceOnUse" patternTransform="rotate(14)">
+              <line x1="7" y1="-8" x2="7" y2="25" stroke="#b8d7e6" stroke-width="2" stroke-linecap="round" opacity="0.48" />
+              <line x1="29" y1="8" x2="29" y2="50" stroke="#7ea8bc" stroke-width="1.4" stroke-linecap="round" opacity="0.32" />
+              <line x1="46" y1="-18" x2="46" y2="12" stroke="#d9eef8" stroke-width="1.3" stroke-linecap="round" opacity="0.34" />
+            </pattern>
+            <clipPath id="window-clip">
+              <rect x="128" y="268" width="270" height="230" rx="4" />
+            </clipPath>
+          </defs>
+
+          <rect width="1280" height="720" fill="url(#sky)" />
+          <circle cx="160" cy="96" r="70" fill="#b6d0dc" opacity="0.13" filter="url(#blur12)" />
+          <path d="M0 232 Q170 104 344 244 T706 228 T1018 206 T1280 190 V720 H0Z" fill="#09131a" opacity="0.9" />
+          <path d="M0 394 Q250 322 420 406 T804 364 T1280 350 V720 H0Z" fill="#0a171f" />
+          <rect x="0" y="385" width="1280" height="335" fill="url(#wet-road)" />
+          <path d="M0 570 Q320 520 635 589 T1280 550" fill="none" stroke="#6d97aa" stroke-width="5" opacity="0.17" />
+          <path d="M0 627 Q320 588 658 643 T1280 610" fill="none" stroke="#9fc2d0" stroke-width="2" opacity="0.13" />
+
+          <g class="inn" filter="url(#shadow)">
+            <path d="M86 248 L180 165 H1062 L1208 253 Z" fill="#171313" stroke="#5b4130" stroke-width="8" />
+            <path d="M118 248 H1170 V662 H118 Z" fill="url(#wall)" stroke="#111" stroke-width="8" />
+            <path d="M118 517 H1170 V662 H118 Z" fill="url(#floor)" />
+            <path d="M470 245 V664 M847 245 V664" stroke="#1a1310" stroke-width="14" opacity="0.9" />
+            <path d="M120 366 H1170 M120 516 H1170" stroke="#1b1410" stroke-width="10" opacity="0.65" />
+            <path d="M138 268 H410 V510 H138Z" fill="#091722" stroke="#806246" stroke-width="12" />
+            <g clip-path="url(#window-clip)">
+              <rect x="128" y="268" width="270" height="230" fill="#0b2230" />
+              <path d="M128 430 L398 340 V510 H128Z" fill="#07131b" />
+              <rect x="128" y="268" width="270" height="230" fill="url(#rain)" opacity="0.9" />
+              <path d="M130 414 Q210 389 280 424 T400 411" fill="none" stroke="#9cc6d5" stroke-width="3" opacity="0.45" />
+            </g>
+            <path d="M270 268 V510 M138 388 H410" stroke="#81644a" stroke-width="9" />
+
+            <g class="counter">
+              <path d="M930 408 H1145 V520 H930Z" fill="#291c16" stroke="#725039" stroke-width="6" />
+              <path d="M910 400 H1160 V424 H910Z" fill="#60402b" />
+              <path d="M964 446 H1116" stroke="#9e6b43" stroke-width="4" opacity="0.45" />
+            </g>
+
+            <g class="ceiling-lamps">
+              <g transform="translate(523 282)">
+                <path d="M0 -38 V-5" stroke="#17110e" stroke-width="7" />
+                <ellipse class="ambient-glow" cx="0" cy="24" rx="175" ry="146" fill="url(#warm-glow)" />
+                <path d="M-26 8 Q0 -11 26 8 L17 42 H-17Z" fill="#43291d" stroke="#d49546" stroke-width="5" />
+                <path class="flame-svg" d="M0 35 C-16 21 -8 4 2 -10 C10 4 19 19 0 35Z" fill="#ffd56a" />
+              </g>
+              <g transform="translate(735 282)">
+                <path d="M0 -38 V-5" stroke="#17110e" stroke-width="7" />
+                <ellipse class="ambient-glow" cx="0" cy="24" rx="175" ry="146" fill="url(#warm-glow)" />
+                <path d="M-26 8 Q0 -11 26 8 L17 42 H-17Z" fill="#43291d" stroke="#d49546" stroke-width="5" />
+                <path class="flame-svg" d="M0 35 C-16 21 -8 4 2 -10 C10 4 19 19 0 35Z" fill="#ffd56a" />
+              </g>
+              <g transform="translate(1007 306)">
+                <path d="M0 -38 V-5" stroke="#17110e" stroke-width="7" />
+                <ellipse class="ambient-glow" cx="0" cy="24" rx="145" ry="130" fill="url(#warm-glow)" />
+                <path d="M-24 8 Q0 -9 24 8 L16 39 H-16Z" fill="#43291d" stroke="#d49546" stroke-width="5" />
+                <path class="flame-svg" d="M0 32 C-14 20 -7 5 2 -8 C9 4 17 18 0 32Z" fill="#ffd56a" />
+              </g>
+            </g>
+
+            <g id="traveler-courier" class="traveler" transform="translate(508 418)">
+              <ellipse class="traveler-halo" cx="0" cy="70" rx="112" ry="140" fill="url(#warm-glow)" opacity="0" />
+              <ellipse cx="2" cy="210" rx="60" ry="12" fill="#000" opacity="0.35" />
+              <path d="M-50 93 Q0 53 50 93 L63 197 H-57Z" fill="#742f2a" stroke="#bd5e4f" stroke-width="4" />
+              <path d="M-52 92 L-82 160 L-47 170 L-21 115" fill="#8c3a31" />
+              <circle cx="0" cy="58" r="35" fill="#b87d5e" />
+              <path d="M-35 56 Q-32 12 5 13 Q38 17 38 63 Q12 44 -35 56Z" fill="#251a19" />
+              <path d="M-9 73 Q5 79 17 69" fill="none" stroke="#4f2a25" stroke-width="3" stroke-linecap="round" />
+              <path d="M-70 148 L-6 102" stroke="#ece5d7" stroke-width="12" opacity="0.85" />
+              <rect x="-22" y="117" width="67" height="48" rx="4" fill="#c9aa72" stroke="#6e4b31" stroke-width="4" transform="rotate(8)" />
+              <circle cx="14" cy="144" r="8" fill="#8d2c28" />
+              <text class="nameplate" x="0" y="242" text-anchor="middle">林雁 · 负伤信使</text>
+            </g>
+
+            <g id="traveler-child" class="traveler" transform="translate(702 447)">
+              <ellipse class="traveler-halo" cx="0" cy="54" rx="105" ry="130" fill="url(#warm-glow)" opacity="0" />
+              <ellipse cx="0" cy="181" rx="48" ry="10" fill="#000" opacity="0.35" />
+              <path d="M-40 83 Q0 57 40 83 L49 170 H-49Z" fill="#345f72" stroke="#568aa1" stroke-width="4" />
+              <circle cx="0" cy="53" r="30" fill="#c68a64" />
+              <path d="M-35 43 Q0 3 38 42 L27 54 Q-4 42 -35 57Z" fill="#2e667e" stroke="#6da8bd" stroke-width="4" />
+              <path d="M-13 65 Q0 72 13 64" fill="none" stroke="#593229" stroke-width="3" stroke-linecap="round" />
+              <path d="M-32 94 L38 142" stroke="#8a5b35" stroke-width="7" />
+              <rect x="22" y="126" width="39" height="43" rx="8" fill="#96643d" stroke="#c58b55" stroke-width="4" />
+              <path d="M-59 120 Q-76 99 -64 82" fill="none" stroke="#b3d4de" stroke-width="5" stroke-linecap="round" />
+              <text class="nameplate" x="0" y="214" text-anchor="middle">乔乔 · 迷路学徒</text>
+            </g>
+
+            <g id="traveler-storyteller" class="traveler" transform="translate(866 414)">
+              <ellipse class="traveler-halo" cx="0" cy="73" rx="120" ry="146" fill="url(#warm-glow)" opacity="0" />
+              <ellipse cx="0" cy="215" rx="62" ry="12" fill="#000" opacity="0.35" />
+              <path d="M-51 100 Q0 64 50 100 L58 204 H-58Z" fill="#3e5140" stroke="#72816c" stroke-width="4" />
+              <circle cx="-5" cy="63" r="36" fill="#a06e55" />
+              <path d="M-40 58 Q-30 12 4 15 Q33 19 35 59 Q4 43 -40 58Z" fill="#d7cbc0" />
+              <path d="M-31 75 Q-6 112 22 76 Q8 125 -18 109Z" fill="#d7cbc0" />
+              <path d="M-30 62 H20" stroke="#d9c59b" stroke-width="7" stroke-linecap="round" />
+              <path d="M49 86 Q97 105 86 176 Q76 213 34 188Z" fill="#8d5b32" stroke="#d0a35f" stroke-width="5" />
+              <path d="M42 96 L89 196" stroke="#d0a35f" stroke-width="5" />
+              <circle cx="71" cy="138" r="19" fill="#c49352" opacity="0.7" />
+              <text class="nameplate" x="0" y="246" text-anchor="middle">莫伯 · 盲眼琴师</text>
+            </g>
+
+            <g class="foreground">
+              <path d="M120 651 H1173" stroke="#744d32" stroke-width="14" />
+              <path d="M210 562 L197 657 M360 562 L375 657 M1034 520 L1045 657" stroke="#251813" stroke-width="16" />
+              <path d="M168 553 H400 V583 H168Z" fill="#503521" stroke="#8d6140" stroke-width="5" />
+              <ellipse cx="286" cy="555" rx="36" ry="12" fill="#9d6c3d" />
+              <ellipse cx="286" cy="552" rx="20" ry="5" fill="#d5a66a" opacity="0.65" />
+            </g>
+          </g>
+
+          <rect class="rain-layer" width="1280" height="720" fill="url(#rain)" opacity="0.72" />
+          <path d="M0 671 Q205 647 352 674 T706 669 T1062 670 T1280 652 V720 H0Z" fill="#08131a" />
+          <g class="reeds" fill="#101a19">
+            <path d="M38 720 Q27 640 59 578 Q44 650 77 720Z" />
+            <path d="M94 720 Q72 645 95 604 Q89 658 118 720Z" />
+            <path d="M1218 720 Q1199 631 1228 570 Q1218 644 1256 720Z" />
+          </g>
+        </svg>
+
+        <header class="brand">
+          <span class="brand-mark" aria-hidden="true">守</span>
+          <div>
+            <p>山道第七码头 · 子时</p>
+            <h1>雨夜客栈 <span>守灯人</span></h1>
+          </div>
+        </header>
+
+        <section class="hud" aria-label="当前状态">
+          <div class="night-readout">
+            <span class="eyebrow">今夜</span>
+            <strong id="night-label">第一夜</strong>
+            <span id="weather-label">风雨初至</span>
+          </div>
+          <div class="flame-readout" aria-live="polite">
+            <div class="flame-icon" aria-hidden="true">
+              <span></span>
+            </div>
+            <div>
+              <span class="eyebrow">灯油余量</span>
+              <strong><span id="flame-value">9</span><small> / 9</small></strong>
+            </div>
+            <div class="flame-pips" id="flame-pips" aria-hidden="true"></div>
+          </div>
+        </section>
+
+        <section class="choice-panel" aria-labelledby="prompt-title">
+          <div class="chapter-line">
+            <span id="chapter-number">夜一</span>
+            <i></i>
+            <span>只可点亮一处</span>
+          </div>
+          <h2 id="prompt-title">雨追着三双脚进了门。</h2>
+          <p id="prompt-copy">
+            屋檐漏水，炉火将熄。三名旅客都在等你抬起那盏灯——可灯油只够撑过三个夜晚。
+          </p>
+          <div class="choices" id="choices" aria-label="本夜选择"></div>
+          <div class="consequence" id="consequence" hidden aria-live="assertive">
+            <span class="seal" aria-hidden="true">果</span>
+            <div>
+              <strong id="consequence-title"></strong>
+              <p id="consequence-copy"></p>
+            </div>
+          </div>
+          <button class="continue-button" id="continue-button" type="button" hidden>
+            推门迎接下一夜
+            <span aria-hidden="true">→</span>
+          </button>
+        </section>
+
+        <section class="journey" aria-label="三个夜晚进度">
+          <ol>
+            <li class="active" data-night="1"><span>壹</span><em>初雨</em></li>
+            <li data-night="2"><span>贰</span><em>寒潮</em></li>
+            <li data-night="3"><span>叁</span><em>破晓前</em></li>
+          </ol>
+        </section>
+
+        <button class="sound-toggle" id="sound-toggle" type="button" aria-pressed="false">
+          <span aria-hidden="true">♪</span>
+          <span>雨声：关</span>
+        </button>
+
+        <div class="light-flash" id="light-flash" aria-hidden="true"></div>
+      </section>
+
+      <section class="ending" id="ending" hidden aria-labelledby="ending-title">
+        <div class="ending-sky"></div>
+        <div class="ending-card">
+          <span class="ending-kicker">第三夜 · 雨止</span>
+          <div class="ending-emblem" id="ending-emblem" aria-hidden="true">☀</div>
+          <h2 id="ending-title"></h2>
+          <p id="ending-copy"></p>
+          <div class="ending-ledger">
+            <div><span>余火</span><strong id="ending-flame">0</strong></div>
+            <div><span>守望</span><strong id="ending-path">—</strong></div>
+            <div><span>夜数</span><strong>三夜</strong></div>
+          </div>
+          <p class="ending-quote" id="ending-quote"></p>
+          <button id="restart-button" type="button">再守一次灯</button>
+        </div>
+      </section>
+    </main>
+    <script src="./game.js"></script>
+  </body>
+</html>

@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0",
+  "run_id": "RUN-20260728T132144Z-932b17c5",
+  "policy": {
+    "worker_self_approval_forbidden": true,
+    "verifier_evidence_required": true,
+    "at_least_one_required_gate": true
+  },
+  "gates": [
+    {
+      "id": "BINDING",
+      "title": "Project binding receipt",
+      "criterion": "PROJECT_BINDING_RECEIPT.md names the canonical repository, branch, baseline commit, target artifact, stage, protocol-only limitation, and protected invariants.",
+      "required": true,
+      "owner": "c0-builder",
+      "verifier": "c0-evidence-runner",
+      "status": "PASS",
+      "evidence_ids": [
+        "EV-20260728T132947Z-25db7668"
+      ],
+      "updated_at": "2026-07-28T13:29:47Z"
+    },
+    {
+      "id": "BOOT",
+      "title": "Runnable first screen",
+      "criterion": "A local static server serves the artifact; a real browser loads the single-screen game with title, Night 1 state, 9 lamp units, and no page errors.",
+      "required": true,
+      "owner": "c0-builder",
+      "verifier": "c0-evidence-runner",
+      "status": "PENDING",
+      "evidence_ids": [],
+      "updated_at": "2026-07-28T13:22:06Z"
+    },
+    {
+      "id": "CORE_LOOP",
+      "title": "Three consequential nights",
+      "criterion": "Browser interaction makes exactly one allocation choice on each of three nights, each choice changes the consequence text and reduces lamp units, and Night 3 transitions to an ending.",
+      "required": true,
+      "owner": "c0-builder",
+      "verifier": "c0-evidence-runner",
+      "status": "PENDING",
+      "evidence_ids": [],
+      "updated_at": "2026-07-28T13:22:06Z"
+    },
+    {
+      "id": "BRANCHING",
+      "title": "Choice-dependent ending",
+      "criterion": "Two deterministic browser playthroughs using different choices reach visibly different named endings and recorded decision histories.",
+      "required": true,
+      "owner": "c0-builder",
+      "verifier": "c0-evidence-runner",
+      "status": "PENDING",
+      "evidence_ids": [],
+      "updated_at": "2026-07-28T13:22:06Z"
+    },
+    {
+      "id": "VISUAL",
+      "title": "Rainy inn art direction",
+      "criterion": "Runtime screenshots clearly show rain, an inn, warm lamp light against cold night tones, and at least three visually distinguishable travelers without external assets.",
+      "required": true,
+      "owner": "c0-builder",
+      "verifier": "c0-evidence-runner",
+      "status": "PENDING",
+      "evidence_ids": [],
+      "updated_at": "2026-07-28T13:22:06Z"
+    }
+  ]
+}

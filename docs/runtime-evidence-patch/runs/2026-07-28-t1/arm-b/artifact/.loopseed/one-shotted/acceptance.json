@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "run_id": "RUN-20260728T130932Z-07fe63d2",
+  "policy": {
+    "worker_self_approval_forbidden": true,
+    "verifier_evidence_required": true,
+    "at_least_one_required_gate": true
+  },
+  "gates": [
+    {
+      "id": "BUILD",
+      "title": "可直接运行",
+      "criterion": "index.html 与本地源码无需外部依赖，通过静态服务器可加载，控制台无页面错误",
+      "required": true,
+      "owner": "lead",
+      "verifier": "runtime-verifier",
+      "status": "PASS",
+      "evidence_ids": [
+        "EV-20260728T131649Z-de4a4f2a"
+      ],
+      "updated_at": "2026-07-28T13:16:49Z"
+    },
+    {
+      "id": "LOOP",
+      "title": "三夜因果主循环",
+      "criterion": "实际浏览器中完成三个夜晚：每夜恰有一次选择、灯火从初始值按选择成本真实递减、第三夜后出现与累计选择一致的结局",
+      "required": true,
+      "owner": "lead",
+      "verifier": "runtime-verifier",
+      "status": "PENDING",
+      "evidence_ids": [],
+      "updated_at": "2026-07-28T13:09:52Z"
+    },
+    {
+      "id": "VISUAL",
+      "title": "主题画面与状态证据",
+      "criterion": "最多三张实际运行截图清楚呈现单屏雨夜客栈、冷暖灯光、至少三名可辨认旅客，以及初始/中段/结局状态",
+      "required": true,
+      "owner": "lead",
+      "verifier": "runtime-verifier",
+      "status": "PENDING",
+      "evidence_ids": [],
+      "updated_at": "2026-07-28T13:09:52Z"
+    }
+  ]
+}
