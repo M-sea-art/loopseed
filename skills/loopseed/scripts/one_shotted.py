@@ -77,7 +77,7 @@ def build_parser() -> argparse.ArgumentParser:
     target_group.add_argument("--gate", help="Acceptance gate to update from machine evidence")
     target_group.add_argument("--blocker", help="Active blocker to produce unblock evidence for")
     machine.add_argument("--actor", required=True)
-    machine.add_argument("--command", required=True)
+    machine.add_argument("--command", dest="exec_command", required=True)
     machine.add_argument("--project", required=True)
     machine.add_argument("--candidate", required=True)
     machine.add_argument("--artifact", required=True)
@@ -155,7 +155,7 @@ def main(argv: list[str] | None = None) -> int:
             result = run_evidence(
                 root,
                 args.actor,
-                args.command,
+                args.exec_command,
                 args.project,
                 args.candidate,
                 args.artifact,
