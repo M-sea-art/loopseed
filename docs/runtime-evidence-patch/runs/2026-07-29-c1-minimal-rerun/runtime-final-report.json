@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "loopseed_version": "0.3.0-c1",
+  "mode": "one-shotted",
+  "run_id": "RUN-20260729T145001Z-c6f27b0b",
+  "root_goal": "Produce and persist a machine-verifiable C1 delivery receipt without changing main",
+  "verdict": "VERIFIED",
+  "required_gates": [
+    "PRIMARY"
+  ],
+  "gate_evidence": {
+    "PRIMARY": [
+      "EV-20260729T145047Z-319866c2"
+    ]
+  },
+  "open_blocking_defects": [],
+  "finished_at": "2026-07-29T14:50:51.706611Z"
+}
