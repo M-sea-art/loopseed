@@ -1,0 +1,49 @@
+{
+  "test_id": "2026-07-29-c1-minimal",
+  "project_goal": "Validate that LOOPSEED C1 can recover from BLOCKED only with fresh machine evidence.",
+  "loopseed_branch": "experiment/evidence-governed-runtime-v0.5",
+  "target_repository": "M-sea-art/loopseed",
+  "target_branch": "experiment/c1-minimal-preflight-2026-07-29",
+  "source_commit": "9d77d0b3d4c32c3c5ab98df82977f3fc4e8af4da",
+  "candidate_commit": null,
+  "product": {
+    "execution_status": "NOT_STARTED_PREFLIGHT_STOP",
+    "quality_status": "NOT_EVALUATED",
+    "artifact": null,
+    "artifact_hash": null
+  },
+  "blocked": {
+    "entered": false,
+    "blocker_id": "C1-RUNTIME-RESUME-MISSING",
+    "reason": "No executable resume operation and no machine Evidence Runner exist at the bound source commit.",
+    "unblock_condition": "Implement machine-enforced BLOCKED recovery and bound command evidence, then rerun C1."
+  },
+  "resume": {
+    "fresh_evidence_id": null,
+    "resumed": false,
+    "resumed_to": null,
+    "manual_state_edit": false
+  },
+  "evidence": {
+    "command_executed": true,
+    "exit_code": 2,
+    "binding_valid": true,
+    "stale_evidence_rejected": null,
+    "wrong_binding_rejected": null,
+    "artifact_drift_rejected": null
+  },
+  "finalization": {
+    "attempted": false,
+    "finalized": false,
+    "terminal_status": "C1_RUNTIME_MISSING"
+  },
+  "tests": {
+    "existing_tests_passed": null,
+    "new_tests_passed": null
+  },
+  "decision": {
+    "verdict": "C1_RUNTIME_MISSING",
+    "blocker_or_failure": "CLI rejects resume as an invalid command; gate evidence records supplied strings without executing or binding them.",
+    "next_narrow_action": "Add resume plus a machine Evidence Runner and the six rejection tests; rerun only C1."
+  }
+}
