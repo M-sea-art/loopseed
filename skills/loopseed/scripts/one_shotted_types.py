@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-VERSION = "0.3.0"
+VERSION = "0.3.0-c1"
 RUN_RELATIVE = Path(".loopseed") / "one-shotted"
 VALID_STATUSES = {"ACTIVE", "VERIFIED", "BLOCKED", "ABORTED"}
 VALID_PHASES = {"BIND", "PLAN", "IMPLEMENT", "VERIFY", "REPAIR", "FINALIZE"}
@@ -39,7 +39,7 @@ class OneShottedError(RuntimeError):
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return datetime.now(timezone.utc).isoformat(timespec="microseconds").replace("+00:00", "Z")
 
 
 def new_id(prefix: str) -> str:
@@ -60,4 +60,3 @@ def run_dir(root: Path) -> Path:
 
 def template_dir() -> Path:
     return Path(__file__).resolve().parents[1] / "templates" / "one-shotted"
-
