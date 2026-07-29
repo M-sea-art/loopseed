@@ -1,0 +1,27 @@
+name: C1 Runtime CI
+
+on:
+  push:
+    branches:
+      - experiment/c1-runtime-implementation-2026-07-29
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile Python
+        run: python -m compileall -q hooks skills/loopseed/scripts tests
+      - name: Run all tests
+        run: python -m unittest discover -s tests -v
+      - name: Confirm C1 CLI
+        run: |
+          python skills/loopseed/scripts/one_shotted.py --help | grep -E "run-evidence|resume"
+          python skills/loopseed/scripts/one_shotted.py resume --help > /dev/null
