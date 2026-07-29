@@ -1,0 +1,9 @@
+{
+  "artifact_type": "loopseed-c1-delivery-receipt",
+  "schema_version": 1,
+  "test_id": "2026-07-29-c1-minimal-rerun",
+  "repository": "M-sea-art/loopseed",
+  "source_commit": "09a279f",
+  "goal": "Prove that a real, persistent artifact can survive BLOCKED and be finalized only after fresh machine evidence.",
+  "delivery_status": "ready"
+}
