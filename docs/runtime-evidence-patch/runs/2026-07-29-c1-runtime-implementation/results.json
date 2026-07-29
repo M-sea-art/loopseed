@@ -1,0 +1,42 @@
+{
+  "test_id": "2026-07-29-c1-runtime-implementation",
+  "verdict": "C1_RUNTIME_IMPLEMENTED_READY_FOR_MINIMAL_RERUN",
+  "repository": "M-sea-art/loopseed",
+  "base_commit": "9d77d0b3d4c32c3c5ab98df82977f3fc4e8af4da",
+  "implementation_branch": "experiment/c1-runtime-implementation-2026-07-29",
+  "main_modified": false,
+  "pull_request_created": false,
+  "capabilities": {
+    "resume_command": true,
+    "machine_evidence_runner": true,
+    "freshness_check": true,
+    "blocker_binding": true,
+    "project_binding": true,
+    "candidate_binding": true,
+    "artifact_sha256": true,
+    "artifact_drift_rejection": true,
+    "machine_required_gate": true
+  },
+  "negative_tests": {
+    "absent_evidence_rejected": true,
+    "stale_evidence_rejected": true,
+    "wrong_blocker_rejected": true,
+    "wrong_binding_rejected": true,
+    "artifact_drift_rejected": true,
+    "manual_pass_rejected": true
+  },
+  "verification": {
+    "original_one_shotted_tests_passed": 11,
+    "existing_hook_tests_passed": 7,
+    "new_c1_runtime_tests_passed": 7,
+    "new_c1_cli_tests_passed": 1,
+    "total_tests_passed": 26,
+    "cli_end_to_end_smoke": "PASS",
+    "verification_environment": "isolated connector-sourced local reconstruction",
+    "github_actions_run": false
+  },
+  "promotion": {
+    "v0_5_core_promoted": false,
+    "next_allowed_action": "rerun only the minimal C1 runtime test on a real checkout"
+  }
+}
