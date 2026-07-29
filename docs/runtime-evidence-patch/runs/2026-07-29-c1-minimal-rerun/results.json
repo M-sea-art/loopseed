@@ -1,0 +1,60 @@
+{
+  "test_id": "2026-07-29-c1-minimal-rerun",
+  "project_goal": "Produce and persist a machine-verifiable C1 delivery receipt without changing main",
+  "loopseed_branch": "experiment/evidence-governed-runtime-v0.5",
+  "target_repository": "M-sea-art/loopseed",
+  "target_branch": "experiment/c1-minimal-rerun-2026-07-29",
+  "source_commit": "09a279f26898e1c79a1806d5f70832d41e51dbdf",
+  "candidate_commit": "52708dfb6872ac2517fa9789aec972b73233bd01",
+  "product": {
+    "execution_status": "COMPLETED",
+    "quality_status": "PASS",
+    "artifact": "artifacts/c1-delivery-receipt.json",
+    "artifact_hash": "7890f8bbb5db2a13a5dd1192968242141b3ab1f3959cf3f8c76fbef61e98eb48"
+  },
+  "blocked": {
+    "entered": true,
+    "blocker_id": "BLK-20260729T145011Z-aa2352bc",
+    "reason": "Independent verification approval file is absent; PRIMARY cannot be verified",
+    "unblock_condition": "Create the verifier approval file with the exact token, then rerun the real verifier"
+  },
+  "resume": {
+    "fresh_evidence_id": "EV-20260729T145042Z-53ded2ce",
+    "resumed": true,
+    "resumed_to": "VERIFY",
+    "manual_state_edit": false
+  },
+  "evidence": {
+    "command_executed": true,
+    "exit_code": 0,
+    "gate_evidence_id": "EV-20260729T145047Z-319866c2",
+    "binding_valid": true,
+    "absent_evidence_rejected": true,
+    "stale_evidence_rejected": true,
+    "wrong_blocker_rejected": true,
+    "wrong_binding_rejected": true,
+    "artifact_drift_rejected": true,
+    "manual_pass_rejected": true
+  },
+  "finalization": {
+    "attempted": true,
+    "finalized": true,
+    "terminal_status": "C1_PASS"
+  },
+  "tests": {
+    "existing_tests_passed": true,
+    "new_tests_passed": true,
+    "total_tests_passed": 26
+  },
+  "invariants": {
+    "main_commit": "5a4097cd4398558714b1d9b526ab02641c45e52f",
+    "main_modified": false,
+    "source_branch_modified": false,
+    "pull_request_created": false
+  },
+  "decision": {
+    "verdict": "C1_PASS",
+    "blocker_or_failure": null,
+    "next_narrow_action": "Review the persisted C1 evidence branch before promoting the runtime; do not rerun T2 or T3 for this verdict."
+  }
+}
