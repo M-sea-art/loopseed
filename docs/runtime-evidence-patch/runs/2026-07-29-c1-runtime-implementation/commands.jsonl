@@ -1,0 +1,3 @@
+{"seq":1,"label":"core and C1 unit tests","command":"PYTHONPATH=<isolated>/skills/loopseed/scripts python -m unittest discover -s <isolated>/tests -v","exit_code":0,"result":"25 tests passed before CLI regression test was added"}
+{"seq":2,"label":"CLI end-to-end smoke","command":"init -> add-gate --machine -> transition BLOCKED with binding -> run-evidence --blocker -> resume -> run-evidence --gate -> finalize","exit_code":0,"result":"BLOCKED -> ACTIVE/VERIFY -> VERIFIED"}
+{"seq":3,"label":"full regression including CLI dispatch","command":"PYTHONPATH=<isolated>/skills/loopseed/scripts python -m unittest discover -s <isolated>/tests -q","exit_code":0,"result":"26 tests passed"}
