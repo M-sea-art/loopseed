@@ -19,6 +19,8 @@ from one_shotted_core import (  # noqa: E402
     initialize,
     record_defect,
     record_gate_result,
+    resume,
+    run_evidence,
     status,
     transition,
     validate,
@@ -52,6 +54,11 @@ def build_parser() -> argparse.ArgumentParser:
     gate.add_argument("--owner", required=True, help="Implementation owner")
     gate.add_argument("--verifier", required=True, help="Independent verifier")
     gate.add_argument("--optional", action="store_true")
+    gate.add_argument(
+        "--machine",
+        action="store_true",
+        help="Require machine-executed evidence; manual record entries cannot satisfy this gate",
+    )
 
     record = subparsers.add_parser("record", help="Record an independent gate verdict")
     add_root(record)
@@ -61,6 +68,20 @@ def build_parser() -> argparse.ArgumentParser:
     record.add_argument("--summary", required=True)
     record.add_argument("--command", dest="commands", action="append", default=[])
     record.add_argument("--artifact", action="append", default=[])
+
+    machine = subparsers.add_parser(
+        "run-evidence", help="Execute a command and bind its exit status to a gate or blocker"
+    )
+    add_root(machine)
+    target_group = machine.add_mutually_exclusive_group(required=True)
+    target_group.add_argument("--gate", help="Acceptance gate to update from machine evidence")
+    target_group.add_argument("--blocker", help="Active blocker to produce unblock evidence for")
+    machine.add_argument("--actor", required=True)
+    machine.add_argument("--command", required=True)
+    machine.add_argument("--project", required=True)
+    machine.add_argument("--candidate", required=True)
+    machine.add_argument("--artifact", required=True)
+    machine.add_argument("--timeout", type=int, default=120)
 
     defect = subparsers.add_parser("defect", help="Append an OPEN or RESOLVED defect event")
     add_root(defect)
@@ -78,7 +99,17 @@ def build_parser() -> argparse.ArgumentParser:
     move.add_argument("--no-progress", action="store_true")
     move.add_argument("--blocker")
     move.add_argument("--unblock")
+    move.add_argument("--project")
+    move.add_argument("--candidate")
+    move.add_argument("--artifact")
     move.add_argument("--abort", action="store_true")
+
+    recover = subparsers.add_parser(
+        "resume", help="Resume BLOCKED to VERIFY only with fresh machine unblock evidence"
+    )
+    add_root(recover)
+    recover.add_argument("--evidence", required=True)
+    recover.add_argument("--actor", required=True)
 
     check = subparsers.add_parser("validate", help="Validate contracts, ledgers, and evidence references")
     add_root(check)
@@ -108,6 +139,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.owner,
                 args.verifier,
                 required=not args.optional,
+                requires_machine_evidence=args.machine,
             )
         elif args.command == "record":
             result = record_gate_result(
@@ -118,6 +150,18 @@ def main(argv: list[str] | None = None) -> int:
                 args.summary,
                 commands=args.commands,
                 artifacts=args.artifact,
+            )
+        elif args.command == "run-evidence":
+            result = run_evidence(
+                root,
+                args.actor,
+                args.command,
+                args.project,
+                args.candidate,
+                args.artifact,
+                gate_id=args.gate,
+                blocker_id=args.blocker,
+                timeout_seconds=args.timeout,
             )
         elif args.command == "defect":
             result = record_defect(
@@ -138,7 +182,12 @@ def main(argv: list[str] | None = None) -> int:
                 blocked_reason=args.blocker,
                 unblock_condition=args.unblock,
                 abort=args.abort,
+                project_id=args.project,
+                candidate_commit=args.candidate,
+                artifact=args.artifact,
             )
+        elif args.command == "resume":
+            result = resume(root, args.evidence, args.actor)
         elif args.command == "validate":
             result = validate(root, require_final=args.require_final)
         elif args.command == "finalize":
