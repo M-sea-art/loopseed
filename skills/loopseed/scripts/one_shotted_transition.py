@@ -5,8 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from one_shotted_integrity import artifact_identity
 from one_shotted_io import load_run, write_json_atomic
-from one_shotted_types import ALLOWED_TRANSITIONS, VALID_PHASES, OneShottedError, clean_line, utc_now
+from one_shotted_types import ALLOWED_TRANSITIONS, VALID_PHASES, OneShottedError, clean_line, new_id, utc_now
+
 
 def transition(
     root: Path,
@@ -16,6 +18,9 @@ def transition(
     blocked_reason: str | None = None,
     unblock_condition: str | None = None,
     abort: bool = False,
+    project_id: str | None = None,
+    candidate_commit: str | None = None,
+    artifact: str | None = None,
 ) -> dict[str, Any]:
     target, _, _, state = load_run(root)
     status = str(state.get("status", "")).upper()
@@ -37,19 +42,42 @@ def transition(
     if bool(blocked_reason) != bool(unblock_condition):
         raise OneShottedError("BLOCKED requires both --blocker and --unblock")
     if blocked_reason and unblock_condition:
+        supplied_binding = [project_id, candidate_commit, artifact]
+        if any(supplied_binding) and not all(supplied_binding):
+            raise OneShottedError("C1 BLOCKED binding requires --project, --candidate, and --artifact together")
+        blocked_at = utc_now()
+        blocker: dict[str, Any] = {
+            "id": new_id("BLK"),
+            "reason": clean_line(blocked_reason, name="blocker reason"),
+            "unblock_condition": clean_line(unblock_condition, name="unblock condition"),
+            "blocked_at": blocked_at,
+            "resume_phase": current_phase,
+            "status": "OPEN",
+        }
+        if all(supplied_binding):
+            binding = {
+                "project_id": clean_line(str(project_id), name="project id"),
+                "candidate_commit": clean_line(str(candidate_commit), name="candidate commit"),
+                "artifact": artifact_identity(root, str(artifact)),
+            }
+            blocker["binding"] = binding
+            state["binding"] = binding
         state.update(
             {
                 "status": "BLOCKED",
-                "true_blocker": {
-                    "reason": clean_line(blocked_reason, name="blocker reason"),
-                    "unblock_condition": clean_line(unblock_condition, name="unblock condition"),
-                },
-                "next_action": "Wait for the exact unblock condition; do not claim completion.",
-                "updated_at": utc_now(),
+                "true_blocker": blocker,
+                "next_action": "Wait for the exact unblock condition; resume only with fresh machine evidence.",
+                "updated_at": blocked_at,
             }
         )
         write_json_atomic(target / "state.json", state)
-        return {"ok": True, "status": "BLOCKED", "phase": current_phase, "true_blocker": state["true_blocker"]}
+        return {
+            "ok": True,
+            "status": "BLOCKED",
+            "phase": current_phase,
+            "blocker_id": blocker["id"],
+            "true_blocker": blocker,
+        }
 
     desired = phase.strip().upper() if phase else current_phase
     if desired not in VALID_PHASES:
@@ -88,4 +116,3 @@ def transition(
         "reroute_required": reroute_required,
         "next_action": state.get("next_action", ""),
     }
-
