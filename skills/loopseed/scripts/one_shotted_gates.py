@@ -9,6 +9,7 @@ from one_shotted_io import load_run, write_json_atomic
 from one_shotted_model import gate_map
 from one_shotted_types import OneShottedError, clean_line, utc_now
 
+
 def add_gate(
     root: Path,
     gate_id: str,
@@ -17,6 +18,7 @@ def add_gate(
     owner: str,
     verifier: str,
     required: bool = True,
+    requires_machine_evidence: bool = False,
 ) -> dict[str, Any]:
     target, _, acceptance, state = load_run(root)
     if str(state.get("status", "")).upper() != "ACTIVE":
@@ -39,6 +41,7 @@ def add_gate(
             "title": title,
             "criterion": criterion,
             "required": bool(required),
+            "requires_machine_evidence": bool(requires_machine_evidence),
             "owner": owner,
             "verifier": verifier,
             "status": "PENDING",
@@ -47,6 +50,10 @@ def add_gate(
         }
     )
     write_json_atomic(target / "acceptance.json", acceptance)
-    return {"ok": True, "gate": gate_id, "required": bool(required), "status": "PENDING"}
-
-
+    return {
+        "ok": True,
+        "gate": gate_id,
+        "required": bool(required),
+        "requires_machine_evidence": bool(requires_machine_evidence),
+        "status": "PENDING",
+    }
