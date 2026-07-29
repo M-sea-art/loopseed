@@ -5,8 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from one_shotted_integrity import artifact_identity
 from one_shotted_io import read_json, read_jsonl
 from one_shotted_model import gate_map, latest_defects
+from one_shotted_runner import PRODUCER
 from one_shotted_types import (
     REQUIRED_FILES,
     VALID_GATE_STATUSES,
@@ -15,6 +17,46 @@ from one_shotted_types import (
     OneShottedError,
     run_dir,
 )
+
+
+def _machine_errors(item: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    evidence_id = str(item.get("id", "<unknown>"))
+    required = (
+        "producer",
+        "purpose",
+        "command",
+        "cwd",
+        "started_at",
+        "finished_at",
+        "created_at",
+        "exit_code",
+        "project_id",
+        "candidate_commit",
+        "artifact",
+    )
+    for field in required:
+        if field not in item or item.get(field) in (None, ""):
+            errors.append(f"Machine evidence {evidence_id} is missing {field}")
+    if item.get("producer") != PRODUCER:
+        errors.append(f"Machine evidence {evidence_id} has an unknown producer")
+    if item.get("purpose") not in {"GATE", "UNBLOCK"}:
+        errors.append(f"Machine evidence {evidence_id} has invalid purpose")
+    try:
+        exit_code = int(item.get("exit_code"))
+    except (TypeError, ValueError):
+        errors.append(f"Machine evidence {evidence_id} has invalid exit_code")
+    else:
+        expected = "PASS" if exit_code == 0 else "FAIL"
+        if item.get("result") != expected:
+            errors.append(f"Machine evidence {evidence_id} result does not match exit_code")
+    artifact = item.get("artifact")
+    if not isinstance(artifact, dict) or not str(artifact.get("path", "")).strip() or not str(
+        artifact.get("sha256", "")
+    ).strip():
+        errors.append(f"Machine evidence {evidence_id} requires artifact path and sha256")
+    return errors
+
 
 def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     target = run_dir(root)
@@ -51,6 +93,9 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
             blocker.get("unblock_condition", "")
         ).strip():
             errors.append("BLOCKED requires true_blocker.reason and true_blocker.unblock_condition")
+        elif isinstance(blocker.get("binding"), dict):
+            if not str(blocker.get("id", "")).strip() or not str(blocker.get("blocked_at", "")).strip():
+                errors.append("C1 BLOCKED requires true_blocker.id and true_blocker.blocked_at")
 
     evidence, evidence_errors = read_jsonl(target / "evidence.jsonl")
     defects, defect_errors = read_jsonl(target / "defects.jsonl")
@@ -65,6 +110,8 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
             errors.append(f"Duplicate evidence id: {evidence_id}")
         else:
             evidence_by_id[evidence_id] = item
+        if item.get("kind") == "MACHINE":
+            errors.extend(_machine_errors(item))
 
     try:
         gates = gate_map(acceptance)
@@ -72,6 +119,9 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         errors.append(str(exc))
         gates = {}
     policy = acceptance.get("policy", {})
+    binding = state.get("binding")
+    last_resume_at = str(state.get("last_resume_at", "")).strip()
+
     for gate_id, gate in gates.items():
         gate_status = str(gate.get("status", "PENDING")).upper()
         if gate_status not in VALID_GATE_STATUSES:
@@ -100,6 +150,40 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
             ]
             if not pass_items:
                 errors.append(f"Gate {gate_id} is PASS without verifier-authored PASS evidence")
+                continue
+            if gate.get("requires_machine_evidence", False):
+                machine_items = [
+                    item
+                    for item in pass_items
+                    if item.get("kind") == "MACHINE"
+                    and item.get("producer") == PRODUCER
+                    and item.get("purpose") == "GATE"
+                    and int(item.get("exit_code", -1)) == 0
+                ]
+                if not machine_items:
+                    errors.append(f"Gate {gate_id} requires machine-executed PASS evidence")
+                    continue
+                latest = machine_items[-1]
+                if not isinstance(binding, dict):
+                    errors.append(f"Machine gate {gate_id} requires active project binding")
+                    continue
+                if str(latest.get("project_id", "")) != str(binding.get("project_id", "")):
+                    errors.append(f"Gate {gate_id} machine evidence has wrong project binding")
+                if str(latest.get("candidate_commit", "")) != str(binding.get("candidate_commit", "")):
+                    errors.append(f"Gate {gate_id} machine evidence has wrong candidate commit")
+                artifact = latest.get("artifact")
+                if not isinstance(artifact, dict):
+                    errors.append(f"Gate {gate_id} machine evidence is missing artifact identity")
+                else:
+                    try:
+                        current = artifact_identity(root, str(artifact.get("path", "")))
+                    except OneShottedError as exc:
+                        errors.append(str(exc))
+                    else:
+                        if current.get("sha256") != artifact.get("sha256"):
+                            errors.append(f"Gate {gate_id} machine evidence is stale after artifact drift")
+                if last_resume_at and str(latest.get("created_at", "")) <= last_resume_at:
+                    errors.append(f"Gate {gate_id} machine evidence predates the latest resume")
 
     defect_state = latest_defects(defects)
     blocking_open = sorted(
@@ -118,6 +202,7 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         "state": state,
         "gates": gates,
         "evidence": evidence,
+        "evidence_by_id": evidence_by_id,
         "defects": defects,
         "blocking_open_defects": blocking_open,
     }
@@ -133,5 +218,3 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         "evidence_count": len(evidence),
         "blocking_open_defects": blocking_open,
     }, data
-
-
