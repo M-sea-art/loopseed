@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "loopseed_version": "0.5.0",
+  "run_id": "",
+  "status": "DRAFT",
+  "brief_id": "",
+  "project_domain": "general",
+  "production_mode": "undecided",
+  "seed_intent": "",
+  "product_outcome": "",
+  "north_star": "",
+  "original_user_ideas": [],
+  "preserved_ideas": [],
+  "revisions": [],
+  "amplifications": [],
+  "decisions": [],
+  "bounded_scope": [],
+  "non_goals": [],
+  "must_not_lose": [],
+  "reference_roles": [],
+  "required_evidence": [],
+  "game": {
+    "player_promise": "",
+    "player_role": "",
+    "core_loop": "",
+    "world_response": "",
+    "unique_hook": "",
+    "art_direction": "",
+    "game_feel": "",
+    "hero_moment": "",
+    "vertical_slice": "",
+    "asset_strategy": "",
+    "performance_budget": {}
+  },
+  "general": {
+    "user_job": "",
+    "primary_flow": "",
+    "artifact_type": "",
+    "target_stage": "",
+    "success_metrics": ""
+  },
+  "moonshot": {
+    "ambition_expansion": "",
+    "scope_guard": ""
+  },
+  "authorization": {
+    "user_event_id": "",
+    "authorized_by": "",
+    "locked_by": ""
+  },
+  "dialogue_event_ids": [],
+  "locked_at": ""
+}
