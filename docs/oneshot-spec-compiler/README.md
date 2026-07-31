@@ -1,170 +1,269 @@
-# LOOPSEED One-Shot Calibration Upgrade v0.4.0
+# LOOPSEED Game-First Dialogue Engine v0.5.0
 
 ## Goal
 
-验证：一句自然语言项目种子，能否先由系统读取项目、推断规划与技术路线，并在必要时通过一次高杠杆问答完成校准，随后不中断地完成完整生产。
-
-核心假设：
-
-> 最少语言 + 自适应校准 + 最大上下文触发 + 正确生产绑定 = 更有力量的 One-Shot。
-
-v0.4.0 完整保留 v0.3.1 的 Project Binding、Artifact Contract、Stage Awareness，以及已有 Expert Activation、Task Graph、Fan-out、Merge、Critic 与 Verification；只在三重绑定之前增加一个薄的 `One-Shot Calibration` 入口。
-
-它不是新 Agent，不是第四个锁，也不是传统的多轮需求访谈。
-
-## One-Shot Definition
-
-LOOPSEED 中的 One-Shot 定义为：
-
-> 一次经过校准、合同冻结后不中途反复改变方向的完整生产执行。
-
-因此：
-
-- One-Shot 不强制等于一条用户消息。
-- 用户最初的一句话仍是项目的语义种子和最高意图锚点。
-- 问答只负责消除会改变整个生产结果的关键歧义。
-- 用户回答校准问题，即授权后续完整生产。
-- 回答后不再询问“是否开始”，不逐阶段要求确认。
-
-## Failure Addressed
-
-直接把一句项目种子送入执行，可能出现两类相反错误：
-
-1. **盲射**：项目、产物、完成阶段或参考角色尚未清楚，系统却立即实施。
-2. **问答膨胀**：系统把本可自行推断的技术和产品细节全部推回给用户，One-Shot 退化为传统需求流程。
-
-v0.4.0 的目标不是增加更多交互，而是只暴露少量高杠杆决策面：
-
-- 当前项目与产品结果是什么。
-- 核心体验或核心工作是什么。
-- 最终交付什么产物。
-- 要达到哪个完成阶段。
-- 哪项技术路线取舍会改变产品形态或交付目标。
-- 参考资料扮演什么角色。
-- 哪种替代结果绝对不能通过。
-- 用什么证据证明完成。
-
-## Pipeline
+Turn an unfinished player idea into one precise, ambitious, executable production shot without losing One-Shot speed.
 
 ```text
-Seed Prompt
+creative seed
     ↓
-Project Discovery
+multi-round co-director dialogue
     ↓
-Project Plan + Stack Inference
+locked creative brief
     ↓
-Adaptive Calibration Decision
-    ├── Clear → Direct Shot
-    └── Material Ambiguity → One-Round Calibrated Shot
-                                  ↓
-                           User Answer = Authorization
+Project Binding + Artifact Contract + Stage Target
     ↓
-Compiled Shot
+One-Shot production + controlled Fan-out
     ↓
-Project Binding
-    ↓
-Artifact Contract
-    ↓
-Stage Target
-    ↓
-Domain Detection
-    ↓
-Expert Activation
-    ↓
-Task Graph
-    ↓
-Fan-out
-    ↓
-Merge
-    ↓
-Alignment Critic
-    ↓
-Repair
-    ↓
-Verification
-    ↓
-Artifact
+merge + critic + repair + verification
 ```
 
-## Adaptive Routes
+The core hypothesis is:
 
-### Direct Shot
+> Multi-round dialogue creates precision; One-Shot and controlled Fan-out create rapid production; evidence keeps both honest.
 
-当项目身份、产物、阶段、规划范围、技术路线、参考角色和验收证据都可从当前目标与项目证据中可靠推断时：
+LoopSeed is game-first. General projects retain the same evidence-governed runtime through a lighter adapter.
 
-- 不为了形式而提问。
-- 直接编译 Compiled Shot。
-- 冻结三重绑定。
-- 进入完整生产。
+## Why v0.5 exists
 
-### Calibrated Shot
+The previous calibration protocol allowed at most one question round. That was useful for resolving a narrow ambiguity, but insufficient for creative game development where the user's seed may need to be:
 
-只有当某个未决选择会实质改变项目、产品形态、核心体验、产物、阶段、技术路线或验收时：
+- preserved across several decisions;
+- corrected when two ideas conflict;
+- amplified around the strongest player experience;
+- completed into an actual game shape;
+- continued rather than reset in each response;
+- explored through a small number of meaningful options.
 
-- 先展示已推断状态。
-- 先给出推荐项目规划与推荐技术栈。
-- 最多集中提出一轮、五个高杠杆问题。
-- 每题提供互斥选项、推荐项和关键后果。
-- 不询问仓库中已经存在的事实。
-- 不询问可逆的底层工程细节。
-- 不把用户拖入库、框架或样式参数的无意义选择。
+At the other extreme, an open-ended requirements interview would destroy One-Shot speed.
 
-如果用户回答“全部按推荐”，即视为完成校准并授权执行。
+v0.5 therefore adds an executable `CALIBRATE` phase with a bounded, progressive, option-rich dialogue ledger and a user-authorized creative brief lock.
 
-## Planning and Stack Responsibility
+## Product definition
 
-项目规划与技术栈首先是编译器责任，而不是用户填表责任。
+LoopSeed is:
 
-系统必须：
+> A game-first AI production engine that co-directs the player's idea until the shot is precise, then launches an uninterrupted production run with controlled Fan-out and evidence-governed completion.
 
-- 从当前项目、目标产物和目标阶段推断一个有边界的单次生产计划。
-- 优先使用能够满足合同的项目原生技术栈。
-- 主动推荐技术路线并解释其项目适配、产物适配和阶段适配。
-- 只在技术选择会改变产品形态、交付目标或不可逆成本时要求用户裁决。
-- 保留可逆、低层、实现型决策给执行者自主完成。
-- 不得为了实现方便而降低产品野心、替换产物或下调阶段。
+It is not:
 
-技术路线属于 Artifact Contract 的实施策略，不构成第四个完整性锁。
+- a generic questionnaire;
+- a giant multi-agent framework;
+- a static prompt library;
+- a game generator that accepts its own screenshots as proof;
+- an excuse to turn a requested game into a blockout, dashboard, scene, or runnable shell.
 
-## Seed Intent Preservation
+## One-Shot definition
 
-最初项目种子不可被校准过程改写成更容易实现的另一种产品。
+One-Shot means:
 
-允许：
+> one user-authorized production run after creative alignment is locked.
 
-- 消除歧义。
-- 确定优先级。
-- 在不改变产品身份的前提下限定本轮范围。
-- 加强验收与证据。
-- 选择更适合目标的技术路线。
+It does not require:
 
-禁止：
+- exactly one user message;
+- exactly one model response;
+- zero preproduction dialogue.
 
-- 把游戏替换成静态 UI、场景漫游或几何 Blockout。
-- 把视觉完成改写成功能可运行。
-- 把完整核心循环改写成单个机制样架。
-- 让参考项目覆盖当前项目身份和合同。
-- 以工程便利性为理由降低用户真实目标。
+It does require:
 
-## Compiled Shot
+- one stable seed-intent anchor;
+- accumulated accepted decisions;
+- a locked product identity and bounded slice;
+- no repeated confirmation after the lock;
+- uninterrupted planning, implementation, verification, and repair until a terminal evidence state.
 
-校准结果被压缩为一份简短、可执行的 `Compiled Shot`，至少包含：
+## Routes
 
-- seed intent
-- product outcome
-- core experience or job
-- bounded scope
-- Project Binding
-- Artifact Contract
-- Stage Target
-- implementation strategy
-- reference roles
-- non-goals
-- required evidence
+### Game default
 
-`Compiled Shot` 是人类可读的执行简报，不是第四个锁。
+```text
+Seed → CALIBRATE → creative lock → BIND → PLAN → IMPLEMENT → VERIFY
+```
 
-生产仍然只冻结：
+### General default
+
+```text
+Goal → BIND → PLAN → IMPLEMENT → VERIFY
+```
+
+### Explicit direct game shot
+
+A game may skip dialogue only when the goal or existing project already makes the following unambiguous:
+
+- game identity;
+- player promise and core loop;
+- target artifact and stage;
+- bounded slice;
+- must-not-lose rules;
+- required evidence;
+- absence of any material decision that would redirect the result.
+
+Skipping dialogue is an optimization, not permission to blind-fire.
+
+## Creative co-director behavior
+
+The model may perform these visible operations:
+
+| Operation | Meaning |
+|---|---|
+| Preserve | Retain original identity and accepted decisions |
+| Clarify | Resolve a material ambiguity |
+| Correct | Repair a contradiction while explaining the tradeoff |
+| Amplify | Deepen the strongest player experience or differentiator |
+| Complete | Add missing product logic without replacing identity |
+| Continue | Extend an already accepted idea rather than resetting it |
+| Offer options | Present meaningfully different paths when a real choice remains |
+
+Every model turn must declare at least one operation and advance at least one material decision surface.
+
+A question must:
+
+- provide two to four meaningful options;
+- recommend exactly one;
+- state the material consequence of each;
+- allow the user to combine or restate options in natural language.
+
+The model must not:
+
+- re-ask an answered question;
+- forget accepted decisions;
+- fall back to generic genre defaults after a specific idea is accepted;
+- ask for repository facts or reversible engineering choices;
+- silently lower ambition or replace the requested artifact;
+- keep interviewing after the brief is ready.
+
+## Dialogue rounds
+
+Default maximum: **five model question rounds**.
+
+Configurable range: **one to eight**.
+
+This is a ceiling, not a quota. The dialogue can end after one or two rounds when ready.
+
+Two no-progress rounds force the model to stop discovery, present the strongest current synthesis, expose only the remaining material choice, and move toward the lock.
+
+At the configured maximum, the system must lock, explicitly block on an unresolved hard conflict, or present one final bounded decision. It may not open another discovery branch.
+
+## Production modes
+
+### Focused
+
+- smallest complete result;
+- fastest coherent route;
+- no volunteered scope expansion;
+- minimum useful topology.
+
+### Studio
+
+Default for games:
+
+- coherent presentation-ready vertical slice;
+- game identity and player promise;
+- complete core loop;
+- Art Bible and game feel;
+- asset route and placeholder replacement;
+- complete playtest;
+- fixed visual evidence;
+- performance budget.
+
+### Moonshot
+
+- deliberately amplifies the strongest experience;
+- aggressively fans out independent quality surfaces;
+- requires an ambition expansion;
+- requires a scope guard;
+- requires at least one explicit seed amplification;
+- never lowers evidence standards.
+
+Moonshot deepens the hero experience; it does not multiply features without bound.
+
+## Creative brief
+
+The dialogue compiles into:
+
+```text
+.loopseed/one-shotted/creative-brief.json
+.loopseed/one-shotted/compiled-shot.md
+```
+
+Common required fields:
+
+- seed intent;
+- product outcome;
+- North Star;
+- original and preserved ideas;
+- revisions and amplifications;
+- decisions;
+- bounded scope and non-goals;
+- must-not-lose rules;
+- reference roles;
+- required evidence;
+- production mode;
+- user authorization event.
+
+Game-specific fields:
+
+- player promise;
+- player role;
+- core loop;
+- world response;
+- unique hook;
+- art direction;
+- game feel;
+- hero moment;
+- vertical slice;
+- asset strategy;
+- performance budget.
+
+General-project fields:
+
+- user job;
+- primary flow;
+- artifact type;
+- target stage;
+- success metrics.
+
+Moonshot fields:
+
+- ambition expansion;
+- scope guard.
+
+## Lock and authority
+
+The user answer or decision referenced by the brief authorizes the production lock.
+
+The lock:
+
+- validates dialogue references;
+- validates the domain and selected mode;
+- requires at least one user event and one model synthesis/option event;
+- writes the structured brief and human-readable compiled shot;
+- freezes the accepted creative direction;
+- moves `CALIBRATE → BIND`.
+
+The lock cannot be bypassed by:
+
+- a normal state transition;
+- early acceptance-gate creation;
+- a worker deciding that the user probably agrees;
+- a verifier approving production direction.
+
+Authority order after lock:
+
+1. current user instruction and accepted dialogue decisions;
+2. locked creative brief and compiled shot;
+3. Project Binding, Artifact Contract, and Stage Target;
+4. named project authority files;
+5. approved implementation strategy;
+6. transferable expert or benchmark principles;
+7. worker proposals.
+
+## Integrity locks
+
+The creative brief is the human-readable production authority. It compiles into the existing integrity system rather than adding an unrelated orchestration framework.
+
+After lock, freeze:
 
 ```text
 project_binding_id
@@ -172,38 +271,106 @@ artifact_contract_id
 stage_target_id
 ```
 
-Task、Fan-out 输出、Merge 输入和最终 Artifact 必须携带同一组引用。任何引用缺失、冲突、跨项目污染、种子意图漂移或未经授权的产物替代，都必须在执行或合并前阻断。
+Every task, Fan-out worker, merge input, critic verdict, and final artifact must preserve those references and the creative brief ID.
 
-## Authority Order
+## Game-first production contract
 
-1. 当前明确用户目标与校准回答
-2. 已绑定的项目权威来源
-3. 冻结的 Artifact Contract 与 Stage Target
-4. 选定的 implementation strategy
-5. Expert / Brand 触发出的可迁移原则
-6. Worker 提案
+The compiler selects the relevant contracts from:
 
-低优先级信息不得改写高优先级合同。
+### Identity and experience
 
-## Production Rules
+- player promise;
+- player role;
+- repeated action;
+- world response;
+- unique hook;
+- first-minute comprehension;
+- success, failure, restart, and emotional rhythm.
 
-- 不修改 main。
-- 不扩展成复杂 Agent Framework。
-- 校准最多一轮、五个问题。
-- 无重大歧义时跳过问答。
-- 校准期间不写入生产文件。
-- 推荐之后再询问，不把架构责任推回给用户。
-- 用户回答后直接冻结并执行，不要求第二次确认。
-- Fan-out 工作，不 Fan-out 人格、项目身份或生产合同。
-- 只并行边界清晰、合同一致的独立产物。
-- 最终由单一执行责任收敛。
-- Fast Path 与 Direct Shot 仍必须通过三个语义锁。
-- 验证标准不因速度模式降低。
-- Critic 必须检查种子意图、项目、产物、实施策略、阶段和证据是否一致。
+### Game feel
 
-## Protocol Files
+- input response;
+- camera;
+- movement and animation;
+- hit or state feedback;
+- sound;
+- readable consequence;
+- no dashboard substitution for embodied game experience.
+
+### Art and assets
+
+- Art Bible;
+- palette, silhouette, material, lighting, scale, and composition;
+- UI/world coherence;
+- asset provenance and licenses;
+- placeholder replacement boundary;
+- fixed shots and isolated subject review;
+- no blockout-as-final substitution.
+
+### Runtime and delivery
+
+- complete scripted playthrough;
+- build, boot, package, relaunch, and persistence where relevant;
+- FPS and frame-time distribution;
+- draw calls and triangles;
+- memory and load time;
+- target-hardware identity;
+- explicit degraded-observation boundary when the intended hardware is unavailable.
+
+## Fan-out
+
+Fan-out accelerates only after creative and production integrity are frozen.
+
+Parallelize independently judgeable quality surfaces, not arbitrary folders or personas.
+
+Possible parallel units:
+
+- isolated asset families;
+- audio;
+- bounded UI surfaces;
+- independent runtime or content tests;
+- read-only investigations;
+- performance profiling;
+- alternative candidates that can be judged under the same contract.
+
+Keep coupled surfaces sequential under one owner:
+
+- game identity;
+- core loop;
+- shared game state;
+- architecture;
+- global lighting and post-processing;
+- final composition;
+- integration;
+- final approval.
+
+Each worker inherits unchanged:
+
+- creative brief ID;
+- project binding ID;
+- artifact contract ID;
+- stage target ID.
+
+> Fan out work, not competing interpretations of the game.
+
+## Verification
+
+The final artifact is verified against the same locked intent and selected production mode.
+
+Focused, Studio, and Moonshot change production strategy and ambition—not evidence truth.
+
+A verifier may return:
+
+- `PASS` when the direct gate evidence satisfies the contract;
+- `FAIL` when a product or performance gate is missed;
+- `BLOCKED` only when an exact external condition prevents further valid verification.
+
+A beautiful screenshot cannot override a failed core loop or performance budget. A green build cannot approve unfinished art. A degraded software-renderer screenshot cannot be reported as native-GPU visual or FPS evidence.
+
+## Protocol files
 
 - `calibration-policy.yaml`
+- `game-first-production-policy.yaml`
 - `project-binding-schema.yaml`
 - `artifact-contract-schema.yaml`
 - `stage-awareness-policy.yaml`
@@ -221,25 +388,28 @@ Task、Fan-out 输出、Merge 输入和最终 Artifact 必须携带同一组引�
 - `benchmarks/xuanmi-sect.yaml`
 - `benchmarks/cross-project-contamination.yaml`
 
-无相禅堂与玄秘门派仍只能使用各自绑定的项目合同。跨项目参考只有在用户明确要求且仅提取可迁移原则时才允许进入当前任务。
+The calibration benchmark must prove:
 
-新增校准 benchmark 必须同时验证：
+- a clear general goal is not forced into dialogue;
+- a game seed can advance over multiple rounds;
+- accepted ideas survive later rounds;
+- corrections and amplifications remain visible;
+- every question has meaningful options and a recommendation;
+- repeated questions are rejected;
+- Studio and Moonshot compile different production strategies;
+- Moonshot cannot lock without a scope guard;
+- the creative lock requires a user answer or decision;
+- production gates and phase transitions cannot bypass the lock;
+- after lock, One-Shot execution begins without another confirmation.
 
-- 清楚目标不被强制提问。
-- 高影响歧义最多经过一轮问答。
-- 系统先提出规划与技术栈建议，再让用户裁决战略取舍。
-- 初始种子不会被简化成更容易实现的替代产品。
-- 问答结果只编译进现有三重绑定。
-- 用户回答后不再要求第二次确认。
+## Success criteria
 
-## Success Criteria
-
-- 用户仍可从一句自然语言项目种子开始。
-- 更少盲射和项目返工。
-- 更少低价值问题。
-- 技术栈与真实项目、产物和目标阶段一致。
-- 原始意图在校准后更清晰、更有力量，而不是被削弱。
-- 正确产物类型不被技术样架替代。
-- Fan-out 后仍保持同一生产合同。
-- 完成声明有真实、阶段对应的证据。
-- 整个流程仍然保持最少语言、最大杠杆和一次生产完成。
+- the player can begin with a short, incomplete game idea;
+- dialogue improves precision without becoming bureaucratic;
+- the model may repair and enlarge ideas without erasing authorship;
+- options expose real product consequences rather than cosmetic preferences;
+- game projects receive game-specific production and evidence contracts;
+- One-Shot execution begins once, after lock;
+- controlled Fan-out makes production faster without fragmenting identity;
+- completion remains fail-closed and evidence-bound;
+- the same engine remains useful for general projects.
