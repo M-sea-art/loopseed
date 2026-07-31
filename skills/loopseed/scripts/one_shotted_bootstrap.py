@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from one_shotted_io import load_template_json, load_template_text, write_json_atomic
-from one_shotted_types import VERSION, clean_line, new_id, run_dir, utc_now
+from one_shotted_types import VERSION, OneShottedError, clean_line, new_id, run_dir, utc_now
 
 def initialize(root: Path, goal: str, force: bool = False) -> dict[str, Any]:
     root_goal = clean_line(goal, name="root goal")
@@ -78,5 +78,4 @@ def initialize(root: Path, goal: str, force: bool = False) -> dict[str, Any]:
         "phase": "BIND",
         "next_action": state["next_action"],
     }
-
 

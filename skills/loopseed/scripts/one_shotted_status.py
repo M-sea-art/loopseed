@@ -8,6 +8,7 @@ from typing import Any
 from one_shotted_audit import _validation_data
 from one_shotted_types import VALID_GATE_STATUSES
 
+
 def status(root: Path) -> dict[str, Any]:
     report, data = _validation_data(root)
     if not data:
@@ -25,6 +26,7 @@ def status(root: Path) -> dict[str, Any]:
         "phase": data["state"].get("phase"),
         "round": data["state"].get("round"),
         "next_action": data["state"].get("next_action"),
+        "binding": data["state"].get("binding"),
         "gate_counts": counts,
         "blocking_open_defects": data["blocking_open_defects"],
         "errors": report["errors"],

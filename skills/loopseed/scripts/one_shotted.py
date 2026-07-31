@@ -15,6 +15,7 @@ if str(SCRIPT_DIR) not in sys.path:
 from one_shotted_core import (  # noqa: E402
     OneShottedError,
     add_gate,
+    bind_project,
     finalize,
     initialize,
     record_defect,
@@ -46,6 +47,14 @@ def build_parser() -> argparse.ArgumentParser:
     init.add_argument("--goal", required=True, help="The single human-authorized root goal")
     init.add_argument("--force", action="store_true", help="Replace an existing One-Shotted run")
 
+    bind = subparsers.add_parser(
+        "bind", help="Bind the run to one project, candidate commit, and artifact before verification"
+    )
+    add_root(bind)
+    bind.add_argument("--project", required=True)
+    bind.add_argument("--candidate", required=True)
+    bind.add_argument("--artifact", required=True)
+
     gate = subparsers.add_parser("add-gate", help="Add an observable acceptance gate")
     add_root(gate)
     gate.add_argument("--id", required=True)
@@ -70,7 +79,7 @@ def build_parser() -> argparse.ArgumentParser:
     record.add_argument("--artifact", action="append", default=[])
 
     machine = subparsers.add_parser(
-        "run-evidence", help="Execute a command and bind its exit status to a gate or blocker"
+        "run-evidence", help="Execute a command and bind its exit status and subject integrity to a gate or blocker"
     )
     add_root(machine)
     target_group = machine.add_mutually_exclusive_group(required=True)
@@ -105,7 +114,7 @@ def build_parser() -> argparse.ArgumentParser:
     move.add_argument("--abort", action="store_true")
 
     recover = subparsers.add_parser(
-        "resume", help="Resume BLOCKED to VERIFY only with fresh machine unblock evidence"
+        "resume", help="Resume BLOCKED to VERIFY only with fresh integrity-stable machine evidence"
     )
     add_root(recover)
     recover.add_argument("--evidence", required=True)
@@ -130,6 +139,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "init":
             result = initialize(root, args.goal, force=args.force)
+        elif args.command == "bind":
+            result = bind_project(root, args.project, args.candidate, args.artifact)
         elif args.command == "add-gate":
             result = add_gate(
                 root,

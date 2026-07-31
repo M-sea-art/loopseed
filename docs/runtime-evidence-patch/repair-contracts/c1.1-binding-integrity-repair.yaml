@@ -1,0 +1,144 @@
+schema_version: "1.1"
+contract_id: c1.1-binding-integrity-repair-2026-07-30
+status: IMPLEMENTED_AWAITING_CROSS_PROJECT_RERUN
+
+source:
+  repository: M-sea-art/loopseed
+  base_branch: experiment/evidence-governed-runtime-v0.5
+  base_commit: 09a279f26898e1c79a1806d5f70832d41e51dbdf
+  failed_cross_project_verdict: C1_BINDING_FAILED
+
+implementation:
+  branch: experiment/c1.1-binding-integrity-repair-2026-07-30
+  runtime_code_head: f94cee8f605986f026a10d6dd01d250ade3aed4d
+  local_isolated_regression:
+    status: PASS
+    tests_passed: 33
+    tests_failed: 0
+  github_workflow_added: .github/workflows/c1.1-runtime-ci.yml
+  remote_ci_claim: NOT_YET_VERIFIED
+
+versioning:
+  released_core:
+    branch: main
+    version: 0.3.0
+    action: KEEP_UNCHANGED
+  next_candidate:
+    version: 0.3.1-c1.1
+    name: C1.1 binding-integrity patch
+    architecture_expansion: false
+
+implemented_runtime_contract:
+  explicit_binding:
+    command: bind
+    fields:
+      - project_id
+      - candidate_commit
+      - artifact_path
+      - artifact_sha256
+    rules:
+      - actual Git HEAD is checked when Git is available
+      - identical binding is idempotent
+      - a different subject requires a fresh run
+  machine_evidence:
+    required_subject_fields:
+      - expected_artifact
+      - artifact_before
+      - artifact_after
+      - bound_candidate_commit
+      - actual_candidate_commit
+    pass_rule: >-
+      exit_code == 0 and actual Git HEAD matches when available and
+      expected artifact == artifact before == artifact after.
+    mutation_result: ARTIFACT_MUTATED_DURING_VERIFICATION
+    deletion_result: ARTIFACT_MISSING_AFTER_VERIFICATION
+  recovery:
+    transition: BLOCKED -> ACTIVE/VERIFY
+    requires:
+      - active blocker ID
+      - evidence newer than blocked_at
+      - machine producer
+      - matching project, candidate and artifact
+      - exit code 0
+      - integrity_stable true
+  independent_audit:
+    checks:
+      - runner result matches exit code and integrity outcome
+      - machine PASS preserves one bound artifact
+      - current artifact still matches evidence
+      - actual Git HEAD still matches the binding
+      - gate evidence is newer than the latest resume
+  finalization:
+    requires:
+      - all required gates PASS
+      - machine gates have integrity-stable evidence
+      - no open P0/P1 defect
+      - current binding remains valid
+
+implemented_tests:
+  - explicit_binding_allows_machine_gate_without_blocker
+  - identical_binding_is_idempotent
+  - silent_rebinding_is_rejected
+  - verifier_mutates_artifact_and_exits_zero_is_rejected
+  - unblock_command_mutates_artifact_is_not_resumable
+  - forged_pass_with_mismatched_hashes_is_rejected
+  - actual_git_head_mismatch_is_rejected
+  - existing_blocked_resume_verify_finalize_flow_still_passes
+  - original_one_shotted_tests_still_pass
+  - lifecycle_hook_tests_still_pass
+  - c1_cli_dispatch_is_protected
+
+schemas_and_docs:
+  aligned:
+    - .codex-plugin/plugin.json
+    - README.md
+    - README.zh-CN.md
+    - CHANGELOG.md
+    - docs/version-management.md
+    - skills/loopseed/SKILL.md
+    - skills/loopseed/references/one-shotted-mode.md
+    - skills/loopseed/references/state-contract.md
+    - skills/loopseed/schemas/one-shotted/state.schema.json
+    - skills/loopseed/schemas/one-shotted/acceptance.schema.json
+    - skills/loopseed/schemas/one-shotted/machine-evidence.schema.json
+    - skills/loopseed/schemas/one-shotted/final-report.schema.json
+
+next_cross_project_gate:
+  runtime:
+    mutation_during_command_rejected: required
+    actual_head_binding_enforced: required
+    gate_and_unblock_integrity_enforced: required
+    complete_suite_pass: required
+  product:
+    focused_product_defects_repaired: required
+    full_regression_pass: required
+  run:
+    reuse_failed_run: false
+    reuse_old_pass_evidence: false
+    fresh_blocked_state: required
+    fresh_unblock_evidence: required
+    resumed_to_verify: required
+    fresh_gate_evidence: required
+    manual_state_edit: forbidden
+    open_p0_p1: 0
+    finalized: required
+  review:
+    fresh_verifier: PASS
+  on_pass:
+    status: C1_CROSS_PROJECT_PASS
+    next_decision: review_for_experimental_runtime_promotion
+  on_fail:
+    status: ACTIVE_REPAIR_OR_BLOCKED
+    action: preserve evidence and choose one narrow repair
+
+non_goals:
+  - add new permanent agent roles
+  - add a new state-machine phase
+  - build a full filesystem sandbox
+  - implement full worktree attestation
+  - implement a multi-artifact manifest without new evidence
+  - implement Production Frontier in C1.1
+  - implement the full Strong Verdict model in C1.1
+  - rerun A or B
+  - modify main
+  - create a PR before cross-project PASS

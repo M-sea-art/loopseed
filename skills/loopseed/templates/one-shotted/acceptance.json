@@ -1,10 +1,11 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "run_id": "",
   "policy": {
     "worker_self_approval_forbidden": true,
     "verifier_evidence_required": true,
-    "at_least_one_required_gate": true
+    "at_least_one_required_gate": true,
+    "machine_gate_requires_bound_integrity_stable_evidence": true
   },
   "gates": []
 }

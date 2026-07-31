@@ -17,7 +17,31 @@ from one_shotted_core import add_gate, initialize, transition  # noqa: E402
 
 
 class C1CliTests(unittest.TestCase):
-    def test_run_evidence_subcommand_is_not_shadowed_by_command_option(self) -> None:
+    def test_duplicate_init_returns_structured_error(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".git").mkdir()
+            initialize(root, "Keep the original run")
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(CLI),
+                    "init",
+                    "--root",
+                    str(root),
+                    "--goal",
+                    "Do not replace this run",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 2)
+            payload = json.loads(completed.stdout)
+            self.assertFalse(payload["ok"])
+            self.assertIn("already exists", payload["error"])
+
+    def test_bind_and_run_evidence_subcommands_dispatch(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / ".git").mkdir()
@@ -26,7 +50,28 @@ class C1CliTests(unittest.TestCase):
             script.write_text("print('verified')\n", encoding="utf-8")
             command = f'"{sys.executable}" "{script}"'
 
-            initialize(root, "Exercise C1 CLI")
+            initialize(root, "Exercise C1.1 CLI")
+            bound = subprocess.run(
+                [
+                    sys.executable,
+                    str(CLI),
+                    "bind",
+                    "--root",
+                    str(root),
+                    "--project",
+                    "demo-project",
+                    "--candidate",
+                    "candidate-1",
+                    "--artifact",
+                    "artifact.txt",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(bound.returncode, 0, bound.stderr or bound.stdout)
+            self.assertTrue(json.loads(bound.stdout)["ok"])
+
             add_gate(
                 root,
                 "PRIMARY",
@@ -40,9 +85,6 @@ class C1CliTests(unittest.TestCase):
                 root,
                 blocked_reason="Verification unavailable",
                 unblock_condition="Verification succeeds",
-                project_id="demo-project",
-                candidate_commit="candidate-1",
-                artifact="artifact.txt",
             )
 
             completed = subprocess.run(
@@ -73,7 +115,19 @@ class C1CliTests(unittest.TestCase):
             payload = json.loads(completed.stdout)
             self.assertTrue(payload["ok"])
             self.assertEqual(payload["purpose"], "UNBLOCK")
+            self.assertTrue(payload["integrity_stable"])
             self.assertTrue(str(payload["evidence_id"]).startswith("EV-"))
+
+    def test_help_lists_c1_1_commands(self) -> None:
+        completed = subprocess.run(
+            [sys.executable, str(CLI), "--help"],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0)
+        for command in ("bind", "run-evidence", "resume"):
+            self.assertIn(command, completed.stdout)
 
 
 if __name__ == "__main__":

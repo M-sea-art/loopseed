@@ -18,10 +18,12 @@
           "title": {"type": "string"},
           "criterion": {"type": "string", "minLength": 1},
           "required": {"type": "boolean"},
+          "requires_machine_evidence": {"type": "boolean"},
           "owner": {"type": "string", "minLength": 1},
           "verifier": {"type": "string", "minLength": 1},
           "status": {"enum": ["PENDING", "PASS", "FAIL", "BLOCKED"]},
-          "evidence_ids": {"type": "array", "items": {"type": "string"}}
+          "evidence_ids": {"type": "array", "items": {"type": "string"}},
+          "updated_at": {"type": "string"}
         },
         "additionalProperties": true
       }

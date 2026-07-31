@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/M-sea-art/loopseed/schemas/one-shotted/machine-evidence.schema.json",
+  "title": "LoopSeed C1.1 Machine Evidence",
+  "type": "object",
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "required": ["path", "kind", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["file", "directory"]},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      },
+      "additionalProperties": true
+    },
+    "missingArtifact": {
+      "type": "object",
+      "required": ["path", "kind", "sha256", "error"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "kind": {"const": "missing"},
+        "sha256": {"const": ""},
+        "error": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "id", "schema_version", "kind", "producer", "purpose", "run_id", "result",
+    "actor", "command", "cwd", "started_at", "finished_at", "created_at",
+    "exit_code", "project_id", "candidate_commit", "bound_candidate_commit",
+    "git_repository_detected", "expected_artifact", "artifact_before",
+    "artifact_after", "integrity_stable"
+  ],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "schema_version": {"type": "string"},
+    "kind": {"const": "MACHINE"},
+    "producer": {"const": "loopseed.machine-evidence-runner"},
+    "purpose": {"enum": ["GATE", "UNBLOCK"]},
+    "run_id": {"type": "string", "minLength": 1},
+    "gate_id": {"type": ["string", "null"]},
+    "blocker_id": {"type": ["string", "null"]},
+    "result": {"enum": ["PASS", "FAIL"]},
+    "actor": {"type": "string", "minLength": 1},
+    "command": {"type": "string", "minLength": 1},
+    "cwd": {"type": "string", "minLength": 1},
+    "started_at": {"type": "string", "minLength": 1},
+    "finished_at": {"type": "string", "minLength": 1},
+    "created_at": {"type": "string", "minLength": 1},
+    "exit_code": {"type": "integer"},
+    "timed_out": {"type": "boolean"},
+    "stdout_summary": {"type": "string"},
+    "stderr_summary": {"type": "string"},
+    "project_id": {"type": "string", "minLength": 1},
+    "candidate_commit": {"type": "string", "minLength": 1},
+    "bound_candidate_commit": {"type": "string", "minLength": 1},
+    "actual_candidate_commit": {"type": ["string", "null"]},
+    "git_repository_detected": {"type": "boolean"},
+    "worktree_dirty_before": {"type": ["boolean", "null"]},
+    "worktree_dirty_after": {"type": ["boolean", "null"]},
+    "expected_artifact": {"$ref": "#/$defs/artifact"},
+    "artifact_before": {"$ref": "#/$defs/artifact"},
+    "artifact_after": {
+      "anyOf": [
+        {"$ref": "#/$defs/artifact"},
+        {"$ref": "#/$defs/missingArtifact"}
+      ]
+    },
+    "integrity_stable": {"type": "boolean"},
+    "integrity_failure_reason": {"type": ["string", "null"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"result": {"const": "PASS"}}},
+      "then": {
+        "properties": {
+          "exit_code": {"const": 0},
+          "integrity_stable": {"const": true},
+          "integrity_failure_reason": {"type": "null"},
+          "artifact_after": {"$ref": "#/$defs/artifact"}
+        }
+      }
+    }
+  ],
+  "additionalProperties": true
+}

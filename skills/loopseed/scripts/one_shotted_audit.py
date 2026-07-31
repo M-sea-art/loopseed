@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from one_shotted_integrity import artifact_identity
+from one_shotted_integrity import artifact_identity, repository_identity
 from one_shotted_io import read_json, read_jsonl
 from one_shotted_model import gate_map, latest_defects
 from one_shotted_runner import PRODUCER
@@ -17,6 +17,14 @@ from one_shotted_types import (
     OneShottedError,
     run_dir,
 )
+
+
+def _subject(item: Any) -> tuple[str, str] | None:
+    if not isinstance(item, dict):
+        return None
+    path = str(item.get("path", "")).strip()
+    digest = str(item.get("sha256", "")).strip()
+    return (path, digest) if path and digest else None
 
 
 def _machine_errors(item: dict[str, Any]) -> list[str]:
@@ -33,7 +41,12 @@ def _machine_errors(item: dict[str, Any]) -> list[str]:
         "exit_code",
         "project_id",
         "candidate_commit",
-        "artifact",
+        "bound_candidate_commit",
+        "expected_artifact",
+        "artifact_before",
+        "artifact_after",
+        "integrity_stable",
+        "git_repository_detected",
     )
     for field in required:
         if field not in item or item.get(field) in (None, ""):
@@ -42,19 +55,51 @@ def _machine_errors(item: dict[str, Any]) -> list[str]:
         errors.append(f"Machine evidence {evidence_id} has an unknown producer")
     if item.get("purpose") not in {"GATE", "UNBLOCK"}:
         errors.append(f"Machine evidence {evidence_id} has invalid purpose")
+
     try:
         exit_code = int(item.get("exit_code"))
     except (TypeError, ValueError):
         errors.append(f"Machine evidence {evidence_id} has invalid exit_code")
-    else:
-        expected = "PASS" if exit_code == 0 else "FAIL"
-        if item.get("result") != expected:
-            errors.append(f"Machine evidence {evidence_id} result does not match exit_code")
-    artifact = item.get("artifact")
-    if not isinstance(artifact, dict) or not str(artifact.get("path", "")).strip() or not str(
-        artifact.get("sha256", "")
-    ).strip():
-        errors.append(f"Machine evidence {evidence_id} requires artifact path and sha256")
+        exit_code = -1
+
+    expected = _subject(item.get("expected_artifact"))
+    before = _subject(item.get("artifact_before"))
+    after_raw = item.get("artifact_after")
+    after = _subject(after_raw)
+    after_missing = (
+        isinstance(after_raw, dict)
+        and bool(str(after_raw.get("path", "")).strip())
+        and after_raw.get("kind") == "missing"
+        and str(after_raw.get("sha256", "")) == ""
+    )
+    if expected is None:
+        errors.append(f"Machine evidence {evidence_id} requires expected_artifact path and sha256")
+    if before is None:
+        errors.append(f"Machine evidence {evidence_id} requires artifact_before path and sha256")
+    if after is None and not after_missing:
+        errors.append(f"Machine evidence {evidence_id} has invalid artifact_after identity")
+
+    artifact_stable = expected is not None and expected == before == after
+    head_ok = True
+    if item.get("git_repository_detected") is True:
+        bound = str(item.get("bound_candidate_commit", ""))
+        actual = str(item.get("actual_candidate_commit", ""))
+        head_ok = bool(bound) and actual == bound
+        if not head_ok:
+            errors.append(f"Machine evidence {evidence_id} has wrong actual Git HEAD")
+
+    calculated_integrity = artifact_stable and head_ok
+    if item.get("integrity_stable") is not calculated_integrity:
+        errors.append(f"Machine evidence {evidence_id} integrity_stable is inconsistent")
+    failure_reason = str(item.get("integrity_failure_reason") or "")
+    if calculated_integrity and failure_reason:
+        errors.append(f"Machine evidence {evidence_id} has a failure reason despite stable integrity")
+    if not calculated_integrity and not failure_reason:
+        errors.append(f"Machine evidence {evidence_id} lacks an integrity failure reason")
+
+    expected_result = "PASS" if exit_code == 0 and calculated_integrity else "FAIL"
+    if item.get("result") != expected_result:
+        errors.append(f"Machine evidence {evidence_id} result does not match command and integrity outcome")
     return errors
 
 
@@ -87,6 +132,19 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         errors.append(f"Invalid state status: {status!r}")
     if phase not in VALID_PHASES:
         errors.append(f"Invalid state phase: {phase!r}")
+
+    binding = state.get("binding")
+    if binding is not None:
+        if not isinstance(binding, dict):
+            errors.append("State binding must be an object")
+        else:
+            if not str(binding.get("project_id", "")).strip():
+                errors.append("Project binding requires project_id")
+            if not str(binding.get("candidate_commit", "")).strip():
+                errors.append("Project binding requires candidate_commit")
+            if _subject(binding.get("artifact")) is None:
+                errors.append("Project binding requires artifact path and sha256")
+
     if status == "BLOCKED":
         blocker = state.get("true_blocker")
         if not isinstance(blocker, dict) or not str(blocker.get("reason", "")).strip() or not str(
@@ -96,6 +154,10 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         elif isinstance(blocker.get("binding"), dict):
             if not str(blocker.get("id", "")).strip() or not str(blocker.get("blocked_at", "")).strip():
                 errors.append("C1 BLOCKED requires true_blocker.id and true_blocker.blocked_at")
+            if isinstance(binding, dict) and _subject(blocker["binding"].get("artifact")) != _subject(
+                binding.get("artifact")
+            ):
+                errors.append("Active blocker binding does not match state binding")
 
     evidence, evidence_errors = read_jsonl(target / "evidence.jsonl")
     defects, defect_errors = read_jsonl(target / "defects.jsonl")
@@ -119,8 +181,8 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         errors.append(str(exc))
         gates = {}
     policy = acceptance.get("policy", {})
-    binding = state.get("binding")
     last_resume_at = str(state.get("last_resume_at", "")).strip()
+    repository = repository_identity(root)
 
     for gate_id, gate in gates.items():
         gate_status = str(gate.get("status", "PENDING")).upper()
@@ -159,9 +221,10 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
                     and item.get("producer") == PRODUCER
                     and item.get("purpose") == "GATE"
                     and int(item.get("exit_code", -1)) == 0
+                    and item.get("integrity_stable") is True
                 ]
                 if not machine_items:
-                    errors.append(f"Gate {gate_id} requires machine-executed PASS evidence")
+                    errors.append(f"Gate {gate_id} requires machine-executed integrity-stable PASS evidence")
                     continue
                 latest = machine_items[-1]
                 if not isinstance(binding, dict):
@@ -169,19 +232,33 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
                     continue
                 if str(latest.get("project_id", "")) != str(binding.get("project_id", "")):
                     errors.append(f"Gate {gate_id} machine evidence has wrong project binding")
+                if str(latest.get("bound_candidate_commit", "")) != str(binding.get("candidate_commit", "")):
+                    errors.append(f"Gate {gate_id} machine evidence has wrong bound candidate commit")
                 if str(latest.get("candidate_commit", "")) != str(binding.get("candidate_commit", "")):
                     errors.append(f"Gate {gate_id} machine evidence has wrong candidate commit")
-                artifact = latest.get("artifact")
-                if not isinstance(artifact, dict):
-                    errors.append(f"Gate {gate_id} machine evidence is missing artifact identity")
-                else:
+
+                expected = _subject(latest.get("expected_artifact"))
+                before = _subject(latest.get("artifact_before"))
+                after = _subject(latest.get("artifact_after"))
+                bound_subject = _subject(binding.get("artifact"))
+                if expected is None or expected != before or expected != after or expected != bound_subject:
+                    errors.append(f"Gate {gate_id} machine evidence does not preserve one bound artifact")
+                elif expected is not None:
                     try:
-                        current = artifact_identity(root, str(artifact.get("path", "")))
+                        current = artifact_identity(root, expected[0])
                     except OneShottedError as exc:
                         errors.append(str(exc))
                     else:
-                        if current.get("sha256") != artifact.get("sha256"):
+                        if current.get("sha256") != expected[1]:
                             errors.append(f"Gate {gate_id} machine evidence is stale after artifact drift")
+
+                if repository.get("detected"):
+                    actual = str(repository.get("head") or "")
+                    bound_commit = str(binding.get("candidate_commit", ""))
+                    if actual != bound_commit:
+                        errors.append(f"Gate {gate_id} actual Git HEAD differs from the bound candidate")
+                    if str(latest.get("actual_candidate_commit", "")) != bound_commit:
+                        errors.append(f"Gate {gate_id} evidence recorded the wrong actual Git HEAD")
                 if last_resume_at and str(latest.get("created_at", "")) <= last_resume_at:
                     errors.append(f"Gate {gate_id} machine evidence predates the latest resume")
 

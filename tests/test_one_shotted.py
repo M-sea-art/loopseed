@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO_ROOT / "skills" / "loopseed" / "scripts"
@@ -51,6 +52,30 @@ class OneShottedTests(unittest.TestCase):
             self.assertTrue((target / "evidence.jsonl").is_file())
             self.assertFalse((target / "final-report.json").exists())
             self.assertEqual(status(root)["phase"], "BIND")
+
+    def test_reinitialize_is_rejected_without_mutating_existing_state(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            first = initialize(root, "Build the first verified demo")
+            state_path = root / ".loopseed" / "one-shotted" / "state.json"
+            before = state_path.read_text(encoding="utf-8")
+            with self.assertRaisesRegex(OneShottedError, "already exists"):
+                initialize(root, "Replace it accidentally")
+            self.assertEqual(state_path.read_text(encoding="utf-8"), before)
+            self.assertEqual(status(root)["run_id"], first["run_id"])
+
+    def test_force_reinitialize_replaces_the_existing_run(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            first = initialize(root, "Build the first verified demo")
+            second = initialize(root, "Build the replacement demo", force=True)
+            self.assertNotEqual(first["run_id"], second["run_id"])
+            goal = json.loads(
+                (root / ".loopseed" / "one-shotted" / "goal-contract.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(goal["root_goal"], "Build the replacement demo")
 
     def test_gate_owner_cannot_be_verifier(self) -> None:
         temporary, root = self.make_root()
@@ -102,6 +127,44 @@ class OneShottedTests(unittest.TestCase):
             self.assertTrue(validate(root, require_final=True)["ok"])
             report = json.loads(Path(result["final_report"]).read_text(encoding="utf-8"))
             self.assertEqual(report["verdict"], "VERIFIED")
+
+    def test_require_final_rejects_tampered_final_report(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a demo")
+            self.add_flow_gate(root)
+            record_gate_result(root, "FLOW", "PASS", "verifier", "Flow completed")
+            result = finalize(root)
+            report_path = Path(result["final_report"])
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            report["root_goal"] = "A different goal"
+            report["unexpected_terminal_claim"] = True
+            report_path.write_text(json.dumps(report), encoding="utf-8")
+            validation = validate(root, require_final=True)
+            self.assertFalse(validation["ok"])
+            self.assertTrue(
+                any("root_goal does not match" in error for error in validation["errors"])
+            )
+            self.assertTrue(
+                any("unsupported property" in error for error in validation["errors"])
+            )
+
+    def test_failed_final_validation_rolls_back_terminal_files(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a demo")
+            self.add_flow_gate(root)
+            record_gate_result(root, "FLOW", "PASS", "verifier", "Flow completed")
+            with mock.patch(
+                "one_shotted_finalize.validate",
+                return_value={"ok": False, "errors": ["injected final validation failure"]},
+            ):
+                with self.assertRaisesRegex(OneShottedError, "injected final validation failure"):
+                    finalize(root)
+            self.assertEqual(status(root)["status"], "ACTIVE")
+            self.assertFalse(
+                (root / ".loopseed" / "one-shotted" / "final-report.json").exists()
+            )
 
     def test_open_p1_defect_blocks_then_resolution_allows_finalize(self) -> None:
         temporary, root = self.make_root()

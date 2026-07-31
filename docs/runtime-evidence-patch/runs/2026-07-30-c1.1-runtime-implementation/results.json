@@ -1,0 +1,58 @@
+{
+  "test_id": "2026-07-30-c1.1-runtime-implementation",
+  "repository": "M-sea-art/loopseed",
+  "released_core": {
+    "branch": "main",
+    "commit": "5a4097cd4398558714b1d9b526ab02641c45e52f",
+    "modified": false
+  },
+  "runtime_candidate": {
+    "name": "C1.1 binding-integrity patch",
+    "version": "0.3.1-c1.1",
+    "branch": "experiment/c1.1-binding-integrity-repair-2026-07-30",
+    "base_commit": "3ca526616480f2869d27bc460b2236be17a9b5d1",
+    "runtime_code_checkpoint": "f94cee8f605986f026a10d6dd01d250ade3aed4d",
+    "implementation_contract_checkpoint": "1fafb6ba0410f70a7a7bde390b510fc16a3814b8"
+  },
+  "capabilities": {
+    "explicit_bind_command": true,
+    "machine_gate_without_blocker": true,
+    "actual_git_head_checked": true,
+    "expected_before_after_artifact_checked": true,
+    "mutation_during_gate_rejected": true,
+    "mutation_during_unblock_rejected": true,
+    "forged_integrity_pass_rejected": true,
+    "fresh_evidence_resume_preserved": true,
+    "final_report_contains_binding": true
+  },
+  "contracts": {
+    "runtime_code_aligned": true,
+    "tests_aligned": true,
+    "schemas_aligned": true,
+    "templates_aligned": true,
+    "english_docs_aligned": true,
+    "chinese_docs_aligned": true,
+    "plugin_prerelease_version_aligned": true,
+    "github_workflow_added": true
+  },
+  "verification": {
+    "environment": "isolated local tree reconstructed from connector-fetched remote contents",
+    "tests_passed": 33,
+    "tests_failed": 0,
+    "remote_ci_status": "NOT_VERIFIED",
+    "remote_ci_success_claimed": false
+  },
+  "scope": {
+    "production_frontier": "DEFERRED",
+    "strong_verdict_model": "DEFERRED",
+    "full_worktree_attestation": "DEFERRED",
+    "filesystem_sandbox": "DEFERRED",
+    "multi_artifact_manifest": "DEFERRED"
+  },
+  "decision": {
+    "verdict": "C1_1_RUNTIME_IMPLEMENTED_AWAITING_CROSS_PROJECT_RERUN",
+    "promotion_to_main": false,
+    "pull_request_created": false,
+    "next_narrow_action": "Run one fresh cross-project C1.1 verification with new Runtime and product commits, fresh blocker/evidence, and a Fresh Verifier; promote only with zero open P0/P1 defects."
+  }
+}

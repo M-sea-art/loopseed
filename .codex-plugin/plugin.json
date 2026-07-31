@@ -1,6 +1,6 @@
 {
   "name": "loopseed",
-  "version": "0.3.0",
+  "version": "0.3.1-c1.1",
   "description": "Minimal evidence-driven loops plus an explicit One-Shotted autonomous completion mode.",
   "author": {
     "name": "M-sea-art",
@@ -24,7 +24,7 @@
   "interface": {
     "displayName": "LoopSeed",
     "shortDescription": "Evidence loops and one-instruction autonomous completion.",
-    "longDescription": "Use the ordinary minimal loop for scoped work, or explicitly invoke One-Shotted mode to turn one human authorization into a contract-bound implementation, independent verification, repair, and finalization run.",
+    "longDescription": "Use the ordinary minimal loop for scoped work, or explicitly invoke One-Shotted mode to turn one human authorization into a contract-bound implementation, independent verification, repair, resumable blocking, and fail-closed finalization run.",
     "developerName": "M-sea-art",
     "category": "Productivity",
     "capabilities": [
