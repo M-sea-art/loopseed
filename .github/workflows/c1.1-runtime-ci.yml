@@ -5,12 +5,17 @@ on:
     branches:
       - experiment/c1.1-binding-integrity-repair-2026-07-30
       - fix/c1.1-integrity-hardening-2026-07-31
+      - docs/usage-guide-update-2026-07-31
   pull_request:
     paths:
       - ".codex-plugin/**"
+      - ".github/workflows/c1.1-runtime-ci.yml"
       - "skills/loopseed/**"
       - "hooks/**"
       - "tests/**"
+      - "tools/**"
+      - "docs/usage-guide.zh-CN.md"
+      - "docs/version-management.md"
       - "README.md"
       - "README.zh-CN.md"
       - "CHANGELOG.md"
@@ -31,8 +36,10 @@ jobs:
           python -m json.tool .codex-plugin/plugin.json > /dev/null
           find skills/loopseed/schemas skills/loopseed/templates -name '*.json' -print0 \
             | xargs -0 -n1 python -m json.tool > /dev/null
+      - name: Verify production usage guide version
+        run: python tools/verify_usage_guide_version.py
       - name: Compile Python
-        run: python -m compileall -q hooks skills/loopseed/scripts tests
+        run: python -m compileall -q hooks skills/loopseed/scripts tests tools
       - name: Run complete test suite
         run: python -m unittest discover -s tests -v
       - name: Confirm C1.1 CLI surface
