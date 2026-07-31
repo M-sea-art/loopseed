@@ -1,0 +1,221 @@
+# LOOPSEED Game-First Production Policy v0.5.0
+
+version: "0.5.0"
+
+position:
+  primary_domain: game_development
+  secondary_domain: general_projects
+  promise: co_direct_precisely_then_produce_rapidly_and_verify_honestly
+
+activation:
+  detected_game_goal:
+    default_phase: CALIBRATE
+    default_dialogue: enabled
+    default_mode_after_lock: studio_unless_user_selects_focused_or_moonshot
+  general_goal:
+    default_phase: BIND
+    default_dialogue: disabled
+    default_mode: focused
+
+creative_contract:
+  must_preserve:
+    - seed_intent
+    - accepted_user_decisions
+    - must_not_lose_rules
+  may_improve:
+    - contradictions
+    - missing_game_logic
+    - player_promise
+    - core_loop
+    - world_response
+    - unique_hook
+    - art_direction
+    - game_feel
+    - vertical_slice_boundary
+    - hero_moment
+  may_amplify:
+    - strongest_player_experience
+    - emotional_or_systemic_consequence
+    - visual_identity
+    - world_liveliness
+    - production_ambition_within_scope_guard
+  must_not:
+    - replace_game_with_static_scene
+    - replace_game_with_dashboard
+    - approve_blockout_as_final_art
+    - replace_complete_loop_with_single_mechanic_shell
+    - erase_user_authorship
+
+compiled_game_contract:
+  required:
+    - player_promise
+    - player_role
+    - core_loop
+    - world_response
+    - unique_hook
+    - art_direction
+    - game_feel
+    - hero_moment
+    - vertical_slice
+    - asset_strategy
+    - performance_budget
+  required_common:
+    - north_star
+    - bounded_scope
+    - non_goals
+    - must_not_lose
+    - reference_roles
+    - required_evidence
+
+production_surfaces:
+  game_identity:
+    questions:
+      - what_does_the_player_repeatedly_do
+      - how_does_the_world_answer
+      - what_is_the_unique_promise
+      - why_is_this_a_game_not_a_scene_or_interface
+    owner: game_director_or_primary_lead
+    single_authority: true
+
+  game_feel:
+    inspect:
+      - input_response
+      - camera
+      - movement
+      - animation
+      - sound
+      - hit_or_state_feedback
+      - first_minute_comprehension
+      - success_failure_restart
+    acceptance: running_product_evidence
+
+  art_direction:
+    inspect:
+      - art_bible
+      - palette
+      - silhouette
+      - material_response
+      - lighting
+      - scale
+      - composition
+      - ui_world_coherence
+      - contact_and_grounding
+    forbidden_substitution:
+      - unfinished_blockout
+      - flat_placeholder_materials
+      - unrelated_reference_style
+      - technically_running_but_visually_unfinished
+
+  assets:
+    contract:
+      - source_or_generation_route
+      - license_or_provenance
+      - placeholder_boundary
+      - replacement_condition
+      - integration_format
+      - isolated_review_surface
+    quality_rule: asset_generation_is_not_complete_until_integrated_and_judged_in_the_game
+
+  playtest:
+    inspect:
+      - complete_primary_loop
+      - player_can_understand_goal
+      - success_path
+      - failure_path
+      - restart
+      - representative_content
+      - no_blocking_console_or_runtime_errors
+    verifier: independent_from_primary_implementation_owner
+
+  visual_evidence:
+    require_when_visual_product:
+      - fixed_camera_or_fixed_ui_state
+      - fixed_seed_or_declared_variance
+      - target_quality_tier
+      - target_hardware_or_renderer_identity
+      - named_subject_or_game_state
+      - whole_product_and_isolated_subject_views_when_needed
+    degraded_observation_rule: degraded_renderer_or_disabled_effects_must_be_labeled_and_cannot_prove_production_visual_parity
+
+  performance:
+    possible_gates:
+      - fps_or_frame_time_distribution
+      - draw_calls
+      - triangle_count
+      - memory
+      - load_time
+      - bundle_or_package_size
+      - target_hardware
+    rule: a_missed_required_budget_is_FAIL_even_when_build_and_visual_gates_pass
+
+  delivery:
+    inspect:
+      - production_build
+      - boot
+      - package
+      - relaunch
+      - persistence_when_relevant
+      - documented_controls
+      - clean_error_surface
+
+production_modes:
+  focused:
+    target: smallest_complete_game_result
+    likely_artifact:
+      - playable_prototype
+      - narrow_vertical_slice
+    rule: preserve_game_identity_but_do_not_volunteer_scope_expansion
+
+  studio:
+    target: presentation_ready_vertical_slice
+    minimum_expectation:
+      - complete_core_loop
+      - representative_final_art_direction
+      - game_feel
+      - integrated_assets
+      - complete_playtest
+      - visual_evidence
+      - performance_budget
+
+  moonshot:
+    target: one_or_few_surprising_hero_experiences
+    minimum_expectation:
+      - studio_contracts
+      - ambition_expansion
+      - scope_guard
+      - aggressive_independent_fanout
+      - harsh_whole_product_critic
+      - side_by_side_or_fixed_reference_review_when_legally_and_practically_available
+    rule: ambition_can_rise_but_completion_evidence_cannot_be_relaxed
+
+fanout:
+  accelerate:
+    - isolated_assets
+    - audio
+    - bounded_ui_surfaces
+    - independent_tests
+    - read_only_investigation
+    - performance_profiling
+    - contract_identical_candidates
+  keep_single_owner_when_coupled:
+    - game_identity
+    - core_loop
+    - shared_state
+    - architecture
+    - global_lighting_and_post_processing
+    - final_composition
+    - integration
+    - final_approval
+
+completion:
+  verified_requires:
+    - creative_lock_when_dialogue_enabled
+    - required_gates_pass
+    - verifier_authored_evidence
+    - no_open_p0_or_p1
+    - whole_product_contract_consistency
+  honest_non_pass_states:
+    - FAIL
+    - BLOCKED
+    - PARTIAL_as_reported_product_state_not_terminal_verified_state
+  rule: runnable_is_not_synonymous_with_finished
