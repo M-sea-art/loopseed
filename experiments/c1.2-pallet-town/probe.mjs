@@ -73,7 +73,7 @@ try {
   const readyMs = performance.now() - monotonicStart;
   await page.waitForTimeout(args.settle);
 
-  const runtime = await page.evaluate(() => {
+  const runtime = await page.evaluate((requestedBackend) => {
     const game = window.__GAME__;
     const renderer = game.engine.renderer;
     const info = renderer.info;
@@ -105,7 +105,7 @@ try {
       },
       programs: info.programs ? info.programs.length : 0,
       renderer: {
-        requestedBackend: args.backend,
+        requestedBackend,
         actualVendor,
         actualRenderer,
         webgl2: renderer.capabilities.isWebGL2,
@@ -115,7 +115,7 @@ try {
       },
       seed: game.world.ctx?.seed ?? null,
     };
-  });
+  }, args.backend);
 
   const payload = {
     status: 'PASS',
