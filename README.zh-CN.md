@@ -6,6 +6,19 @@
 
 LoopSeed 是一个需要显式调用的 Codex Skill，用项目规划与直接证据驱动任务完成。`main` 上的稳定版仍是 0.3.0；C1.1 实验候选新增了正式项目绑定、机器执行证据、可恢复的 `BLOCKED`，以及验证过程中不可偷换产物的完整性检查。
 
+## 生产使用技巧
+
+先阅读 [LOOPSEED 生产使用技巧](docs/usage-guide.zh-CN.md)。该指南说明：
+
+- 什么时候使用标准模式，什么时候使用 One-Shotted；
+- 游戏项目和通用项目如何写紧凑、高杠杆目标；
+- 稳定版与 C1.1 实验候选如何选择；
+- 什么时候启用 Fresh Critic 或 Fan-out；
+- 如何用最低成本获得真实运行证据；
+- 哪些结果不能被当作完成证据。
+
+这是一份与版本绑定的长期指南。每次 LoopSeed 升级都必须同步更新；CI 会检查指南版本与 `.codex-plugin/plugin.json` 是否一致。
+
 ## 两种模式
 
 ### 标准 LoopSeed
@@ -210,16 +223,19 @@ Hooks 不会扩大权限、自动开放网络，也不会假装当前执行环�
 python -m json.tool .codex-plugin/plugin.json >/dev/null
 find skills/loopseed/schemas skills/loopseed/templates -name '*.json' -print0 \
   | xargs -0 -n1 python -m json.tool >/dev/null
-python -m compileall -q hooks skills/loopseed/scripts tests
+python tools/verify_usage_guide_version.py
+python -m compileall -q hooks skills/loopseed/scripts tests tools
 python -m unittest discover -s tests -v
 ```
 
 ## 关键文档
 
+- [生产使用技巧](docs/usage-guide.zh-CN.md)
 - [One‑Shotted 模式](skills/loopseed/references/one-shotted-mode.md)
 - [状态合同](skills/loopseed/references/state-contract.md)
 - [运行机制阶梯](skills/loopseed/references/runtime-ladder.md)
 - [执行卡片](skills/loopseed/references/playbook.md)
+- [版本管理](docs/version-management.md)
 
 ## License
 
