@@ -61,7 +61,8 @@ try {
 
   await page.waitForFunction(
     () => window.__GAME__ !== undefined || document.querySelector('#app pre') !== null,
-    { timeout: 90_000 },
+    undefined,
+    { timeout: 240_000 },
   );
 
   const bootError = await page.evaluate(() => {
