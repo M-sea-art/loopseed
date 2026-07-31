@@ -1,175 +1,259 @@
-# LOOPSEED One-Shot Calibration Upgrade v0.4.0
-# Calibrate the shot without turning production into a multi-round agent workflow.
+# LOOPSEED Game-First Creative Dialogue Engine v0.5.0
+# Dialogue aims the shot; One-Shot and controlled Fan-out execute it rapidly.
 
-version: "0.4.0"
+version: "0.5.0"
+
+product_position:
+  primary_domain: game_development
+  secondary_domain: general_projects
+  identity: game_first_ai_production_engine
+  formula:
+    - multi_round_dialogue_for_precision
+    - one_shot_authorization_for_ignition
+    - controlled_fanout_for_speed
+    - evidence_for_truth
 
 one_shot_definition:
-  meaning: one_calibrated_uninterrupted_production_run
-  not_required: exactly_one_user_message
+  meaning: one_user_authorized_uninterrupted_production_run_after_creative_lock
+  not_required:
+    - exactly_one_user_message
+    - exactly_one_model_response
+    - zero_preproduction_dialogue
   invariants:
     - seed_prompt_remains_semantic_anchor
-    - calibration_may_strengthen_but_not_replace_intent
-    - calibration_ends_before_production_execution
-    - user_answer_authorizes_the_full_production_run
+    - accepted_user_decisions_accumulate_across_rounds
+    - dialogue_may_strengthen_but_not_silently_replace_intent
+    - dialogue_ends_before_production_execution
+    - creative_brief_lock_is_the_production_authorization
+    - no_repeated_confirmation_after_lock
 
-calibration:
-  mode: adaptive
-  purpose: amplify_and_align_seed_intent_before_integrity_lock
-  creates_new_agent_layer: false
-  creates_fourth_integrity_lock: false
-  write_during_calibration: false
+routing:
+  game_default:
+    phase: CALIBRATE
+    production_mode: undecided
+    dialogue: enabled
+  general_default:
+    phase: BIND
+    production_mode: focused
+    dialogue: disabled
+  overrides:
+    - explicit_domain
+    - explicit_production_mode
+    - explicit_dialogue_on_or_off
+    - explicit_max_dialogue_rounds
+  direct_game_shot_allowed_when_all:
+    - user_explicitly_disables_dialogue_or_contract_is_already_locked
+    - game_identity_is_unambiguous
+    - player_promise_and_core_loop_are_clear
+    - artifact_and_stage_are_clear
+    - must_not_lose_rules_are_clear
+    - acceptance_is_observable
+    - no_material_choice_would_change_the_result
 
-  discovery:
-    read_before_asking:
-      - current_explicit_user_goal
-      - target_repository_instructions
-      - target_repository_structure
-      - project_local_docs_and_assets
-      - current_branch_state
-      - available_build_test_and_run_commands
-    rule: infer_from_authoritative_evidence_before_requesting_user_input
+creative_co_director:
+  purpose: preserve_correct_amplify_complete_and_continue_the_users_seed
+  role: collaborator_not_requirements_form
+  allowed_effects:
+    preserve:
+      meaning: retain_original_identity_and_accepted_decisions
+    clarify:
+      meaning: resolve_material_ambiguity
+    correct:
+      meaning: expose_and_repair_contradictions_with_visible_tradeoffs
+    amplify:
+      meaning: deepen_the_strongest_player_experience_or_differentiator
+    complete:
+      meaning: add_missing_product_logic_without_changing_identity
+    continue:
+      meaning: extend_previously_accepted_ideas_instead_of_resetting_them
+    offer_options:
+      meaning: present_meaningfully_different_paths_when_a_real_choice_remains
 
-  planning:
-    project_plan:
-      fields:
-        - product_outcome
-        - core_experience_or_job
-        - bounded_scope
-        - non_goals
-        - deliverables
-        - acceptance
-        - verification
-      rule: produce_a_bounded_plan_for_one_production_run_not_a_long_lived_roadmap
+  continuity_rules:
+    - every_round_inherits_all_accepted_user_decisions
+    - do_not_reask_answered_questions
+    - do_not_revert_to_generic_genre_defaults_after_a_specific_idea_is_accepted
+    - revisions_must_name_what_changes_and_what_is_gained_or_sacrificed
+    - amplification_must_deepen_experience_not_multiply_features_without_bound
+    - user_may_select_combine_or_rephrase_options
 
-    stack_proposal:
-      fields:
-        - recommended_stack
-        - repository_fit
-        - artifact_fit
-        - stage_fit
-        - strategic_tradeoffs
-        - rejected_alternatives
-        - confidence
-      rules:
-        - prefer_project_native_stack_when_it_can_satisfy_the_contract
-        - recommend_before_asking_the_user_to_choose
-        - ask_only_when_stack_choice_changes_product_form_delivery_target_or_irreversible_cost
-        - keep_reversible_low_level_choices_executor_owned
-        - never_choose_an_easier_stack_by_downgrading_artifact_or_stage
+  turn_contract:
+    model_turn_must:
+      - declare_at_least_one_allowed_effect
+      - advance_at_least_one_material_decision_surface
+      - preserve_prior_accepted_decisions
+    model_question_must:
+      - offer_between_2_and_4_meaningfully_different_options
+      - recommend_exactly_one_option
+      - state_the_material_consequence_of_every_option
+      - allow_natural_language_or_combined_answers
+    user_turns:
+      accepted_kinds:
+        - seed
+        - answer
+        - decision
+      authority: accepted_user_answer_can_authorize_the_final_creative_lock
 
-  route:
-    direct_shot:
-      when_all:
-        - project_identity_is_unambiguous
-        - artifact_type_is_clear
-        - stage_target_is_clear
-        - planning_scope_is_bounded
-        - stack_route_is_compatible_and_low_risk
-        - reference_roles_are_classified
-        - acceptance_is_observable
-        - no_material_question_would_change_the_result
-      behavior:
-        - compile_without_user_questions
-        - freeze_three_integrity_locks
-        - execute
+  material_decision_surfaces:
+    - product_identity
+    - player_promise
+    - player_role
+    - core_loop
+    - world_response
+    - unique_hook
+    - artifact_type
+    - target_stage
+    - art_direction
+    - game_feel
+    - hero_moment
+    - vertical_slice
+    - asset_strategy
+    - performance_budget
+    - production_mode
+    - reference_role
+    - forbidden_substitution
+    - required_evidence
+    - irreversible_product_or_stack_tradeoff
 
-    calibrated_shot:
-      when_any:
-        - ambiguity_can_redirect_project_or_product_outcome
-        - scope_choice_changes_the_core_experience
-        - stack_choice_changes_product_form_or_delivery_target
-        - artifact_or_stage_can_be_miscompiled
-        - reference_role_can_contaminate_the_active_project
-        - repository_evidence_conflicts_with_seed_intent
-        - irreversible_or_high_risk_action_lacks_authority
-      behavior:
-        - present_inferred_state
-        - present_recommended_plan_and_stack
-        - ask_one_group_of_high_leverage_questions
-        - compile_from_user_answer
-        - freeze_three_integrity_locks
-        - execute_without_second_confirmation
+  must_not_ask:
+    - facts_available_in_repository
+    - questions_already_answered_by_user
+    - reversible_engineering_details
+    - equivalent_library_preferences_without_product_impact
+    - cosmetic_trivia_without_contract_impact
+    - questions_asked_only_to_appear_thorough
 
-  interview:
-    max_rounds: 1
-    max_questions: 5
-    question_format:
-      - mutually_exclusive_options
-      - one_recommended_option
-      - concise_consequence_of_each_material_choice
-      - mapping_to_project_artifact_stage_or_strategy
-    ask_only_when:
-      - answer_changes_project_identity
-      - answer_changes_product_outcome_or_core_experience
-      - answer_changes_artifact_type_or_deliverables
-      - answer_changes_target_stage_or_acceptance
-      - answer_selects_a_material_stack_tradeoff
-      - answer_classifies_a_material_reference
-      - answer_defines_a_forbidden_substitution
-      - answer_changes_required_evidence
-    must_not_ask:
-      - facts_available_in_repository
-      - questions_already_answered_by_the_user
-      - reversible_engineering_details
-      - low_level_library_preferences_without_product_impact
-      - cosmetic_preferences_without_contract_impact
-      - questions_asked_only_to_appear_thorough
-    accepted_answers:
-      - explicit_option_selection
-      - all_recommended
-      - natural_language_equivalent
-    on_unresolved_hard_conflict: block_before_execution
+round_policy:
+  default_max_model_question_rounds: 5
+  configurable_range:
+    minimum: 1
+    maximum: 8
+  semantics: ceiling_not_target
+  stop_early_when_ready: true
+  exact_repeat_questions_forbidden: true
+  at_limit:
+    - synthesize_strongest_current_direction
+    - expose_only_the_remaining_material_decision
+    - request_final_user_choice
+    - lock_or_block_instead_of_opening_more_discovery
+  two_no_progress_rounds:
+    - stop_repeating_discovery
+    - present_strongest_synthesis
+    - offer_final_bounded_options
+    - move_toward_lock
 
-  seed_intent_preservation:
-    allowed:
-      - clarify_ambiguity
-      - prioritize_outcomes
-      - bound_scope_without_changing_the_product_identity
-      - strengthen_acceptance_and_evidence
-      - select_an_implementation_route_that_serves_the_goal
-    forbidden:
-      - replace_the_requested_product_with_an_easier_product
-      - lower_ambition_without_user_authority
-      - convert_visual_completion_into_blockout
-      - convert_a_game_into_a_scene_or_static_interface
-      - let_reference_material_override_the_active_project
-      - optimize_for_implementation_convenience_over_user_intent
+production_modes:
+  focused:
+    promise: smallest_complete_result_fast
+    scope_behavior: do_not_expand_product_idea
+    fanout: minimum_useful_topology
+  studio:
+    promise: presentation_ready_coherent_vertical_slice
+    game_contracts:
+      - game_identity
+      - art_bible
+      - game_feel
+      - asset_strategy
+      - complete_flow
+      - playtest
+      - visual_evidence
+      - performance_budget
+    fanout: activate_only_required_production_disciplines
+  moonshot:
+    promise: deliberately_amplify_the_strongest_experience
+    requires:
+      - explicit_ambition_expansion
+      - explicit_scope_guard
+      - at_least_one_documented_amplification
+    scope_behavior: deepen_one_or_few_hero_experiences_not_unbounded_feature_growth
+    fanout: aggressive_across_independent_quality_surfaces
+    verdict_rule: evidence_standard_is_never_lowered
 
-  reference_roles:
-    allowed:
-      - active_project
-      - transferable_principle
-      - negative_reference
-      - benchmark_only
-    rule: only_active_project_may_define_project_identity_and_contract
+readiness_to_lock:
+  require:
+    - stable_product_identity
+    - clear_product_outcome
+    - clear_north_star
+    - selected_production_mode
+    - bounded_first_complete_slice
+    - must_not_lose_rules
+    - explicit_non_goals
+    - classified_reference_roles
+    - observable_required_evidence
+    - user_answer_or_decision_authorizes_lock
+  game_require:
+    - player_promise
+    - player_role
+    - core_loop
+    - world_response
+    - unique_hook
+    - art_direction
+    - game_feel
+    - hero_moment
+    - vertical_slice
+    - asset_strategy
+    - performance_budget
 
-  compiled_shot:
-    role: concise_human_readable_execution_brief
-    is_integrity_lock: false
-    required_fields:
-      - seed_intent
-      - product_outcome
-      - core_experience_or_job
-      - bounded_scope
-      - project_binding
-      - artifact_contract
-      - stage_target
-      - implementation_strategy
-      - reference_roles
-      - non_goals
-      - required_evidence
-    compiles_into:
-      - project_binding_id
-      - artifact_contract_id
-      - stage_target_id
-    after_compile:
-      - emit_frozen_production_brief
-      - do_not_request_second_confirmation
-      - begin_task_graph_and_execution
+creative_lock:
+  writes:
+    - creative-brief.json
+    - compiled-shot.md
+  transition: CALIBRATE_to_BIND
+  freezes:
+    - seed_intent
+    - accepted_user_decisions
+    - production_mode
+    - product_outcome
+    - north_star
+    - game_or_general_contract
+    - bounded_scope
+    - non_goals
+    - required_evidence
+  cannot_be_bypassed_by:
+    - ordinary_phase_transition
+    - early_acceptance_gate_creation
+    - worker_or_reviewer_self_authorization
+  after_lock:
+    - freeze_project_binding
+    - freeze_artifact_contract
+    - freeze_stage_target
+    - compile_task_graph
+    - execute_without_second_confirmation
+
+seed_intent_preservation:
+  allowed:
+    - clarify_ambiguity
+    - prioritize_outcomes
+    - visibly_correct_contradictions
+    - amplify_the_strongest_experience
+    - complete_missing_logic
+    - continue_accepted_ideas
+    - bound_scope_without_changing_product_identity
+    - strengthen_acceptance_and_evidence
+  forbidden:
+    - replace_requested_product_with_an_easier_product
+    - lower_ambition_without_user_authority
+    - convert_visual_completion_into_blockout
+    - convert_a_game_into_a_scene_static_interface_or_dashboard
+    - convert_complete_core_loop_into_single_mechanic_shell
+    - let_reference_material_override_active_project
+    - optimize_for_implementation_convenience_over_user_intent
+
+reference_roles:
+  allowed:
+    - active_project
+    - transferable_principle
+    - negative_reference
+    - benchmark_only
+  rule: only_active_project_and_user_accepted_decisions_define_product_identity
 
 failure_codes:
-  unresolved_calibration: BLOCK_CALIBRATION_UNRESOLVED
+  calibration_bypassed: BLOCK_CREATIVE_LOCK_REQUIRED
+  repeated_question: BLOCK_DIALOGUE_REPEAT
+  dialogue_bloat: BLOCK_DIALOGUE_BLOAT
+  missing_options: BLOCK_DIALOGUE_OPTIONS
+  missing_recommendation: BLOCK_DIALOGUE_RECOMMENDATION
   seed_intent_drift: BLOCK_SEED_INTENT_DRIFT
-  planning_substitution: BLOCK_PLANNING_SUBSTITUTION
-  stack_mismatch: BLOCK_STACK_MISMATCH
-  excessive_interview: BLOCK_CALIBRATION_BLOAT
+  silent_replacement: BLOCK_PRODUCT_SUBSTITUTION
+  moonshot_without_scope_guard: BLOCK_MOONSHOT_SCOPE
+  unresolved_hard_conflict: BLOCK_CALIBRATION_UNRESOLVED
