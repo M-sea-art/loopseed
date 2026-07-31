@@ -1,13 +1,15 @@
-# LOOPSEED One-Shot Gauntlet Integration Patch v0.4.1
-# Fan-out accelerates delivery only after production integrity and real independence are established.
+# LOOPSEED Controlled Fan-out Policy v0.5.0
+# Dialogue aims the shot; Fan-out accelerates production only after the shot is locked.
 
-version: "0.4.1"
+version: "0.5.0"
 
 fanout:
   enabled: true
-  purpose: accelerate_delivery_without_fragmenting_product_quality
+  purpose: accelerate_delivery_without_fragmenting_game_identity_or_product_quality
 
   preconditions:
+    - creative_dialogue_is_skipped_or_creative_brief_is_locked
+    - compiled_shot_exists_when_calibration_was_enabled
     - project_binding_passed
     - artifact_contract_passed
     - stage_target_resolved
@@ -15,21 +17,50 @@ fanout:
     - task_graph_declares_improvement_units_and_coupling_groups
 
   principle:
-    - "Fan out work, not personas."
-    - "Parallelize independently judgeable quality surfaces, not directories."
+    - "Fan out work, not competing interpretations of the game."
+    - "Parallelize independently judgeable quality surfaces, not directories or personas."
     - "Keep coupled experience surfaces under one sequential owner."
     - "Keep one final integration owner."
+    - "Speed may increase after precision is locked; evidence standards never decrease."
+
+  production_modes:
+    focused:
+      topology: minimum_useful
+      behavior:
+        - prefer_single_lead
+        - add_verifier_at_real_gates
+        - add_specialist_only_for_a_proven_independent_gap
+        - do_not_expand_product_scope
+    studio:
+      topology: bounded_game_studio
+      behavior:
+        - activate_only_disciplines_required_by_the_vertical_slice
+        - parallelize_isolated_assets_tests_audio_and_bounded_surfaces
+        - require_whole_game_integration_and_playtest
+        - preserve_one_art_bible_one_core_loop_and_one_final_owner
+    moonshot:
+      topology: aggressive_but_bounded
+      behavior:
+        - fan_out_independent_quality_surfaces_early_after_lock
+        - allow_parallel_candidate_generation_under_the_same_contract
+        - retain_scope_guard_and_one_integration_owner
+        - run_harsh_whole_product_critic_after_merge
+        - never_lower_acceptance_or_claim_quality_without_evidence
 
   trigger_conditions:
     - independent_outputs
     - independently_judgeable
-    - parallel_execution_reduces_time
+    - parallel_execution_materially_reduces_time
     - clear_artifact_and_quality_boundary
+    - isolated_write_scope_or_worktree
     - no_shared_runtime_state
     - no_cross_system_experience_coupling
+    - identical_creative_brief_id
     - identical_integrity_ref
 
   avoid_conditions:
+    - creative_brief_not_locked
+    - production_mode_undecided
     - same_file_conflict
     - duplicate_generation
     - unclear_architecture
@@ -41,33 +72,76 @@ fanout:
     - shared_runtime_state
     - same_coupling_group_with_write_ownership
     - output_cannot_be_judged_without_builder_context
+    - workers_would_implement_different_game_interpretations
+
+  game_quality_surfaces:
+    parallel_candidates:
+      - isolated_character_or_environment_asset_families
+      - independent_audio_pack
+      - bounded_ui_surface
+      - read_only_design_or_technical_investigation
+      - independent_playtest_harness
+      - performance_profile
+      - alternative_visual_or_interaction_candidate_under_one_fixed_contract
+    sequential_or_single_owner_when_coupled:
+      - game_identity
+      - player_promise
+      - core_loop
+      - shared_game_state
+      - architecture
+      - input_and_camera_feel
+      - global_lighting_and_post_processing
+      - final_composition
+      - merge_and_integration
+      - final_approval
 
   routing:
     independent_improvement_units: parallel_builders_allowed
     coupled_improvement_units: one_sequential_owner
     same_coupling_group: sequential_by_default
     read_only_investigation: may_parallelize_if_it_cannot_mutate_or_approve_the_product
+    candidate_generation: may_parallelize_only_when_all_candidates_share_the_same_contract_and_fixed_evidence
     uncertain_independence: keep_sequential_until_boundary_is_proven
 
   worker_contract:
     inherit_unchanged:
+      - creative_brief_id
       - project_binding_id
       - artifact_contract_id
       - stage_target_id
+      - production_mode
+      - must_not_lose_rules
+      - scope_guard_when_moonshot
     must_return:
       - inspectable_artifact_or_runtime_state
       - acceptance_evidence
       - changed_scope
       - known_dependencies_or_seams
+      - integration_instructions
     may_not:
+      - reinterpret_or_replace_seed_intent
       - import_unapproved_cross_project_contract
       - substitute_artifact_type
       - lower_target_stage
+      - lower_game_or_visual_quality_contract
       - approve_own_quality_gate
       - redefine_coupling_group_to_enable_convenient_parallelism
+      - expand_moonshot_beyond_its_scope_guard
 
-  default:
+  merge:
     final_owner: primary_executor
-    merge_required: true
-    whole_product_review_required_after_multiple_builders: true
-    foreign_output: quarantine
+    required: true
+    checks:
+      - creative_brief_id_matches
+      - integrity_refs_match
+      - one_game_identity_survives
+      - accepted_user_decisions_survive
+      - art_and_game_feel_remain_coherent
+      - passed_gates_are_preserved
+      - performance_budget_is_rechecked
+    after_multiple_builders:
+      - whole_product_review
+      - complete_playtest_or_primary_flow
+      - fixed_visual_evidence_when_relevant
+      - independent_critic
+    foreign_or_conflicting_output: quarantine
