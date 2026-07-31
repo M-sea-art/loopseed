@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 
+# Final bounded C1.2 observation attempt. Failures are recorded as evidence
+# instead of aborting before summary generation.
+set +e
 set -u -o pipefail
 
 LOOPSEED_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SUBJECT="${1:-$LOOPSEED_ROOT/subject}"
 EVIDENCE="${2:-$LOOPSEED_ROOT/evidence}"
 SUBJECT_EXPECTED_COMMIT="d49e0c0de836892133b3b21f50c9d29749879db5"
-BASELINE_RUN_ID="30622497022"
 PREVIEW_URL="http://127.0.0.1:4173/"
 RESULTS_TSV="$EVIDENCE/command-results.tsv"
+BASELINE_RUN_ID="30622497022"
+TIMEOUT_REPAIR_RUN_ID="30622840618"
 
 mkdir -p "$EVIDENCE"
 : > "$RESULTS_TSV"
@@ -53,8 +57,9 @@ if [[ -d "$SUBJECT/.git" ]]; then
 fi
 
 {
-  echo "experiment_round=2"
+  echo "experiment_round=3-final"
   echo "baseline_run_id=$BASELINE_RUN_ID"
+  echo "timeout_repair_run_id=$TIMEOUT_REPAIR_RUN_ID"
   echo "date_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "runner_os=${RUNNER_OS:-unknown}"
   echo "runner_arch=${RUNNER_ARCH:-unknown}"
@@ -80,8 +85,7 @@ if [[ "$SUBJECT_COMMIT" == "missing" ]]; then
   record_skipped "production_build" "subject checkout missing"
   record_skipped "playwright_browser" "subject checkout missing"
   record_skipped "preview_ready" "subject checkout missing"
-  record_skipped "capture_harness_repair" "subject checkout missing"
-  record_skipped "runtime_probe" "subject checkout missing"
+  record_skipped "direct_canvas_capture" "subject checkout missing"
 else
   run_step "npm_ci" "install.log" "npm ci"
   INSTALL_CODE=$?
@@ -102,15 +106,13 @@ else
     FINAL_REASON="dependency installation failed"
     record_skipped "playwright_browser" "npm ci failed"
     record_skipped "preview_ready" "npm ci failed"
-    record_skipped "capture_harness_repair" "npm ci failed"
-    record_skipped "runtime_probe" "npm ci failed"
+    record_skipped "direct_canvas_capture" "npm ci failed"
   elif [[ $CHECK_CODE -ne 0 || $TEST_CODE -ne 0 || $BUILD_CODE -ne 0 ]]; then
     FINAL_STATUS="FAIL"
     FINAL_REASON="one or more engineering gates failed"
     record_skipped "playwright_browser" "engineering gate failed"
     record_skipped "preview_ready" "engineering gate failed"
-    record_skipped "capture_harness_repair" "engineering gate failed"
-    record_skipped "runtime_probe" "engineering gate failed"
+    record_skipped "direct_canvas_capture" "engineering gate failed"
   else
     run_step "playwright_browser" "playwright-install.log" "npx playwright install --with-deps chromium"
     BROWSER_CODE=$?
@@ -119,8 +121,7 @@ else
       FINAL_STATUS="BLOCKED"
       FINAL_REASON="Chromium installation failed"
       record_skipped "preview_ready" "Chromium installation failed"
-      record_skipped "capture_harness_repair" "Chromium installation failed"
-      record_skipped "runtime_probe" "Chromium installation failed"
+      record_skipped "direct_canvas_capture" "Chromium installation failed"
     else
       preview_start="$(now_ms)"
       (cd "$SUBJECT" && npm run preview) > "$EVIDENCE/preview.log" 2>&1 &
@@ -138,55 +139,36 @@ else
 
       if [[ $preview_ready -ne 1 ]]; then
         record_result "preview_ready" "FAIL" 1 "$((preview_end - preview_start))" "preview.log"
-        record_skipped "capture_harness_repair" "preview server did not become ready"
-        record_skipped "runtime_probe" "preview server did not become ready"
+        record_skipped "direct_canvas_capture" "preview server did not become ready"
         FINAL_STATUS="FAIL"
         FINAL_REASON="production build passed, but preview did not become ready"
       else
         record_result "preview_ready" "PASS" 0 "$((preview_end - preview_start))" "preview.log"
 
-        cp "$SUBJECT/tools/capture.mjs" "$SUBJECT/tools/capture-loopseed-repair.mjs"
-        python3 - "$SUBJECT/tools/capture-loopseed-repair.mjs" <<'PY'
-from pathlib import Path
-import sys
-
-path = Path(sys.argv[1])
-text = path.read_text(encoding="utf-8")
-text = text.replace("'--use-angle=metal',", "'--use-angle=swiftshader',")
-text = "\n".join(line for line in text.splitlines() if "--enable-unsafe-webgpu" not in line) + "\n"
-needle = "const consoleErrors = [];"
-replacement = "// LOOPSEED CI adapter: the original waitForFunction call passes its timeout object as arg.\n// Set the page default explicitly so the procedural world may finish on software rendering.\npage.setDefaultTimeout(240000);\n\nconst consoleErrors = [];"
-if needle not in text:
-    raise SystemExit("capture adapter insertion point not found")
-text = text.replace(needle, replacement, 1)
-path.write_text(text, encoding="utf-8")
-PY
-        diff -u "$SUBJECT/tools/capture.mjs" "$SUBJECT/tools/capture-loopseed-repair.mjs" > "$EVIDENCE/capture-adapter.diff" || true
+        cp "$LOOPSEED_ROOT/experiments/c1.2-pallet-town/capture-ci-final.mjs" \
+          "$SUBJECT/tools/capture-loopseed-final.mjs"
 
         run_step \
-          "capture_harness_repair" \
-          "capture-repair.log" \
-          "node tools/capture-loopseed-repair.mjs --url '$PREVIEW_URL' --out '$EVIDENCE/shots' --shots town_reveal,lab_door,starters_out"
+          "direct_canvas_capture" \
+          "capture-final.log" \
+          "node tools/capture-loopseed-final.mjs --url '$PREVIEW_URL' --out '$EVIDENCE/shots' --width 800 --height 450"
         CAPTURE_CODE=$?
 
         if [[ $CAPTURE_CODE -eq 0 ]]; then
-          CAPTURE_MODE="ci-timeout-repair-swiftshader"
-          FINAL_STATUS="PARTIAL"
-          FINAL_REASON="engineering gates passed and all fixed shots were produced through a declared CI adapter that corrected the capture timeout behavior and requested SwiftShader"
-
-          cp "$LOOPSEED_ROOT/experiments/c1.2-pallet-town/probe.mjs" "$SUBJECT/tools/c1-probe.mjs"
-          run_step \
-            "runtime_probe" \
-            "probe.log" \
-            "node tools/c1-probe.mjs --url '$PREVIEW_URL' --out '$EVIDENCE/probe.json' --backend swiftshader"
-          PROBE_CODE=$?
-          if [[ $PROBE_CODE -ne 0 ]]; then
-            FINAL_REASON="$FINAL_REASON; supplementary runtime probe failed"
+          SHOT_COUNT="$(find "$EVIDENCE/shots" -maxdepth 1 -name '*.png' -type f | wc -l | tr -d ' ')"
+          if [[ "$SHOT_COUNT" == "3" ]]; then
+            CAPTURE_MODE="direct-webgl-canvas-swiftshader-low-800x450"
+            FINAL_STATUS="PARTIAL"
+            FINAL_REASON="all engineering gates passed and all three fixed shots were produced by the declared degraded CI observation adapter; native high-quality performance and visual parity remain unverified"
+            sha256sum "$EVIDENCE"/shots/*.png > "$EVIDENCE/shot-sha256.txt"
+            file "$EVIDENCE"/shots/*.png > "$EVIDENCE/shot-files.txt"
+          else
+            FINAL_STATUS="BLOCKED"
+            FINAL_REASON="capture command returned success but did not produce exactly three PNG files"
           fi
         else
-          record_skipped "runtime_probe" "repaired capture failed"
           FINAL_STATUS="BLOCKED"
-          FINAL_REASON="the bounded timeout/backend CI adapter still could not produce the required screenshots"
+          FINAL_REASON="final bounded direct-canvas adapter could not produce the three required screenshots"
         fi
       fi
     fi
@@ -197,86 +179,126 @@ python3 - "$RESULTS_TSV" "$EVIDENCE/command-results.json" <<'PY'
 import csv, json, sys
 from pathlib import Path
 rows = []
-with Path(sys.argv[1]).open(encoding="utf-8") as handle:
-    for name, state, exit_code, elapsed_ms, log_file in csv.reader(handle, delimiter="\t"):
-        rows.append({"name": name, "state": state, "exitCode": int(exit_code), "elapsedMs": int(elapsed_ms), "logFile": log_file})
+source = Path(sys.argv[1])
+if source.exists():
+    with source.open(encoding="utf-8") as handle:
+        for row in csv.reader(handle, delimiter="\t"):
+            if len(row) != 5:
+                continue
+            name, state, exit_code, elapsed_ms, log_file = row
+            rows.append({
+                "name": name,
+                "state": state,
+                "exitCode": int(exit_code),
+                "elapsedMs": int(elapsed_ms),
+                "logFile": log_file,
+            })
 Path(sys.argv[2]).write_text(json.dumps(rows, indent=2), encoding="utf-8")
 PY
 
-python3 - "$EVIDENCE" "$SUBJECT_EXPECTED_COMMIT" "$SUBJECT_COMMIT" "$CAPTURE_MODE" "$FINAL_STATUS" "$FINAL_REASON" "$BASELINE_RUN_ID" <<'PY'
+python3 - "$EVIDENCE" "$SUBJECT_EXPECTED_COMMIT" "$SUBJECT_COMMIT" "$CAPTURE_MODE" "$FINAL_STATUS" "$FINAL_REASON" "$BASELINE_RUN_ID" "$TIMEOUT_REPAIR_RUN_ID" <<'PY'
 import json, sys
 from pathlib import Path
+
 root = Path(sys.argv[1])
-expected, actual, mode, status, reason, baseline = sys.argv[2:]
+expected, actual, mode, status, reason, baseline, repair = sys.argv[2:]
 commands = json.loads((root / "command-results.json").read_text(encoding="utf-8"))
-probe = json.loads((root / "probe.json").read_text(encoding="utf-8")) if (root / "probe.json").exists() else None
-manifest = json.loads((root / "shots" / "manifest.json").read_text(encoding="utf-8")) if (root / "shots" / "manifest.json").exists() else None
-produced = sorted(p.name for p in (root / "shots").glob("*.png")) if (root / "shots").exists() else []
+manifest_path = root / "shots" / "manifest.json"
+manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else None
+produced = sorted(path.name for path in (root / "shots").glob("*.png")) if (root / "shots").exists() else []
 required = ["town_reveal.png", "lab_door.png", "starters_out.png"]
 missing = [name for name in required if name not in produced]
+
 summary = {
-  "experiment": "LOOPSEED C1.2 Pallet Town external evidence run",
-  "round": 2,
-  "baselineRunId": int(baseline),
-  "status": status,
-  "reason": reason,
-  "subject": {"repository": "PauliusOS/pallet-town-3d", "expectedCommit": expected, "actualCommit": actual, "commitMatches": expected == actual},
-  "captureMode": mode,
-  "adapterScope": ["request SwiftShader on Linux", "set Playwright page default timeout to 240000 ms"],
-  "requiredShots": required,
-  "producedShots": produced,
-  "missingShots": missing,
-  "visualCriticVerdict": "PENDING_INDEPENDENT_REVIEW" if not missing else "NOT_REVIEWABLE",
-  "commands": commands,
-  "probe": probe,
-  "captureManifest": manifest,
+    "experiment": "LOOPSEED C1.2 Pallet Town external evidence run",
+    "round": "3-final",
+    "priorRuns": [int(baseline), int(repair)],
+    "status": status,
+    "reason": reason,
+    "subject": {
+        "repository": "PauliusOS/pallet-town-3d",
+        "expectedCommit": expected,
+        "actualCommit": actual,
+        "commitMatches": expected == actual,
+    },
+    "captureMode": mode,
+    "adapterScope": {
+        "renderer": "SwiftShader",
+        "viewport": "800x450",
+        "qualityTier": "low",
+        "readback": "direct WebGL canvas, not browser page screenshot",
+        "externalSourceModified": False,
+    },
+    "requiredShots": required,
+    "producedShots": produced,
+    "missingShots": missing,
+    "visualCriticVerdict": "PENDING_INDEPENDENT_REVIEW" if not missing else "NOT_REVIEWABLE",
+    "commands": commands,
+    "captureManifest": manifest,
 }
 (root / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
 lines = [
-  "# LOOPSEED C1.2 repair verification",
-  "",
-  f"- Status: **{status}**",
-  f"- Reason: {reason}",
-  f"- Baseline run: `{baseline}`",
-  f"- Subject commit: `{actual}`",
-  f"- Frozen commit matched: **{'yes' if expected == actual else 'no'}**",
-  f"- Capture mode: `{mode}`",
-  f"- Required screenshots produced: **{len(required)-len(missing)}/{len(required)}**",
-  "- Visual critic verdict: **PENDING_INDEPENDENT_REVIEW**" if not missing else "- Visual critic verdict: **NOT_REVIEWABLE**",
-  "",
-  "## Commands",
-  "",
-  "| Gate | State | Exit | Elapsed ms | Log |",
-  "|---|---:|---:|---:|---|",
+    "# LOOPSEED C1.2 final bounded run",
+    "",
+    f"- Status: **{status}**",
+    f"- Reason: {reason}",
+    f"- Prior runs: `{baseline}`, `{repair}`",
+    f"- Subject commit: `{actual}`",
+    f"- Frozen commit matched: **{'yes' if expected == actual else 'no'}**",
+    f"- Capture mode: `{mode}`",
+    f"- Required screenshots produced: **{len(required) - len(missing)}/{len(required)}**",
+    "- Visual critic verdict: **PENDING_INDEPENDENT_REVIEW**" if not missing else "- Visual critic verdict: **NOT_REVIEWABLE**",
+    "",
+    "## Commands",
+    "",
+    "| Gate | State | Exit | Elapsed ms | Log |",
+    "|---|---:|---:|---:|---|",
 ]
 for item in commands:
-    lines.append(f"| {item['name']} | {item['state']} | {item['exitCode']} | {item['elapsedMs']} | `{item['logFile']}` |")
-if probe and probe.get("status") == "PASS":
-    runtime = probe.get("runtime", {})
-    renderer = runtime.get("renderer", {})
-    lines += [
-      "", "## Runtime probe", "",
-      f"- Page ready: `{probe.get('readyMs', 0):.0f} ms`",
-      f"- World build total: `{runtime.get('buildTotalMs', 0):.0f} ms`",
-      f"- Actual renderer: `{renderer.get('actualRenderer')}`",
-      f"- Actual vendor: `{renderer.get('actualVendor')}`",
-      f"- Probe FPS: `{runtime.get('fps')}`",
-      f"- Probe draw calls: `{runtime.get('render', {}).get('drawCalls')}`",
-      f"- Probe triangles: `{runtime.get('render', {}).get('triangles')}`",
-    ]
-if manifest:
-    lines += ["", "## Fixed shots", "", "| Shot | FPS | Draw calls | Triangles |", "|---|---:|---:|---:|"]
+    lines.append(
+        f"| {item['name']} | {item['state']} | {item['exitCode']} | {item['elapsedMs']} | `{item['logFile']}` |"
+    )
+
+if manifest and manifest.get("status") == "PASS":
+    runtime = manifest.get("runtime", {})
+    lines.extend([
+        "",
+        "## Degraded observation runtime",
+        "",
+        f"- Page ready: `{manifest.get('readyMs', 0):.0f} ms`",
+        f"- World build total: `{runtime.get('buildTotalMs', 0):.0f} ms`",
+        f"- Actual renderer: `{runtime.get('actualRenderer')}`",
+        f"- Actual vendor: `{runtime.get('actualVendor')}`",
+        f"- Viewport: `{runtime.get('viewport')}`",
+        f"- Quality tier: `{runtime.get('qualityTier')}`",
+        "",
+        "## Fixed shots",
+        "",
+        "| Shot | KiB | FPS before freeze | Draw calls | Triangles | Mean luminance | Variance |",
+        "|---|---:|---:|---:|---:|---:|---:|",
+    ])
     for shot in manifest.get("shots", []):
         stats = shot.get("stats", {})
-        lines.append(f"| {shot.get('id')} | {stats.get('fps')} | {stats.get('drawCalls')} | {stats.get('triangles')} |")
-lines += [
-  "", "## Evidence boundary", "",
-  "The external source is unchanged. This round repairs only the CI observation adapter. SwiftShader FPS is not native-GPU performance evidence. Visual quality remains pending until an independent critic inspects the three PNG files.",
-]
+        sample = shot.get("sample", {})
+        lines.append(
+            f"| {shot.get('id')} | {shot.get('bytes', 0) / 1024:.0f} | "
+            f"{stats.get('fpsBeforeFreeze')} | {stats.get('drawCalls')} | {stats.get('triangles')} | "
+            f"{sample.get('meanLuminance', 0):.1f} | {sample.get('luminanceVariance', 0):.1f} |"
+        )
+
+lines.extend([
+    "",
+    "## Evidence boundary",
+    "",
+    "This is the final bounded CI adapter attempt. The subject source stayed unchanged. SwiftShader, low quality, 800×450 rendering, and direct-canvas readback are diagnostic evidence only; their FPS and appearance cannot establish native high-quality performance or AAA parity.",
+])
 (root / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 PY
 
 cat "$EVIDENCE/summary.md"
-[[ "$FINAL_STATUS" == "FAIL" ]] && exit 1
+
+if [[ "$FINAL_STATUS" == "FAIL" ]]; then
+  exit 1
+fi
 exit 0
