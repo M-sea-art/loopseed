@@ -1,97 +1,297 @@
 # One-Shotted Mode
 
-One-Shotted mode turns **one human authorization** into a bounded autonomous completion run. It copies the successful engineering pattern behind strong “one-shot” agent projects without copying their domain or assuming that a single model response is enough.
+One-Shotted mode turns **one production authorization** into a bounded autonomous completion run.
 
-## What is being replicated
-
-The useful pattern is:
+For games, the authorization may be preceded by a short or multi-round creative co-director dialogue. The dialogue aims the shot; it does not split production into repeated human approvals.
 
 ```text
-one human goal
+player seed
     ↓
-project identity + architecture contract
+creative co-director dialogue
+preserve · correct · amplify · complete · continue · offer options
     ↓
-predeclared acceptance gates
+user-authorized creative brief
     ↓
-implementation owner(s)
+One-Shot production lock
     ↓
-repeatable evidence harness
+controlled Fan-out + integration
     ↓
-independent verifier
+repeatable evidence + independent verifier
     ↓
 PASS → preserve / FAIL → repair or rollback
     ↓
 final gate decides completion
 ```
 
-The prompt is only the ignition. The architecture contract, ownership boundaries, deterministic or repeatable evidence, independent criticism, and honest stopping rule make the run self-driving.
+## Product position
+
+LoopSeed is game-first. Its primary job is to turn a player's game idea into a coherent production brief, then rapidly organize design, engineering, assets, integration, playtesting, and verification.
+
+General software projects use the same evidence-governed engine with a lighter product adapter.
 
 ## Invocation
 
 ```text
-/goal $loopseed one-shotted Build the requested vertical slice and prove the complete user path works.
+$loopseed one-shotted <natural-language goal>
 ```
 
-or:
-
-```text
-$loopseed one-shotted <one natural-language goal>
-```
-
-Use ordinary LoopSeed for small or tightly scoped tasks. One-Shotted mode is justified when repeated user prompting would otherwise be needed across planning, implementation, verification, and repair.
-
-## Bootstrap
-
-From the target project root:
+Initialize the project-local control plane:
 
 ```bash
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py init \
   --root . \
-  --goal "<the exact user-authorized goal>"
+  --goal "<the user's seed>"
 ```
 
-This creates:
+Optional controls:
+
+```text
+--domain auto|game|general
+--production-mode auto|focused|studio|moonshot
+--dialogue auto|on|off
+--max-dialogue-rounds 1..8
+```
+
+The default game route enters `CALIBRATE`. The default general route enters `BIND`. A clear game contract may explicitly skip dialogue; Moonshot always benefits from an explicit ambition and scope calibration.
+
+## What the creative dialogue is for
+
+The user is not required to arrive with a finished design document. The model acts as a co-director that can:
+
+- preserve the idea's identity;
+- identify and explain contradictions;
+- correct a weak or conflicting formulation without erasing the original intent;
+- amplify the most distinctive player experience;
+- complete missing game logic;
+- continue concepts the user already accepted;
+- present two to four meaningful options with a recommendation and consequences.
+
+A dialogue round is justified only when it advances a material surface such as:
+
+- player promise or role;
+- core loop and world response;
+- unique hook;
+- target artifact and production stage;
+- art direction, game feel, asset route, or hero moment;
+- vertical-slice boundary;
+- performance or evidence contract;
+- production mode;
+- an irreversible technical or commercial choice.
+
+Do not ask for repository facts, reversible implementation details, cosmetic trivia, or decisions already made. Do not reset accepted ideas in later rounds.
+
+## Dialogue turns
+
+Model questions require two to four options and one recommendation:
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py dialogue-turn \
+  --root . \
+  --actor model \
+  --kind question \
+  --summary "Choose how the first slice proves that the sect is alive" \
+  --effect preserve \
+  --effect amplify \
+  --advance core_loop \
+  --advance hero_moment \
+  --option "A|Three-day crisis|A complete bounded management loop" \
+  --option "B|Cinematic scene|More spectacle but weaker gameplay evidence" \
+  --option "C|Large sandbox|More breadth but lower completion confidence" \
+  --recommended A
+```
+
+Record the user's natural-language response:
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py dialogue-turn \
+  --root . \
+  --actor user \
+  --kind answer \
+  --summary "Use A, but preserve the inherited-memory idea and the high-fidelity cutaway view"
+```
+
+The ledger stores compact decisions, not private reasoning or full transcripts.
+
+## Dialogue stopping rule
+
+The default maximum is five model question rounds. It is a ceiling, not a quota.
+
+Lock the shot as soon as all of the following are sufficiently resolved:
+
+- the product identity is stable;
+- the player promise and core experience are clear;
+- the first complete production boundary is chosen;
+- the user has accepted or combined the material options;
+- must-not-lose rules and forbidden substitutions are explicit;
+- the selected mode is clear;
+- evidence can decide success or failure.
+
+Do not ask another question merely to appear thorough. If the cap is reached, present the strongest synthesis and the remaining material decision rather than starting a new discovery branch.
+
+## Production modes
+
+### Focused
+
+Use the smallest topology and scope that can finish one coherent result quickly. Preserve the requested product; do not volunteer additional systems.
+
+### Studio
+
+Default game-production route. Produce a coherent, presentation-ready vertical slice with game identity, Art Bible, game feel, assets, complete flow, playtest, and performance evidence.
+
+### Moonshot
+
+Amplify the most compelling experience and use aggressive but bounded Fan-out. Moonshot requires:
+
+- an explicit ambition expansion;
+- an explicit scope guard;
+- at least one documented amplification of the user's seed;
+- the same fail-closed evidence rules as every other mode.
+
+Moonshot deepens the strongest experience. It does not authorize uncontrolled feature multiplication or inflated completion claims.
+
+## Creative brief
+
+The dialogue compiles into `creative-brief.json` and `compiled-shot.md`.
+
+For a game, the brief includes:
+
+- seed intent and product outcome;
+- North Star;
+- original and preserved ideas;
+- visible revisions and amplifications;
+- decisions, bounded scope, non-goals, and must-not-lose rules;
+- player promise and role;
+- core loop and world response;
+- unique hook;
+- art direction and game feel;
+- hero moment and vertical slice;
+- asset strategy and performance budget;
+- reference roles;
+- required evidence;
+- the user answer or decision that authorizes the production lock.
+
+Lock it with:
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py lock-brief \
+  --root . \
+  --file creative-brief.json
+```
+
+The lock moves `CALIBRATE → BIND`. Ordinary transitions cannot bypass it. Acceptance gates cannot be added while calibration is open.
+
+## Control plane
+
+The initialized run contains:
 
 ```text
 .loopseed/one-shotted/
 ├── project-identity.md
 ├── architecture-contract.md
 ├── goal-contract.json
+├── creative-brief.json
+├── compiled-shot.md          # after creative lock
+├── dialogue.jsonl
 ├── acceptance.json
 ├── expert-registry.json
 ├── state.json
 ├── evidence.jsonl
 ├── defects.jsonl
-└── final-report.json       # only after successful finalization
+└── final-report.json         # only after successful finalization
 ```
 
-The directory is a small control plane, not a work diary. Keep current goal, gates, latest state, evidence events, and defect events. Never store secrets, private reasoning, or large copied sources.
+This is a small production control surface, not a work diary. Never store secrets, private reasoning, or copied source dumps.
 
 ## State machine
 
 ```text
+CALIBRATE
+  co-direct the seed and lock the user-authorized brief
+    ↓
 BIND
-  resolve authority, project identity, and observable outcome
+  freeze project, artifact, and stage identity
     ↓
 PLAN
-  choose the smallest coherent route and ownership boundaries
+  choose the smallest complete route and ownership boundaries
     ↓
 IMPLEMENT
-  make the authorized change; keep integration central
+  execute; fan out only independently judgeable work
     ↓
 VERIFY
-  independent verifier runs the real gate
+  independent verifier runs the real gates
     ├── PASS → next gate or FINALIZE
     └── FAIL → REPAIR
                  ↓
                IMPLEMENT / VERIFY
 ```
 
-`transition --no-progress` counts stalled rounds. At two consecutive no-progress rounds, the control plane forces `PLAN` and requires root-cause diagnosis plus a materially different route.
+Two no-progress rounds during calibration force a concise synthesis and final option decision. Two no-progress production rounds force root-cause replanning and a materially different route.
+
+## Game-first contracts
+
+Use the relevant subset of these contracts:
+
+### Game identity
+
+- player promise;
+- player role;
+- repeated player action;
+- world response;
+- unique hook;
+- why the result is a game rather than a static scene or interface.
+
+### Game feel
+
+- input latency and response;
+- camera behavior;
+- movement, animation, hit or state feedback;
+- sound and visual response;
+- first-minute comprehension;
+- success, failure, restart, and emotional rhythm.
+
+### Art production
+
+- Art Bible and palette;
+- silhouette, material, lighting, scale, composition, and UI/world coherence;
+- asset strategy and provenance;
+- placeholder replacement boundary;
+- fixed shots and isolated subject views;
+- prohibition against approving a blockout as final art.
+
+### Runtime and delivery
+
+- complete scripted playthrough;
+- production build, boot, package, relaunch, and state persistence where relevant;
+- FPS, frame time, draw calls, triangles, memory, load time, and regression budgets;
+- target hardware or an explicit degraded-observation boundary.
+
+## Fan-out
+
+The creative brief and integrity locks are shared by every worker. Fan out only when outputs are:
+
+- independent;
+- independently judgeable;
+- isolated in write scope or worktree;
+- faster in parallel than sequentially;
+- mergeable under one lead.
+
+Good candidates include isolated asset families, read-only investigations, independent tests, audio, bounded UI surfaces, and performance profiling.
+
+Keep the following under one sequential owner when coupled:
+
+- product identity;
+- core loop and shared game state;
+- architecture;
+- lighting or post-processing ownership;
+- final composition;
+- integration;
+- final approval.
+
+Fan out work, not competing interpretations of the game.
 
 ## Acceptance gates
 
-A gate is a decision, not an aspiration. It names:
+A gate names:
 
 - a stable ID;
 - one observable criterion;
@@ -106,32 +306,30 @@ Example:
 ```bash
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
   --root . \
-  --id BUILD \
-  --title "Production build" \
-  --criterion "The documented production build command exits zero" \
+  --id FLOW \
+  --title "Complete game loop" \
+  --criterion "A fresh player can complete, fail, and restart the documented slice" \
   --owner lead \
   --verifier verifier
 ```
 
-Choose gates close to the real product. Depending on the goal, these may include build, boot, complete user flow, screenshots at named states, data integrity, accessibility, performance distribution, regression, or artifact existence. Do not create dozens of low-value gates.
+Choose gates close to the real product. Do not replace player experience with build-only checks.
 
 ## Independent evidence
 
-Only the declared verifier may record a gate verdict:
+Only the declared verifier may record a verdict:
 
 ```bash
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py record \
   --root . \
-  --gate BUILD \
+  --gate FLOW \
   --result PASS \
   --actor verifier \
-  --summary "Production build completed successfully" \
-  --command "npm run build"
+  --summary "The complete slice was played from start through restart" \
+  --command "python tools/playtest.py"
 ```
 
-The implementation owner may produce candidate evidence, but cannot approve its own gate. Agreement is not proof. Prefer commands, runtime inspection, fixed screenshots, diffs, artifacts, or complete scripted flows.
-
-A `FAIL` automatically moves the run to `REPAIR`. The repair must be re-run by the verifier; changing the prose does not change the gate.
+A `FAIL` moves the run to `REPAIR`. Repair must be rerun by the verifier. Changing prose does not change a gate.
 
 ## Defects
 
@@ -147,19 +345,7 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py defect \
   --actor verifier
 ```
 
-Resolve with another event using the same ID and `--status RESOLVED`. The latest event controls current defect status. Open P0 or P1 defects prevent finalization.
-
-## Repair, rollback, and coupling
-
-Use parallel work only for independent investigation, tests, or isolated candidates. Rendering, product composition, architecture, shared state, and other coupled concerns need one sequential owner. When a change breaks an already-passed gate, repair it or restore the last passing state before continuing.
-
-Do not loop on the same diagnosis. After two no-progress rounds:
-
-```bash
-python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition --root . --no-progress
-```
-
-The run returns to `PLAN` and requires a different route.
+Resolve with another event using the same ID and `--status RESOLVED`. Open P0/P1 defects prevent finalization.
 
 ## Completion
 
@@ -169,20 +355,21 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py finalize --root .
 
 Finalization fails closed unless:
 
+- the creative brief is locked when calibration is enabled;
 - at least one required gate exists;
 - every required gate is `PASS`;
 - each PASS references evidence written by its declared verifier;
 - no P0/P1 defect remains open;
-- the contracts and ledgers are internally consistent.
+- contracts and ledgers are internally consistent.
 
-Successful finalization writes `final-report.json`, moves phase to `FINALIZE`, and sets status to `VERIFIED`. Hooks stop continuing after a terminal state.
+Successful finalization writes `final-report.json` and sets `VERIFIED`.
 
 ## Economy rules
 
-- One instruction does not imply maximal fanout.
-- Start with one lead and one evidence truth.
-- Add a verifier only at actual gates; add specialists only for independent gaps.
-- Keep outputs structured and bounded.
-- Update state on decisions, evidence, route changes, blockers, and terminal results—not every tool call.
-- Reuse the project’s existing build/test/runtime harness before building new orchestration.
+- Dialogue rounds must buy precision, not ceremony.
+- One production authorization does not imply maximal Fan-out.
+- Focused uses the minimum useful topology.
+- Studio activates only the disciplines required by the slice.
+- Moonshot accelerates independent quality surfaces but remains bounded.
+- Reuse the project's build, runtime, capture, and test harnesses before adding orchestration.
 - Prefer the closest real acceptance test over long status reports.
