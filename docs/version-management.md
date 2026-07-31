@@ -24,6 +24,41 @@ LoopSeed keeps `main` as the released stable baseline. Experimental branches rep
 - Failed runs remain immutable evidence; repair uses new commits and a fresh run.
 - No PR to `main` before the current candidate passes its declared cross-project gate.
 
+## Production usage guide synchronization gate
+
+`docs/usage-guide.zh-CN.md` is the canonical living guide for choosing Standard vs One-Shotted mode, selecting the current production branch, writing compact goals, applying evidence gates, and controlling Critic/Fan-out cost.
+
+Every version upgrade must update the guide in the same change. An upgrade includes any change to:
+
+- `.codex-plugin/plugin.json` version;
+- user-visible commands or invocation syntax;
+- Standard or One-Shotted behavior;
+- project binding, Gate, evidence, state, BLOCKED/Resume, or finalization rules;
+- the recommended stable or experimental production route;
+- default cost, Critic, Fan-out, or verification policy;
+- examples that no longer represent the latest recommended practice.
+
+The upgrade is documentation-incomplete until all of the following are true:
+
+```yaml
+usage_guide:
+  loopseed_version_matches_plugin: true
+  last_updated_refreshed: true
+  commands_and_examples_current: true
+  version_map_current: true
+  production_route_current: true
+  cost_policy_current: true
+  verifier_passed: true
+```
+
+Required check:
+
+```bash
+python tools/verify_usage_guide_version.py
+```
+
+CI must fail closed when the version declared by `docs/usage-guide.zh-CN.md` differs from `.codex-plugin/plugin.json`. A version bump without a synchronized guide update must not be described as a complete upgrade.
+
 ## C1.1 promised scope
 
 C1.1 intentionally stays narrow:
@@ -66,6 +101,7 @@ cross_project:
 repository:
   main_unchanged: true
   docs_schemas_tests_aligned: true
+  usage_guide_version_check: PASS
 ```
 
 Until then, v0.3 remains the released core.
