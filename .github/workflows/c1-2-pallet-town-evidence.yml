@@ -18,7 +18,7 @@ permissions:
 
 concurrency:
   group: c1-2-pallet-town-evidence-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   evidence:
@@ -45,9 +45,9 @@ jobs:
           cache: npm
           cache-dependency-path: subject/package-lock.json
 
-      - name: Execute bounded evidence run
+      - name: Execute bounded repair verification
         run: |
-          bash experiments/c1.2-pallet-town/run.sh \
+          bash experiments/c1.2-pallet-town/run-round2.sh \
             "$GITHUB_WORKSPACE/subject" \
             "$GITHUB_WORKSPACE/evidence"
 
