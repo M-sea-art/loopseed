@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from one_shotted_integrity import artifact_identity
+from one_shotted_bind import assert_same_binding, make_binding
 from one_shotted_io import load_run, write_json_atomic
 from one_shotted_types import ALLOWED_TRANSITIONS, VALID_PHASES, OneShottedError, clean_line, new_id, utc_now
 
@@ -26,7 +26,7 @@ def transition(
     status = str(state.get("status", "")).upper()
     current_phase = str(state.get("phase", "")).upper()
     if status != "ACTIVE":
-        raise OneShottedError(f"Cannot transition a run in terminal status {status}")
+        raise OneShottedError(f"Cannot transition a run in non-active status {status}")
 
     if abort:
         state.update(
@@ -45,6 +45,17 @@ def transition(
         supplied_binding = [project_id, candidate_commit, artifact]
         if any(supplied_binding) and not all(supplied_binding):
             raise OneShottedError("C1 BLOCKED binding requires --project, --candidate, and --artifact together")
+
+        existing_binding = state.get("binding")
+        binding: dict[str, Any] | None = existing_binding if isinstance(existing_binding, dict) else None
+        if all(supplied_binding):
+            proposed = make_binding(root, str(project_id), str(candidate_commit), str(artifact))
+            if binding is not None:
+                assert_same_binding(binding, proposed)
+            else:
+                binding = proposed
+                state["binding"] = binding
+
         blocked_at = utc_now()
         blocker: dict[str, Any] = {
             "id": new_id("BLK"),
@@ -54,14 +65,8 @@ def transition(
             "resume_phase": current_phase,
             "status": "OPEN",
         }
-        if all(supplied_binding):
-            binding = {
-                "project_id": clean_line(str(project_id), name="project id"),
-                "candidate_commit": clean_line(str(candidate_commit), name="candidate commit"),
-                "artifact": artifact_identity(root, str(artifact)),
-            }
+        if binding is not None:
             blocker["binding"] = binding
-            state["binding"] = binding
         state.update(
             {
                 "status": "BLOCKED",

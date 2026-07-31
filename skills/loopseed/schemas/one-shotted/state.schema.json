@@ -4,6 +4,50 @@
   "title": "LoopSeed One-Shotted State",
   "type": "object",
   "required": ["schema_version", "loopseed_version", "mode", "run_id", "status", "phase", "round", "no_progress_rounds", "next_action"],
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "required": ["path", "kind", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["file", "directory"]},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      },
+      "additionalProperties": true
+    },
+    "binding": {
+      "type": "object",
+      "required": ["project_id", "candidate_commit", "artifact", "bound_at"],
+      "properties": {
+        "schema_version": {"type": "string"},
+        "project_id": {"type": "string", "minLength": 1},
+        "candidate_commit": {"type": "string", "minLength": 1},
+        "artifact": {"$ref": "#/$defs/artifact"},
+        "git_repository_detected": {"type": "boolean"},
+        "actual_candidate_commit": {"type": ["string", "null"]},
+        "worktree_dirty": {"type": ["boolean", "null"]},
+        "bound_at": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "blocker": {
+      "type": "object",
+      "required": ["id", "reason", "unblock_condition", "blocked_at", "status"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "reason": {"type": "string", "minLength": 1},
+        "unblock_condition": {"type": "string", "minLength": 1},
+        "blocked_at": {"type": "string", "minLength": 1},
+        "resume_phase": {"type": "string"},
+        "status": {"enum": ["OPEN", "RESOLVED"]},
+        "binding": {"$ref": "#/$defs/binding"},
+        "resolved_at": {"type": "string"},
+        "resolved_by": {"type": "string"},
+        "resolved_by_evidence": {"type": "string"}
+      },
+      "additionalProperties": true
+    }
+  },
   "properties": {
     "schema_version": {"type": "string"},
     "loopseed_version": {"type": "string"},
@@ -15,7 +59,11 @@
     "no_progress_rounds": {"type": "integer", "minimum": 0},
     "max_no_progress_rounds": {"type": "integer", "minimum": 1},
     "next_action": {"type": "string"},
-    "true_blocker": {"type": ["object", "null"]}
+    "binding": {"anyOf": [{"$ref": "#/$defs/binding"}, {"type": "null"}]},
+    "true_blocker": {"anyOf": [{"$ref": "#/$defs/blocker"}, {"type": "null"}]},
+    "blocker_history": {"type": "array", "items": {"$ref": "#/$defs/blocker"}},
+    "last_resume_at": {"type": "string"},
+    "last_resume_evidence_id": {"type": "string"}
   },
   "additionalProperties": true
 }

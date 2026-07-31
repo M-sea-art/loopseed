@@ -4,7 +4,7 @@
 
 [English](README.md)
 
-LoopSeed 是一个需要显式调用的 Codex Skill，用项目规划与直接证据驱动任务完成。0.3 新增 **One‑Shotted 模式**：用户只给出一次自然语言授权，系统即可自主完成规划、实现、独立验收、修复和终局判断，不需要用户不断重复“继续”。
+LoopSeed 是一个需要显式调用的 Codex Skill，用项目规划与直接证据驱动任务完成。`main` 上的稳定版仍是 0.3.0；C1.1 实验候选新增了正式项目绑定、机器执行证据、可恢复的 `BLOCKED`，以及验证过程中不可偷换产物的完整性检查。
 
 ## 两种模式
 
@@ -34,7 +34,7 @@ $loopseed <目标>
 $loopseed one-shotted <一句自然语言目标>
 ```
 
-这里的“One‑Shotted”是**一次人类授权**，不是模型只回复一次。系统内部可以多轮规划、调用工具、分派真正独立的任务、运行测试、采集证据、修复缺陷、回滚回归并从状态恢复；但不再要求用户反复推动。
+“One‑Shotted”是**一次人类授权**，不是模型只回复一次。系统内部可以多轮规划、调用工具、运行测试、独立验收、修复、回滚、诚实阻塞，并凭新证据恢复；用户不需要反复说“继续”。
 
 ```text
 一次人类目标
@@ -50,8 +50,6 @@ $loopseed one-shotted <一句自然语言目标>
                       终局门
 ```
 
-它复刻的是优秀“one-shot”项目真正有效的工程方法：提示词只负责点火；架构合同、所有权边界、可重复证据、独立批评者和严格停止条件，才让任务能够自我驱动。
-
 ## 为什么它不是臃肿的多智能体框架
 
 LoopSeed 的宗旨是减少重复提示与协调成本，而不是追求智能体数量。
@@ -63,11 +61,11 @@ LoopSeed 的宗旨是减少重复提示与协调成本，而不是追求智能�
 - 连续两轮无进展，强制回到根因诊断并换路；
 - 未解决的 P0/P1 缺陷禁止完成；
 - 只有 Finalizer 可以写入 `VERIFIED`；
-- 多写入者必须隔离，高耦合问题必须由单一负责人顺序收敛。
+- 多写入者必须隔离，高耦合问题必须顺序收敛。
 
 ## One‑Shotted 控制面
 
-内置的零依赖 CLI 会在目标项目中建立一个小型、可审计的控制面：
+初始化：
 
 ```bash
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py init \
@@ -90,28 +88,100 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py init \
 └── final-report.json       # 只有终局验证通过后才生成
 ```
 
-### 增加验收 Gate
+### 先绑定唯一验证对象
+
+机器 Gate 执行前，先绑定项目、候选 Commit 和产物：
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py bind \
+  --root . \
+  --project PROJECT-P01 \
+  --candidate "$(git rev-parse HEAD)" \
+  --artifact dist/app.js
+```
+
+真实 Git 工作树中，CLI 会自行核对实际 `HEAD`。同一绑定可重复执行；若项目、Commit 或产物改变，必须开启新的 Run，不能静默换绑。
+
+### 增加机器 Gate
 
 ```bash
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
   --root . \
   --id FLOW \
   --title "完整用户流程" \
-  --criterion "新用户可以完成文档规定的主流程" \
+  --criterion "新用户可以完成规定主流程" \
   --owner lead \
-  --verifier verifier
+  --verifier verifier \
+  --machine
 ```
 
-### 记录独立验收
+`--machine` 表示手工写一句 `record PASS` 不能满足这个 Gate。
+
+### 执行机器证据
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py run-evidence \
+  --root . \
+  --gate FLOW \
+  --actor verifier \
+  --command "python tools/playtest.py" \
+  --project PROJECT-P01 \
+  --candidate "$(git rev-parse HEAD)" \
+  --artifact dist/app.js
+```
+
+机器 PASS 必须同时满足：
+
+```text
+命令退出码为 0
+实际 Git HEAD 等于绑定 Commit（存在 Git 时）
+绑定 Hash = 命令执行前 Hash = 命令执行后 Hash
+```
+
+如果验证命令在执行过程中修改或删除了被验证产物，系统会记录 `FAIL`；这条证据既不能通过 Gate，也不能解除阻塞。
+
+### 进入 BLOCKED 并恢复
+
+只有真实外部条件缺失时才进入阻塞：
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition \
+  --root . \
+  --blocker "独立验证环境暂不可用" \
+  --unblock "验证命令可以实际运行"
+```
+
+条件成立后，针对同一绑定生成新的解阻证据：
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py run-evidence \
+  --root . \
+  --blocker <BLOCKER_ID> \
+  --actor verifier \
+  --command "python tools/check_unblock.py" \
+  --project PROJECT-P01 \
+  --candidate "$(git rev-parse HEAD)" \
+  --artifact dist/app.js
+
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py resume \
+  --root . \
+  --evidence <EVIDENCE_ID> \
+  --actor verifier
+```
+
+`resume` 只接受属于当前 Blocker、晚于阻塞时间、机器真实执行、绑定一致且产物完整性稳定的证据，然后把同一个 Run 恢复到 `ACTIVE / VERIFY`。
+
+### 普通人工验收
+
+不要求机器执行的 Gate 仍可由指定 Verifier 写入简洁证据：
 
 ```bash
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py record \
   --root . \
-  --gate FLOW \
+  --gate COPY_REVIEW \
   --result PASS \
   --actor verifier \
-  --summary "完整主流程实际运行通过" \
-  --command "python tools/playtest.py"
+  --summary "已核对批准文案"
 ```
 
 ### 终局判断
@@ -120,21 +190,19 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py record \
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py finalize --root .
 ```
 
-以下任一条件不满足都会拒绝完成：至少存在一个必需 Gate；所有必需 Gate 均有指定 Verifier 写入的 PASS 证据；合同与证据引用一致；不存在仍开放的 P0/P1 缺陷。
+以下任一条件不满足都会拒绝完成：所有必需 Gate 有合法证据；机器 Gate 始终绑定同一个产物；当前 Git 与 Artifact 仍匹配；合同与证据账本一致；不存在开放的 P0/P1 缺陷。
 
 完整协议见 [One‑Shotted Mode](skills/loopseed/references/one-shotted-mode.md)。
 
 ## Hooks
 
-现有 Hooks 保持保守：
-
 - `SessionStart` 只为 ACTIVE 状态恢复压缩上下文；
 - One‑Shotted JSON 状态优先于旧 `.loopseed.md`；
 - `Stop` 在验收未完成时只请求一次续接；
-- `stop_hook_active` 防止递归循环；
-- `VERIFIED`、`BLOCKED`、`ABORTED` 必定允许停止。
+- `VERIFIED`、`BLOCKED`、`ABORTED` 允许当前会话停止；
+- `BLOCKED` 不是自动完成，也不是永久死锁，只能通过显式 `resume` 和新鲜机器证据恢复。
 
-Hooks 不会扩大权限、自动开放网络，也不会假装当前 Codex 表面具备不存在的机制。
+Hooks 不会扩大权限、自动开放网络，也不会假装当前执行环境具备不存在的能力。
 
 ## 本地验证
 

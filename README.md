@@ -4,7 +4,7 @@
 
 [简体中文](README.zh-CN.md)
 
-LoopSeed is an explicitly invoked Codex skill for plan-bound, evidence-driven execution. Version 0.3 adds **One-Shotted mode**: one human instruction can authorize a complete planning, implementation, independent verification, repair, and finalization run without requiring the user to repeatedly push the agent forward.
+LoopSeed is an explicitly invoked Codex skill for plan-bound, evidence-driven execution. The released `main` baseline is 0.3.0. The C1.1 experimental prerelease adds explicit project binding, machine-executed evidence, resumable `BLOCKED` runs, and integrity-stable finalization.
 
 ## Two modes
 
@@ -34,7 +34,7 @@ or:
 $loopseed one-shotted <one natural-language goal>
 ```
 
-“One-Shotted” means **one human authorization**, not one model response. LoopSeed may internally plan, invoke tools, delegate independent work, test, capture evidence, repair defects, roll back regressions, and resume from state. The user should not need to repeatedly say “continue.”
+“One-Shotted” means **one human authorization**, not one model response. LoopSeed may internally plan, invoke tools, delegate independent work, test, capture evidence, repair defects, roll back regressions, block honestly, and resume from fresh evidence. The user should not need to repeatedly say “continue.”
 
 ```text
 one human goal
@@ -49,8 +49,6 @@ Plan → Implement → Independent Verify
                               ↓
                          Final Gate
 ```
-
-The pattern is inspired by the strongest part of autonomous “one-shot” projects: the prompt starts the run, but contracts, ownership, repeatable evidence, independent criticism, and a fail-closed stop rule make it self-driving.
 
 ## Why it is not a giant agent framework
 
@@ -90,6 +88,20 @@ Generated files:
 └── final-report.json       # generated only after successful finalization
 ```
 
+### Bind one verification subject
+
+Before a machine gate, bind the run to one project, candidate commit, and artifact:
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py bind \
+  --root . \
+  --project PROJECT-P01 \
+  --candidate "$(git rev-parse HEAD)" \
+  --artifact dist/app.js
+```
+
+In a real Git worktree, the CLI independently verifies the actual `HEAD`. Repeating the same binding is idempotent; changing the project, candidate, or artifact requires a fresh run.
+
 ### Add a gate
 
 ```bash
@@ -99,19 +111,77 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
   --title "Complete user flow" \
   --criterion "A fresh user can finish the documented primary flow" \
   --owner lead \
-  --verifier verifier
+  --verifier verifier \
+  --machine
 ```
 
-### Record an independent verdict
+`--machine` prevents a prose-only `record PASS` from satisfying the gate.
+
+### Execute machine evidence
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py run-evidence \
+  --root . \
+  --gate FLOW \
+  --actor verifier \
+  --command "python tools/playtest.py" \
+  --project PROJECT-P01 \
+  --candidate "$(git rev-parse HEAD)" \
+  --artifact dist/app.js
+```
+
+Machine PASS requires all of the following:
+
+```text
+command exit code == 0
+actual Git HEAD == bound candidate (when Git is present)
+bound artifact hash == before-command hash == after-command hash
+```
+
+If the verifier command changes or deletes the bound artifact, evidence is recorded as `FAIL` and cannot satisfy a gate or unblock a run.
+
+### Block and resume
+
+A true external blocker may stop safely:
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition \
+  --root . \
+  --blocker "Independent verification surface is unavailable" \
+  --unblock "The verifier command becomes runnable"
+```
+
+After the condition becomes true, produce fresh unblock evidence against the same binding:
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py run-evidence \
+  --root . \
+  --blocker <BLOCKER_ID> \
+  --actor verifier \
+  --command "python tools/check_unblock.py" \
+  --project PROJECT-P01 \
+  --candidate "$(git rev-parse HEAD)" \
+  --artifact dist/app.js
+
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py resume \
+  --root . \
+  --evidence <EVIDENCE_ID> \
+  --actor verifier
+```
+
+`resume` accepts only fresh, machine-produced, integrity-stable evidence for the active blocker and returns the same run to `ACTIVE / VERIFY`.
+
+### Manual independent verdicts
+
+Non-machine gates may still use compact verifier-authored records:
 
 ```bash
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py record \
   --root . \
-  --gate FLOW \
+  --gate COPY_REVIEW \
   --result PASS \
   --actor verifier \
-  --summary "The full primary flow completed without errors" \
-  --command "python tools/playtest.py"
+  --summary "The approved copy is present"
 ```
 
 ### Finalize
@@ -120,7 +190,7 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py record \
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py finalize --root .
 ```
 
-Finalization fails unless every required gate has verifier-authored PASS evidence, at least one required gate exists, contracts are consistent, and no P0/P1 defect is open.
+Finalization fails unless every required gate has valid verifier evidence, machine gates retain one bound subject, contracts are consistent, the current artifact and Git identity still match, and no P0/P1 defect is open.
 
 See [One-Shotted Mode](skills/loopseed/references/one-shotted-mode.md) for the complete workflow.
 
@@ -132,7 +202,8 @@ Bundled hooks remain conservative:
 - One-Shotted JSON state takes precedence over legacy `.loopseed.md`.
 - `Stop` requests one continuation while acceptance remains unresolved.
 - `stop_hook_active` prevents recursive continuation.
-- `VERIFIED`, `BLOCKED`, and `ABORTED` always allow stop.
+- `VERIFIED`, `BLOCKED`, and `ABORTED` allow the current session to stop.
+- `BLOCKED` is recoverable only through the explicit evidence-bound `resume` command.
 
 Hooks do not expand permissions, grant network access, or make unavailable Codex mechanisms real.
 

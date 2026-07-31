@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-VERSION = "0.3.0-c1"
+VERSION = "0.3.1-c1.1"
 RUN_RELATIVE = Path(".loopseed") / "one-shotted"
 VALID_STATUSES = {"ACTIVE", "VERIFIED", "BLOCKED", "ABORTED"}
 VALID_PHASES = {"BIND", "PLAN", "IMPLEMENT", "VERIFY", "REPAIR", "FINALIZE"}
@@ -60,3 +60,7 @@ def run_dir(root: Path) -> Path:
 
 def template_dir() -> Path:
     return Path(__file__).resolve().parents[1] / "templates" / "one-shotted"
+
+
+def schema_dir() -> Path:
+    return Path(__file__).resolve().parents[1] / "schemas" / "one-shotted"

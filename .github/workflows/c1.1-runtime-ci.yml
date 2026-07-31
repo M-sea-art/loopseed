@@ -1,0 +1,43 @@
+name: C1.1 Runtime CI
+
+on:
+  push:
+    branches:
+      - experiment/c1.1-binding-integrity-repair-2026-07-30
+      - fix/c1.1-integrity-hardening-2026-07-31
+  pull_request:
+    paths:
+      - ".codex-plugin/**"
+      - "skills/loopseed/**"
+      - "hooks/**"
+      - "tests/**"
+      - "README.md"
+      - "README.zh-CN.md"
+      - "CHANGELOG.md"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate JSON contracts
+        run: |
+          python -m json.tool .codex-plugin/plugin.json > /dev/null
+          find skills/loopseed/schemas skills/loopseed/templates -name '*.json' -print0 \
+            | xargs -0 -n1 python -m json.tool > /dev/null
+      - name: Compile Python
+        run: python -m compileall -q hooks skills/loopseed/scripts tests
+      - name: Run complete test suite
+        run: python -m unittest discover -s tests -v
+      - name: Confirm C1.1 CLI surface
+        run: |
+          python skills/loopseed/scripts/one_shotted.py --help | grep -E "bind|run-evidence|resume"
+          python skills/loopseed/scripts/one_shotted.py bind --help > /dev/null
+          python skills/loopseed/scripts/one_shotted.py run-evidence --help > /dev/null
+          python skills/loopseed/scripts/one_shotted.py resume --help > /dev/null

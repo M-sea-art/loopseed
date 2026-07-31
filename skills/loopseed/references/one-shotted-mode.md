@@ -1,30 +1,6 @@
 # One-Shotted Mode
 
-One-Shotted mode turns **one human authorization** into a bounded autonomous completion run. It copies the successful engineering pattern behind strong “one-shot” agent projects without copying their domain or assuming that a single model response is enough.
-
-## What is being replicated
-
-The useful pattern is:
-
-```text
-one human goal
-    ↓
-project identity + architecture contract
-    ↓
-predeclared acceptance gates
-    ↓
-implementation owner(s)
-    ↓
-repeatable evidence harness
-    ↓
-independent verifier
-    ↓
-PASS → preserve / FAIL → repair or rollback
-    ↓
-final gate decides completion
-```
-
-The prompt is only the ignition. The architecture contract, ownership boundaries, deterministic or repeatable evidence, independent criticism, and honest stopping rule make the run self-driving.
+One-Shotted mode turns **one human authorization** into a bounded autonomous completion run. The prompt is only the ignition; project binding, acceptance gates, repeatable evidence, independent verification, repair, recovery, and fail-closed finalization make the run self-driving.
 
 ## Invocation
 
@@ -38,7 +14,7 @@ or:
 $loopseed one-shotted <one natural-language goal>
 ```
 
-Use ordinary LoopSeed for small or tightly scoped tasks. One-Shotted mode is justified when repeated user prompting would otherwise be needed across planning, implementation, verification, and repair.
+Use ordinary LoopSeed for small or tightly scoped tasks. One-Shotted mode is justified when repeated user prompting would otherwise be needed across planning, implementation, verification, blocking, recovery, and repair.
 
 ## Bootstrap
 
@@ -50,7 +26,7 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py init \
   --goal "<the exact user-authorized goal>"
 ```
 
-This creates:
+This creates a compact project-local control plane:
 
 ```text
 .loopseed/one-shotted/
@@ -65,13 +41,13 @@ This creates:
 └── final-report.json       # only after successful finalization
 ```
 
-The directory is a small control plane, not a work diary. Keep current goal, gates, latest state, evidence events, and defect events. Never store secrets, private reasoning, or large copied sources.
+Never store secrets, customer data, private reasoning, or large copied sources in this directory.
 
 ## State machine
 
 ```text
 BIND
-  resolve authority, project identity, and observable outcome
+  resolve authority and bind one verification subject
     ↓
 PLAN
   choose the smallest coherent route and ownership boundaries
@@ -89,49 +65,142 @@ VERIFY
 
 `transition --no-progress` counts stalled rounds. At two consecutive no-progress rounds, the control plane forces `PLAN` and requires root-cause diagnosis plus a materially different route.
 
+## Explicit project binding
+
+Machine evidence must identify exactly one subject:
+
+```text
+project ID
++ candidate commit
++ artifact path
++ artifact SHA-256
+```
+
+Bind it before machine verification:
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py bind \
+  --root . \
+  --project PROJECT-P01 \
+  --candidate "$(git rev-parse HEAD)" \
+  --artifact dist/app.js
+```
+
+Rules:
+
+- a real Git worktree must have an actual `HEAD` equal to the bound candidate;
+- dirty worktree state is recorded but is not automatically rejected;
+- repeating the identical binding is idempotent;
+- changing project, candidate, artifact path, or artifact hash requires a fresh run;
+- machine gates may run without ever entering `BLOCKED` once a binding exists.
+
 ## Acceptance gates
 
-A gate is a decision, not an aspiration. It names:
-
-- a stable ID;
-- one observable criterion;
-- whether it is required;
-- an implementation owner;
-- a different verifier;
-- evidence IDs;
-- status: `PENDING`, `PASS`, `FAIL`, or `BLOCKED`.
-
-Example:
+A gate is a decision, not an aspiration. It names a stable ID, observable criterion, required/optional status, implementation owner, different verifier, evidence IDs, and current status.
 
 ```bash
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
   --root . \
   --id BUILD \
   --title "Production build" \
-  --criterion "The documented production build command exits zero" \
+  --criterion "The production build command exits zero without changing the bound artifact" \
   --owner lead \
-  --verifier verifier
+  --verifier verifier \
+  --machine
 ```
 
-Choose gates close to the real product. Depending on the goal, these may include build, boot, complete user flow, screenshots at named states, data integrity, accessibility, performance distribution, regression, or artifact existence. Do not create dozens of low-value gates.
+Use `--machine` whenever completion depends on an executable check and an immutable artifact. Do not create dozens of low-value gates.
 
-## Independent evidence
+## Machine evidence
 
-Only the declared verifier may record a gate verdict:
+Execute the real verifier:
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py run-evidence \
+  --root . \
+  --gate BUILD \
+  --actor verifier \
+  --command "python tools/verify.py" \
+  --project PROJECT-P01 \
+  --candidate "$(git rev-parse HEAD)" \
+  --artifact dist/app.js
+```
+
+The runner records bounded stdout/stderr, timestamps, exit code, project and commit identity, expected artifact, before artifact, after artifact, and an explicit integrity verdict.
+
+PASS is derived, not declared:
+
+```text
+exit_code == 0
+AND actual Git HEAD == bound candidate (when Git exists)
+AND expected artifact == before artifact == after artifact
+```
+
+A verifier command that modifies, deletes, or replaces the bound artifact records machine `FAIL` with an integrity reason. It cannot satisfy a gate or unblock a run. Audit and finalization independently re-check the same conditions instead of trusting the runner's `result` field.
+
+## Manual evidence
+
+Only the declared verifier may record a manual gate verdict:
 
 ```bash
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py record \
   --root . \
-  --gate BUILD \
+  --gate COPY_REVIEW \
   --result PASS \
   --actor verifier \
-  --summary "Production build completed successfully" \
-  --command "npm run build"
+  --summary "Approved copy is present"
 ```
 
-The implementation owner may produce candidate evidence, but cannot approve its own gate. Agreement is not proof. Prefer commands, runtime inspection, fixed screenshots, diffs, artifacts, or complete scripted flows.
+Manual records cannot satisfy a gate declared with `--machine`.
 
-A `FAIL` automatically moves the run to `REPAIR`. The repair must be re-run by the verifier; changing the prose does not change the gate.
+## True blocking and recovery
+
+A failing test, low quality, uncertainty, or an exhausted route is not a blocker. It triggers repair, rollback, or replanning.
+
+A true external blocker requires an exact reason and exact unblock condition:
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition \
+  --root . \
+  --blocker "Independent verification surface is unavailable" \
+  --unblock "The verifier command becomes runnable"
+```
+
+If an explicit binding already exists, the blocker inherits it. Legacy unbound blocking remains possible, but evidence-bound `resume` requires a bound blocker.
+
+After the condition becomes true, execute fresh unblock evidence against the same subject:
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py run-evidence \
+  --root . \
+  --blocker <BLOCKER_ID> \
+  --actor verifier \
+  --command "python tools/check_unblock.py" \
+  --project PROJECT-P01 \
+  --candidate "$(git rev-parse HEAD)" \
+  --artifact dist/app.js
+```
+
+Then resume:
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py resume \
+  --root . \
+  --evidence <EVIDENCE_ID> \
+  --actor verifier
+```
+
+Resume accepts only evidence that is:
+
+- machine-produced by the bundled runner;
+- newer than the active blocker;
+- produced by the named actor;
+- tied to the active blocker;
+- tied to the same project, candidate, and artifact;
+- exit-code `0`;
+- integrity-stable.
+
+It returns the same run to `ACTIVE / VERIFY`. Gate evidence produced before the latest resume cannot finalize the run.
 
 ## Defects
 
@@ -143,23 +212,11 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py defect \
   --id VIS-001 \
   --severity P1 \
   --status OPEN \
-  --summary "Primary game state is visually unreadable" \
+  --summary "Primary state is unreadable" \
   --actor verifier
 ```
 
 Resolve with another event using the same ID and `--status RESOLVED`. The latest event controls current defect status. Open P0 or P1 defects prevent finalization.
-
-## Repair, rollback, and coupling
-
-Use parallel work only for independent investigation, tests, or isolated candidates. Rendering, product composition, architecture, shared state, and other coupled concerns need one sequential owner. When a change breaks an already-passed gate, repair it or restore the last passing state before continuing.
-
-Do not loop on the same diagnosis. After two no-progress rounds:
-
-```bash
-python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition --root . --no-progress
-```
-
-The run returns to `PLAN` and requires a different route.
 
 ## Completion
 
@@ -171,11 +228,13 @@ Finalization fails closed unless:
 
 - at least one required gate exists;
 - every required gate is `PASS`;
-- each PASS references evidence written by its declared verifier;
+- every PASS has valid evidence from its verifier;
+- machine gates preserve one bound subject and still match current Git/artifact identity;
+- no machine gate evidence predates the latest resume;
 - no P0/P1 defect remains open;
-- the contracts and ledgers are internally consistent.
+- contracts and ledgers are internally consistent.
 
-Successful finalization writes `final-report.json`, moves phase to `FINALIZE`, and sets status to `VERIFIED`. Hooks stop continuing after a terminal state.
+Successful finalization writes `final-report.json`, including the verified binding, moves phase to `FINALIZE`, and sets status to `VERIFIED`.
 
 ## Economy rules
 
@@ -183,6 +242,6 @@ Successful finalization writes `final-report.json`, moves phase to `FINALIZE`, a
 - Start with one lead and one evidence truth.
 - Add a verifier only at actual gates; add specialists only for independent gaps.
 - Keep outputs structured and bounded.
-- Update state on decisions, evidence, route changes, blockers, and terminal results—not every tool call.
+- Update state on decisions, evidence, route changes, blockers, recovery, and terminal results—not every tool call.
 - Reuse the project’s existing build/test/runtime harness before building new orchestration.
 - Prefer the closest real acceptance test over long status reports.

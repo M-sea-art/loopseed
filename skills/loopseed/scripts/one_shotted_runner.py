@@ -1,4 +1,4 @@
-"""Machine-executed evidence for C1 gate and unblock verification."""
+"""Machine-executed evidence for C1.1 gate and unblock verification."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from one_shotted_integrity import artifact_identity
+from one_shotted_integrity import artifact_identity, repository_identity
 from one_shotted_io import append_jsonl, load_run, write_json_atomic
 from one_shotted_model import gate_map
 from one_shotted_types import OneShottedError, clean_line, new_id, utc_now
@@ -20,7 +20,12 @@ def _bounded(value: str | None) -> str:
     return text if len(text) <= MAX_OUTPUT else text[:MAX_OUTPUT] + "\n...[truncated]"
 
 
-def _assert_binding(expected: dict[str, Any], project_id: str, candidate_commit: str, artifact: dict[str, Any]) -> None:
+def _assert_binding(
+    expected: dict[str, Any],
+    project_id: str,
+    candidate_commit: str,
+    artifact: dict[str, Any],
+) -> None:
     if str(expected.get("project_id", "")) != project_id:
         raise OneShottedError("Evidence project binding does not match the active run")
     if str(expected.get("candidate_commit", "")) != candidate_commit:
@@ -32,6 +37,28 @@ def _assert_binding(expected: dict[str, Any], project_id: str, candidate_commit:
         raise OneShottedError("Evidence artifact path does not match the active run")
     if str(expected_artifact.get("sha256", "")) != str(artifact.get("sha256", "")):
         raise OneShottedError("Evidence artifact hash does not match the active run")
+
+
+def _assert_actual_head(root: Path, candidate_commit: str) -> dict[str, Any]:
+    repository = repository_identity(root)
+    if repository.get("detected"):
+        actual = str(repository.get("head") or "")
+        if not actual:
+            raise OneShottedError("Real Git worktree has no committed HEAD")
+        if actual != candidate_commit:
+            raise OneShottedError(
+                f"Actual Git HEAD {actual} does not match bound candidate {candidate_commit}"
+            )
+    return repository
+
+
+def _missing_artifact(expected: dict[str, Any], error: Exception) -> dict[str, Any]:
+    return {
+        "path": str(expected.get("path", "")),
+        "kind": "missing",
+        "sha256": "",
+        "error": str(error),
+    }
 
 
 def run_evidence(
@@ -85,10 +112,14 @@ def run_evidence(
             raise OneShottedError("Implementation owner cannot self-approve a gate")
         binding = state.get("binding")
         if not isinstance(binding, dict):
-            raise OneShottedError("Active run lacks C1 project binding")
+            raise OneShottedError("Active run lacks C1 project binding; use the bind command first")
 
+    expected_artifact = binding.get("artifact")
+    if not isinstance(expected_artifact, dict):
+        raise OneShottedError("Active binding is missing artifact identity")
     before = artifact_identity(root, artifact)
     _assert_binding(binding, project_id, candidate_commit, before)
+    repository_before = _assert_actual_head(root, candidate_commit)
 
     started_at = utc_now()
     timed_out = False
@@ -112,12 +143,40 @@ def run_evidence(
         stderr = _bounded(exc.stderr.decode() if isinstance(exc.stderr, bytes) else exc.stderr)
     finished_at = utc_now()
 
-    after = artifact_identity(root, artifact)
+    try:
+        after = artifact_identity(root, artifact)
+    except OneShottedError as exc:
+        after = _missing_artifact(expected_artifact, exc)
+    repository_after = repository_identity(root)
+
+    expected_hash = str(expected_artifact.get("sha256", ""))
+    before_hash = str(before.get("sha256", ""))
+    after_hash = str(after.get("sha256", ""))
+    artifact_stable = bool(expected_hash) and expected_hash == before_hash == after_hash
+
+    git_detected = bool(repository_before.get("detected"))
+    actual_before = repository_before.get("head")
+    actual_after = repository_after.get("head") if repository_after.get("detected") else None
+    head_stable = not git_detected or (
+        str(actual_before or "") == candidate_commit and str(actual_after or "") == candidate_commit
+    )
+
+    integrity_stable = artifact_stable and head_stable
+    integrity_failure_reason: str | None = None
+    if not artifact_stable:
+        integrity_failure_reason = (
+            "ARTIFACT_MISSING_AFTER_VERIFICATION"
+            if not after_hash
+            else "ARTIFACT_MUTATED_DURING_VERIFICATION"
+        )
+    elif not head_stable:
+        integrity_failure_reason = "CANDIDATE_COMMIT_CHANGED_DURING_VERIFICATION"
+
     evidence_id = new_id("EV")
-    result = "PASS" if exit_code == 0 else "FAIL"
+    result = "PASS" if exit_code == 0 and integrity_stable else "FAIL"
     entry = {
         "id": evidence_id,
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "kind": "MACHINE",
         "producer": PRODUCER,
         "purpose": purpose,
@@ -137,8 +196,17 @@ def run_evidence(
         "stderr_summary": stderr,
         "project_id": project_id,
         "candidate_commit": candidate_commit,
-        "artifact": after,
+        "bound_candidate_commit": str(binding.get("candidate_commit", "")),
+        "actual_candidate_commit": actual_after if git_detected else None,
+        "git_repository_detected": git_detected,
+        "worktree_dirty_before": repository_before.get("worktree_dirty"),
+        "worktree_dirty_after": repository_after.get("worktree_dirty"),
+        "expected_artifact": dict(expected_artifact),
         "artifact_before": before,
+        "artifact_after": after,
+        "artifact": after,
+        "integrity_stable": integrity_stable,
+        "integrity_failure_reason": integrity_failure_reason,
     }
     append_jsonl(target / "evidence.jsonl", entry)
 
@@ -158,12 +226,14 @@ def run_evidence(
         write_json_atomic(target / "state.json", state)
 
     return {
-        "ok": exit_code == 0,
+        "ok": result == "PASS",
         "evidence_id": evidence_id,
         "purpose": purpose,
         "gate": gate_id,
         "blocker": blocker_id,
         "result": result,
         "exit_code": exit_code,
+        "integrity_stable": integrity_stable,
+        "integrity_failure_reason": integrity_failure_reason,
         "artifact": after,
     }

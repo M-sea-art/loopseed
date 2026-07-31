@@ -1,4 +1,4 @@
-"""Evidence-bound recovery from BLOCKED for C1 runs."""
+"""Evidence-bound recovery from BLOCKED for C1.1 runs."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from one_shotted_integrity import assert_artifact_matches
+from one_shotted_integrity import assert_artifact_matches, repository_identity
 from one_shotted_io import load_run, read_jsonl, write_json_atomic
 from one_shotted_runner import PRODUCER
 from one_shotted_types import OneShottedError, clean_line, utc_now
@@ -17,6 +17,14 @@ def _parse_utc(value: str, *, name: str) -> datetime:
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
     except (TypeError, ValueError) as exc:
         raise OneShottedError(f"Invalid {name} timestamp: {value!r}") from exc
+
+
+def _subject(item: Any, name: str) -> dict[str, Any]:
+    if not isinstance(item, dict):
+        raise OneShottedError(f"Resume evidence is missing {name}")
+    if not str(item.get("path", "")).strip() or not str(item.get("sha256", "")).strip():
+        raise OneShottedError(f"Resume evidence {name} requires path and sha256")
+    return item
 
 
 def resume(root: Path, evidence_id: str, actor: str) -> dict[str, Any]:
@@ -53,6 +61,8 @@ def resume(root: Path, evidence_id: str, actor: str) -> dict[str, Any]:
         raise OneShottedError("Resume actor must be the actor who produced the unblock evidence")
     if evidence.get("result") != "PASS" or int(evidence.get("exit_code", -1)) != 0:
         raise OneShottedError("Resume evidence did not pass")
+    if evidence.get("integrity_stable") is not True or evidence.get("integrity_failure_reason"):
+        raise OneShottedError("Resume evidence did not preserve the bound subject")
     if _parse_utc(str(evidence.get("created_at", "")), name="evidence") <= _parse_utc(
         blocked_at, name="blocked_at"
     ):
@@ -60,17 +70,32 @@ def resume(root: Path, evidence_id: str, actor: str) -> dict[str, Any]:
 
     if str(evidence.get("project_id", "")) != str(binding.get("project_id", "")):
         raise OneShottedError("Resume evidence has the wrong project binding")
+    if str(evidence.get("bound_candidate_commit", "")) != str(binding.get("candidate_commit", "")):
+        raise OneShottedError("Resume evidence has the wrong bound candidate commit")
     if str(evidence.get("candidate_commit", "")) != str(binding.get("candidate_commit", "")):
         raise OneShottedError("Resume evidence has the wrong candidate commit")
-    expected_artifact = binding.get("artifact")
-    actual_artifact = evidence.get("artifact")
-    if not isinstance(expected_artifact, dict) or not isinstance(actual_artifact, dict):
-        raise OneShottedError("Resume evidence is missing artifact identity")
-    if str(actual_artifact.get("path", "")) != str(expected_artifact.get("path", "")):
-        raise OneShottedError("Resume evidence has the wrong artifact path")
-    if str(actual_artifact.get("sha256", "")) != str(expected_artifact.get("sha256", "")):
-        raise OneShottedError("Resume evidence has the wrong artifact hash")
-    assert_artifact_matches(root, actual_artifact)
+
+    expected_binding = _subject(binding.get("artifact"), "bound artifact")
+    expected = _subject(evidence.get("expected_artifact"), "expected_artifact")
+    before = _subject(evidence.get("artifact_before"), "artifact_before")
+    after = _subject(evidence.get("artifact_after"), "artifact_after")
+    expected_tuple = (str(expected_binding.get("path")), str(expected_binding.get("sha256")))
+    if any(
+        (str(item.get("path")), str(item.get("sha256"))) != expected_tuple
+        for item in (expected, before, after)
+    ):
+        raise OneShottedError("Resume evidence does not attest to one stable bound artifact")
+
+    repository = repository_identity(root)
+    if repository.get("detected"):
+        actual = str(repository.get("head") or "")
+        bound = str(binding.get("candidate_commit", ""))
+        if actual != bound:
+            raise OneShottedError(f"Actual Git HEAD {actual} does not match bound candidate {bound}")
+        if str(evidence.get("actual_candidate_commit", "")) != bound:
+            raise OneShottedError("Resume evidence has the wrong actual candidate commit")
+
+    assert_artifact_matches(root, expected_binding)
 
     resolved_at = utc_now()
     resolved = dict(blocker)

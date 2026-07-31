@@ -1,0 +1,4 @@
+{"seq":1,"kind":"local_verification","command":"python -m unittest discover -s tests -v","environment":"isolated tree reconstructed from connector-fetched branch contents","exit_code":0,"result":"33 passed, 0 failed","remote_ci":false}
+{"seq":2,"kind":"connector_check","command":"GitHub.compare_commits(base=5a4097cd4398558714b1d9b526ab02641c45e52f, head=main)","exit_code":0,"result":"identical; main unchanged"}
+{"seq":3,"kind":"connector_readback","command":"Fetch remote one_shotted_bind.py, one_shotted_runner.py, tests/test_c1_runtime.py and c1.1-runtime-ci.yml from the repair branch","exit_code":0,"result":"critical implementation, focused tests and workflow were present on the remote branch"}
+{"seq":4,"kind":"connector_status","command":"GitHub.get_commit_combined_status on the implementation branch head","exit_code":0,"result":"no verifiable commit status returned; remote CI success not claimed"}
