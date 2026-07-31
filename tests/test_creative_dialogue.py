@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 import tempfile
 import unittest
@@ -13,11 +14,13 @@ if str(SCRIPTS) not in sys.path:
 from one_shotted_core import (  # noqa: E402
     OneShottedError,
     add_gate,
+    finalize,
     initialize,
     lock_creative_brief,
     record_dialogue_turn,
     status,
     transition,
+    validate,
 )
 
 
@@ -133,6 +136,19 @@ class CreativeDialogueTests(unittest.TestCase):
             self.assertEqual(result["phase"], "BIND")
             self.assertEqual(result["production_mode"], "focused")
 
+    def test_clear_game_can_explicitly_use_direct_studio_path(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            result = initialize(
+                root,
+                "Build a fully specified browser game vertical slice",
+                dialogue="off",
+            )
+            self.assertEqual(result["project_domain"], "game")
+            self.assertEqual(result["phase"], "BIND")
+            self.assertEqual(result["production_mode"], "studio")
+            self.assertEqual(result["calibration_status"], "SKIPPED")
+
     def test_model_question_requires_meaningful_options(self) -> None:
         temporary, root = self.make_root()
         with temporary:
@@ -146,6 +162,54 @@ class CreativeDialogueTests(unittest.TestCase):
                     effects=["clarify"],
                     advances=["production_mode"],
                     options=["A|Focused|Fast"],
+                    recommended="A",
+                )
+
+    def test_repeated_question_is_rejected(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a browser game")
+            question = {
+                "actor": "model",
+                "kind": "question",
+                "summary": "Choose the production route.",
+                "effects": ["clarify"],
+                "advances": ["production_mode"],
+                "options": [
+                    "A|Focused|Fast complete result",
+                    "B|Studio|Presentation-ready slice",
+                ],
+                "recommended": "B",
+            }
+            record_dialogue_turn(root, **question)
+            record_dialogue_turn(root, "user", "answer", "Choose Studio.")
+            with self.assertRaisesRegex(OneShottedError, "Do not repeat"):
+                record_dialogue_turn(root, **question)
+
+    def test_dialogue_round_limit_is_enforced(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a browser game", max_dialogue_rounds=1)
+            record_dialogue_turn(
+                root,
+                "model",
+                "question",
+                "Choose the production route.",
+                effects=["clarify"],
+                advances=["production_mode"],
+                options=["A|Focused|Fast", "B|Studio|Polished"],
+                recommended="B",
+            )
+            record_dialogue_turn(root, "user", "answer", "Choose Studio.")
+            with self.assertRaisesRegex(OneShottedError, "round limit reached"):
+                record_dialogue_turn(
+                    root,
+                    "model",
+                    "question",
+                    "Choose the hero moment.",
+                    effects=["complete"],
+                    advances=["hero_moment"],
+                    options=["A|Crisis|Systemic", "B|Reveal|Cinematic"],
                     recommended="A",
                 )
 
@@ -180,6 +244,35 @@ class CreativeDialogueTests(unittest.TestCase):
                 add_gate(root, "FLOW", "Complete flow", "The game loop completes", "lead", "verifier")
             with self.assertRaisesRegex(OneShottedError, "Use lock-brief"):
                 transition(root, phase="BIND")
+
+    def test_finalize_cannot_bypass_dialogue_lock(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a game")
+            with self.assertRaisesRegex(OneShottedError, "must be LOCKED"):
+                finalize(root)
+
+    def test_validation_rejects_tampered_question_options(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a game")
+            record_dialogue_turn(
+                root,
+                "model",
+                "question",
+                "Choose the production route.",
+                effects=["clarify"],
+                advances=["production_mode"],
+                options=["A|Focused|Fast", "B|Studio|Polished"],
+                recommended="B",
+            )
+            ledger = root / ".loopseed" / "one-shotted" / "dialogue.jsonl"
+            event = json.loads(ledger.read_text(encoding="utf-8"))
+            event["options"] = [{"id": "A", "label": "Focused", "consequence": "Fast"}]
+            ledger.write_text(json.dumps(event) + "\n", encoding="utf-8")
+            report = validate(root)
+            self.assertFalse(report["ok"])
+            self.assertTrue(any("between 2 and 4" in error for error in report["errors"]))
 
 
 if __name__ == "__main__":
