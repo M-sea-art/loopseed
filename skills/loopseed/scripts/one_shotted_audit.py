@@ -1,4 +1,4 @@
-"""Consistency audit for One-Shotted contracts, evidence, and defects."""
+"""Consistency audit for One-Shotted contracts, evidence, dialogue, and defects."""
 
 from __future__ import annotations
 
@@ -8,6 +8,9 @@ from typing import Any
 from one_shotted_io import read_json, read_jsonl
 from one_shotted_model import gate_map, latest_defects
 from one_shotted_types import (
+    CALIBRATION_FILES,
+    PRODUCTION_MODES,
+    PROJECT_DOMAINS,
     REQUIRED_FILES,
     VALID_GATE_STATUSES,
     VALID_PHASES,
@@ -15,6 +18,7 @@ from one_shotted_types import (
     OneShottedError,
     run_dir,
 )
+
 
 def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     target = run_dir(root)
@@ -51,6 +55,89 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
             blocker.get("unblock_condition", "")
         ).strip():
             errors.append("BLOCKED requires true_blocker.reason and true_blocker.unblock_condition")
+
+    project_domain = str(goal.get("project_domain", "general")).lower()
+    production_mode = str(goal.get("production_mode", "focused")).lower()
+    calibration = goal.get("calibration", {})
+    calibration_enabled = isinstance(calibration, dict) and bool(calibration.get("enabled", False))
+    calibration_status = (
+        str(calibration.get("status", "SKIPPED")).upper() if isinstance(calibration, dict) else "SKIPPED"
+    )
+    creative_brief: dict[str, Any] = {}
+    dialogue: list[dict[str, Any]] = []
+    dialogue_by_id: dict[str, dict[str, Any]] = {}
+    dialogue_rounds = 0
+
+    if project_domain not in PROJECT_DOMAINS:
+        errors.append(f"Invalid project_domain: {project_domain!r}")
+
+    if calibration_enabled:
+        for name in CALIBRATION_FILES:
+            if not (target / name).exists():
+                errors.append(f"Missing calibration file: {target / name}")
+        try:
+            creative_brief = read_json(target / "creative-brief.json")
+        except OneShottedError as exc:
+            errors.append(str(exc))
+        dialogue, dialogue_errors = read_jsonl(target / "dialogue.jsonl")
+        errors.extend(dialogue_errors)
+        for event in dialogue:
+            event_id = str(event.get("id", "")).strip()
+            if not event_id:
+                errors.append("Every dialogue entry requires a non-empty id")
+            elif event_id in dialogue_by_id:
+                errors.append(f"Duplicate dialogue id: {event_id}")
+            else:
+                dialogue_by_id[event_id] = event
+        dialogue_rounds = sum(
+            1
+            for event in dialogue
+            if event.get("actor") == "model" and event.get("kind") == "question"
+        )
+
+        if calibration_status == "OPEN":
+            if phase != "CALIBRATE" and status == "ACTIVE":
+                errors.append("An OPEN creative dialogue must remain in phase CALIBRATE")
+            if production_mode not in PRODUCTION_MODES | {"undecided"}:
+                errors.append(f"Invalid open production_mode: {production_mode!r}")
+        elif calibration_status == "LOCKED":
+            if phase == "CALIBRATE":
+                errors.append("A LOCKED creative brief cannot remain in phase CALIBRATE")
+            if production_mode not in PRODUCTION_MODES:
+                errors.append(f"Locked production_mode must be one of {sorted(PRODUCTION_MODES)}")
+            if str(creative_brief.get("status", "")).upper() != "LOCKED":
+                errors.append("goal calibration is LOCKED but creative-brief.json is not LOCKED")
+            if creative_brief.get("run_id") != goal.get("run_id"):
+                errors.append("Creative brief must share the run_id")
+            brief_id = str(creative_brief.get("brief_id", "")).strip()
+            if not brief_id or brief_id != str(calibration.get("brief_id", "")).strip():
+                errors.append("Goal calibration and creative brief must share one non-empty brief_id")
+            if str(creative_brief.get("project_domain", "")).lower() != project_domain:
+                errors.append("Creative brief project_domain must match the goal contract")
+            if str(creative_brief.get("production_mode", "")).lower() != production_mode:
+                errors.append("Creative brief production_mode must match the goal contract")
+            if not (target / "compiled-shot.md").is_file():
+                errors.append("A locked creative brief requires compiled-shot.md")
+            authorization = creative_brief.get("authorization", {})
+            if not isinstance(authorization, dict):
+                errors.append("Locked creative brief requires an authorization object")
+            else:
+                user_event_id = str(authorization.get("user_event_id", "")).strip()
+                event = dialogue_by_id.get(user_event_id)
+                if event is None or event.get("actor") != "user" or event.get("kind") not in {
+                    "answer",
+                    "decision",
+                }:
+                    errors.append("Locked creative brief authorization must reference a user answer or decision")
+            if int(calibration.get("dialogue_rounds", -1)) != dialogue_rounds:
+                errors.append("Locked calibration dialogue_rounds must match the dialogue ledger")
+        else:
+            errors.append("Enabled calibration status must be OPEN or LOCKED")
+    else:
+        if phase == "CALIBRATE":
+            errors.append("Phase CALIBRATE requires calibration.enabled=true")
+        if production_mode not in PRODUCTION_MODES:
+            errors.append(f"Non-dialogue production_mode must be one of {sorted(PRODUCTION_MODES)}")
 
     evidence, evidence_errors = read_jsonl(target / "evidence.jsonl")
     defects, defect_errors = read_jsonl(target / "defects.jsonl")
@@ -120,6 +207,12 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         "evidence": evidence,
         "defects": defects,
         "blocking_open_defects": blocking_open,
+        "creative_brief": creative_brief,
+        "dialogue": dialogue,
+        "dialogue_rounds": dialogue_rounds,
+        "project_domain": project_domain,
+        "production_mode": production_mode,
+        "calibration_status": calibration_status,
     }
     return {
         "ok": not errors,
@@ -129,9 +222,11 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         "run_id": goal.get("run_id"),
         "status": status,
         "phase": phase,
+        "project_domain": project_domain,
+        "production_mode": production_mode,
+        "calibration_status": calibration_status,
+        "dialogue_rounds": dialogue_rounds,
         "gate_count": len(gates),
         "evidence_count": len(evidence),
         "blocking_open_defects": blocking_open,
     }, data
-
-
