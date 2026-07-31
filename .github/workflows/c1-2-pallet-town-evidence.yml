@@ -1,18 +1,23 @@
 name: C1.2 Pallet Town evidence
 
 on:
-  push:
+  pull_request:
     branches:
-      - experiment/c1.2-pallet-town-evidence-2026-07-31
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
     paths:
       - .github/workflows/c1-2-pallet-town-evidence.yml
+      - experiments/c1.2-pallet-town/**
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: c1-2-pallet-town-evidence
+  group: c1-2-pallet-town-evidence-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false
 
 jobs:
