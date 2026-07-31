@@ -1,11 +1,23 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "run_id": "",
   "default_topology": "single-lead",
+  "game_first": true,
+  "calibration_role": {
+    "id": "creative-director",
+    "responsibility": "Preserve, correct, amplify, complete, and continue the user's game seed through bounded option-rich dialogue before production is locked.",
+    "write_scope": "dialogue ledger and compiled creative brief only",
+    "may_not": [
+      "silently_replace_seed_intent",
+      "downgrade_a_game_to_a_scene_or_blockout",
+      "authorize_production_for_the_user",
+      "approve_final_quality"
+    ]
+  },
   "roles": [
     {
       "id": "lead",
-      "responsibility": "Own planning, implementation integration, and next-action selection.",
+      "responsibility": "Own the locked creative brief, production planning, implementation integration, and next-action selection.",
       "write_scope": "authorized project scope"
     },
     {
@@ -14,5 +26,10 @@
       "write_scope": "evidence and defect ledgers only"
     }
   ],
-  "fanout_policy": "Add helpers only for independent work whose value exceeds coordination cost."
+  "production_mode_policy": {
+    "focused": "Use the minimum topology that can complete the locked result without expanding scope.",
+    "studio": "Activate the game-production roles required for a coherent presentation-ready vertical slice.",
+    "moonshot": "Fan out aggressively across independent quality surfaces, while one lead guards scope, integration, and evidence."
+  },
+  "fanout_policy": "Fan out independently judgeable work after the creative brief and integrity locks are frozen; never fan out project identity, core game promise, shared runtime state, or final approval."
 }
