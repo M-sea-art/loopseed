@@ -9,6 +9,7 @@ from one_shotted_io import load_run, write_json_atomic
 from one_shotted_model import gate_map
 from one_shotted_types import OneShottedError, clean_line, utc_now
 
+
 def add_gate(
     root: Path,
     gate_id: str,
@@ -21,6 +22,8 @@ def add_gate(
     target, _, acceptance, state = load_run(root)
     if str(state.get("status", "")).upper() != "ACTIVE":
         raise OneShottedError("Gates may only be changed while the run is ACTIVE")
+    if str(state.get("phase", "")).upper() == "CALIBRATE":
+        raise OneShottedError("Lock the creative brief before declaring production acceptance gates")
 
     gate_id = clean_line(gate_id, name="gate id")
     title = clean_line(title, name="gate title")
@@ -48,5 +51,3 @@ def add_gate(
     )
     write_json_atomic(target / "acceptance.json", acceptance)
     return {"ok": True, "gate": gate_id, "required": bool(required), "status": "PENDING"}
-
-
