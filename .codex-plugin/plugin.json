@@ -1,7 +1,7 @@
 {
   "name": "loopseed",
-  "version": "0.3.0",
-  "description": "Minimal evidence-driven loops plus an explicit One-Shotted autonomous completion mode.",
+  "version": "0.5.0",
+  "description": "Game-first creative dialogue, One-Shot production, controlled Fan-out, and evidence-governed completion.",
   "author": {
     "name": "M-sea-art",
     "url": "https://github.com/M-sea-art"
@@ -11,20 +11,22 @@
   "license": "MIT",
   "keywords": [
     "codex",
+    "game-development",
+    "creative-dialogue",
     "agent",
     "autonomy",
     "one-shotted",
-    "goal-mode",
+    "fan-out",
     "verification",
-    "hooks",
+    "production-runtime",
     "skill"
   ],
   "skills": "./skills/",
   "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "LoopSeed",
-    "shortDescription": "Evidence loops and one-instruction autonomous completion.",
-    "longDescription": "Use the ordinary minimal loop for scoped work, or explicitly invoke One-Shotted mode to turn one human authorization into a contract-bound implementation, independent verification, repair, and finalization run.",
+    "shortDescription": "Aim game ideas through dialogue, then launch verified One-Shot production.",
+    "longDescription": "LoopSeed is a game-first AI production engine. It co-directs an unfinished idea through bounded multi-round dialogue, locks a user-authorized creative brief, then executes one uninterrupted production run with controlled Fan-out, independent verification, repair, and fail-closed finalization. General projects use a lighter domain adapter.",
     "developerName": "M-sea-art",
     "category": "Productivity",
     "capabilities": [
@@ -33,9 +35,9 @@
     ],
     "websiteURL": "https://github.com/M-sea-art/loopseed",
     "defaultPrompt": [
-      "/goal $loopseed one-shotted <one natural-language goal>",
-      "$loopseed one-shotted <one natural-language goal>",
-      "$loopseed Complete this goal through the smallest evidence-driven loop; continue until verified or truly blocked."
+      "$loopseed one-shotted Help me sharpen and amplify this game idea through meaningful options, then launch the complete production run once the creative brief is locked.",
+      "$loopseed one-shotted <one natural-language game or product seed>",
+      "$loopseed Complete this scoped goal through the smallest evidence-driven loop; continue until verified or truly blocked."
     ]
   }
 }
