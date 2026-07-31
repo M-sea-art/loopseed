@@ -77,6 +77,14 @@ try {
     const game = window.__GAME__;
     const renderer = game.engine.renderer;
     const info = renderer.info;
+    const gl = renderer.getContext();
+    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    const actualVendor = debugInfo
+      ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL)
+      : gl.getParameter(gl.VENDOR);
+    const actualRenderer = debugInfo
+      ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+      : gl.getParameter(gl.RENDERER);
     const buildTimings = Array.isArray(game.world.buildTimings)
       ? game.world.buildTimings.map(([label, ms]) => ({ label, ms }))
       : [];
@@ -97,6 +105,9 @@ try {
       },
       programs: info.programs ? info.programs.length : 0,
       renderer: {
+        requestedBackend: args.backend,
+        actualVendor,
+        actualRenderer,
         webgl2: renderer.capabilities.isWebGL2,
         maxTextureSize: renderer.capabilities.maxTextureSize,
         maxSamples: renderer.capabilities.maxSamples,
