@@ -17,7 +17,9 @@ from one_shotted_core import (  # noqa: E402
     add_gate,
     finalize,
     initialize,
+    lock_creative_brief_file,
     record_defect,
+    record_dialogue_turn,
     record_gate_result,
     status,
     transition,
@@ -42,7 +44,55 @@ def build_parser() -> argparse.ArgumentParser:
     init = subparsers.add_parser("init", help="Create a project-local One-Shotted control plane")
     add_root(init)
     init.add_argument("--goal", required=True, help="The single human-authorized root goal")
+    init.add_argument("--domain", default="auto", choices=("auto", "game", "general"))
+    init.add_argument(
+        "--production-mode",
+        default="auto",
+        choices=("auto", "focused", "studio", "moonshot"),
+    )
+    init.add_argument("--dialogue", default="auto", choices=("auto", "on", "off"))
+    init.add_argument("--max-dialogue-rounds", type=int, default=5)
     init.add_argument("--force", action="store_true", help="Replace an existing One-Shotted run")
+
+    dialogue = subparsers.add_parser(
+        "dialogue-turn",
+        help="Record a creative co-director turn before the One-Shot production lock",
+    )
+    add_root(dialogue)
+    dialogue.add_argument("--actor", required=True, choices=("user", "model"))
+    dialogue.add_argument(
+        "--kind",
+        required=True,
+        choices=("seed", "synthesis", "question", "answer", "decision"),
+    )
+    dialogue.add_argument("--summary", required=True)
+    dialogue.add_argument(
+        "--effect",
+        action="append",
+        default=[],
+        help="Model effect: preserve, clarify, correct, amplify, complete, continue, offer_options",
+    )
+    dialogue.add_argument(
+        "--advance",
+        action="append",
+        default=[],
+        help="Material decision surface advanced by this turn",
+    )
+    dialogue.add_argument(
+        "--option",
+        action="append",
+        default=[],
+        help="Question option in ID|label|consequence format; repeat 2-4 times",
+    )
+    dialogue.add_argument("--recommended", help="Recommended option ID")
+
+    lock = subparsers.add_parser(
+        "lock-brief",
+        help="Validate and freeze a user-authorized creative brief, then enter BIND",
+    )
+    add_root(lock)
+    lock.add_argument("--file", required=True, help="Path to the compiled creative brief JSON")
+    lock.add_argument("--actor", default="lead", help="Actor performing the lock")
 
     gate = subparsers.add_parser("add-gate", help="Add an observable acceptance gate")
     add_root(gate)
@@ -73,7 +123,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     move = subparsers.add_parser("transition", help="Advance, reroute, block, or abort the run")
     add_root(move)
-    move.add_argument("--phase", choices=("BIND", "PLAN", "IMPLEMENT", "VERIFY", "REPAIR"))
+    move.add_argument(
+        "--phase",
+        choices=("CALIBRATE", "BIND", "PLAN", "IMPLEMENT", "VERIFY", "REPAIR"),
+    )
     move.add_argument("--next", dest="next_action")
     move.add_argument("--no-progress", action="store_true")
     move.add_argument("--blocker")
@@ -98,7 +151,28 @@ def main(argv: list[str] | None = None) -> int:
     root = Path(args.root)
     try:
         if args.command == "init":
-            result = initialize(root, args.goal, force=args.force)
+            result = initialize(
+                root,
+                args.goal,
+                force=args.force,
+                domain=args.domain,
+                production_mode=args.production_mode,
+                dialogue=args.dialogue,
+                max_dialogue_rounds=args.max_dialogue_rounds,
+            )
+        elif args.command == "dialogue-turn":
+            result = record_dialogue_turn(
+                root,
+                args.actor,
+                args.kind,
+                args.summary,
+                effects=args.effect,
+                advances=args.advance,
+                options=args.option,
+                recommended=args.recommended,
+            )
+        elif args.command == "lock-brief":
+            result = lock_creative_brief_file(root, Path(args.file), actor=args.actor)
         elif args.command == "add-gate":
             result = add_gate(
                 root,
