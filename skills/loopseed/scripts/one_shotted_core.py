@@ -1,6 +1,11 @@
 """Public control-plane API for LoopSeed One-Shotted mode."""
 
 from one_shotted_bootstrap import initialize
+from one_shotted_calibration import (
+    lock_creative_brief,
+    lock_creative_brief_file,
+    record_dialogue_turn,
+)
 from one_shotted_defects import record_defect
 from one_shotted_evidence import record_gate_result
 from one_shotted_finalize import finalize
@@ -15,7 +20,10 @@ __all__ = [
     "add_gate",
     "finalize",
     "initialize",
+    "lock_creative_brief",
+    "lock_creative_brief_file",
     "record_defect",
+    "record_dialogue_turn",
     "record_gate_result",
     "status",
     "transition",
