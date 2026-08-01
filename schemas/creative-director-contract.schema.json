@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LoopSeed Creative Director Contract",
+  "type": "object",
+  "required": [
+    "creative_north_star",
+    "player_promise",
+    "identity_guard"
+  ],
+  "properties": {
+    "creative_north_star": {
+      "type": "object",
+      "required": [
+        "purpose",
+        "experience_target",
+        "unique_identity"
+      ],
+      "properties": {
+        "purpose": {"type": "string"},
+        "experience_target": {"type": "string"},
+        "unique_identity": {"type": "string"}
+      }
+    },
+    "player_promise": {
+      "type": "object",
+      "required": [
+        "core_loop",
+        "hero_moment"
+      ],
+      "properties": {
+        "core_loop": {"type": "string"},
+        "hero_moment": {"type": "string"}
+      }
+    },
+    "identity_guard": {
+      "type": "object",
+      "required": [
+        "must_preserve",
+        "forbidden_substitutions"
+      ],
+      "properties": {
+        "must_preserve": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "forbidden_substitutions": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    }
+  }
+}
