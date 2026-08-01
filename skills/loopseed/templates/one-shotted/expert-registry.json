@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "run_id": "",
   "default_topology": "single-lead",
   "game_first": true,
@@ -31,5 +31,11 @@
     "studio": "Activate the game-production roles required for a coherent presentation-ready vertical slice.",
     "moonshot": "Fan out aggressively across independent quality surfaces, while one lead guards scope, integration, and evidence."
   },
-  "fanout_policy": "Fan out independently judgeable work after the creative brief and integrity locks are frozen; never fan out project identity, core game promise, shared runtime state, or final approval."
+  "fanout_policy": "Fan out independently judgeable work after the creative brief and integrity locks are frozen; never fan out project identity, core game promise, shared runtime state, or final approval.",
+  "scheduler_policy": {
+    "lead_retains_scheduling_after_delegation": true,
+    "no_idle_while_runnable": true,
+    "soft_advice_never_blocks": true,
+    "wait_requires_named_running_tasks_and_fallback": true
+  }
 }

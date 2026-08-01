@@ -1,6 +1,6 @@
-# LOOPSEED Game-First Expert Activation Policy v0.5.0
+# LOOPSEED Game-First Expert Activation Policy v0.7.0
 
-version: "0.5.0"
+version: "0.7.0"
 
 policy:
   order:
@@ -19,6 +19,7 @@ policy:
     - "Experts may improve execution but may not rewrite locked production intent."
     - "Game projects receive game-production expertise before generic software convenience."
     - "Do not trade delivery speed for unnecessary governance."
+    - "Reviewer and advisor output is SOFT_ADVICE unless a named consumer proves a hard dependency."
 
 preproduction_role:
   creative_director:
@@ -160,6 +161,7 @@ scope_guard:
     - "Use project-local evidence before transferable reference principles."
     - "Do not convert every benchmark into a full product rewrite."
     - "Do not replace parallel execution with sequential analysis by default."
+    - "Do not wait for an expert while any safe independent production or verification node is runnable."
     - "Verification depth must match task risk and selected production mode."
     - "No expert may change creative_brief_id, project_binding_id, artifact_contract_id, or stage_target_id."
     - "No expert may expand Moonshot beyond its scope guard."

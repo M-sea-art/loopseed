@@ -1,7 +1,7 @@
 {
   "name": "loopseed",
-  "version": "0.5.0",
-  "description": "Game-first creative dialogue, One-Shot production, controlled Fan-out, and evidence-governed completion.",
+  "version": "0.7.0",
+  "description": "Game-first creative dialogue, One-Shot production, no-idle Fan-out, and evidence-governed completion.",
   "author": {
     "name": "M-sea-art",
     "url": "https://github.com/M-sea-art"
@@ -17,6 +17,7 @@
     "autonomy",
     "one-shotted",
     "fan-out",
+    "parallel-scheduler",
     "verification",
     "production-runtime",
     "skill"
@@ -26,7 +27,7 @@
   "interface": {
     "displayName": "LoopSeed",
     "shortDescription": "Aim game ideas through dialogue, then launch verified One-Shot production.",
-    "longDescription": "LoopSeed is a game-first AI production engine. It co-directs an unfinished idea through bounded multi-round dialogue, locks a user-authorized creative brief, then executes one uninterrupted production run with controlled Fan-out, independent verification, repair, and fail-closed finalization. General projects use a lighter domain adapter.",
+    "longDescription": "LoopSeed is a game-first AI production engine. It co-directs an unfinished idea through bounded dialogue, locks a user-authorized creative brief, then executes one uninterrupted production run with no-idle controlled Fan-out, independent verification, repair, and fail-closed finalization. General projects use a lighter domain adapter.",
     "developerName": "M-sea-art",
     "category": "Productivity",
     "capabilities": [

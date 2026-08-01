@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "loopseed_version": "0.5.0",
+  "loopseed_version": "0.7.0",
   "mode": "one-shotted",
   "run_id": "",
   "root_goal": "",

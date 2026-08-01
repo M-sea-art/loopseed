@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.1",
-  "loopseed_version": "0.5.0",
+  "schema_version": "1.2",
+  "loopseed_version": "0.7.0",
   "mode": "one-shotted",
   "run_id": "",
   "status": "ACTIVE",
@@ -11,5 +11,6 @@
   "max_no_progress_rounds": 2,
   "next_action": "",
   "true_blocker": null,
+  "scheduler_wait": null,
   "updated_at": ""
 }

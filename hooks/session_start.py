@@ -16,9 +16,10 @@ def main() -> None:
         phase = compact(state.get("phase")) or "UNKNOWN"
         message = (
             f"LoopSeed One-Shotted is ACTIVE in phase {phase}. Read the project-root "
-            ".loopseed/one-shotted goal, architecture, acceptance, state, evidence, and defect files before acting. "
+            ".loopseed/one-shotted goal, architecture, task graph, acceptance, state, evidence, and defect files before acting. "
             "Continue the declared state machine from direct evidence. Keep one integration owner, require an "
-            "independent verifier for gate verdicts, and never write VERIFIED except through the finalizer."
+            "independent verifier for gate verdicts, dispatch safe runnable tasks before waiting, and never write "
+            "VERIFIED except through the finalizer."
         )
     else:
         message = (

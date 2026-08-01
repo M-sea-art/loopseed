@@ -1,7 +1,7 @@
-# LOOPSEED Controlled Fan-out Policy v0.5.0
+# LOOPSEED No-Idle Controlled Fan-out Policy v0.7.0
 # Dialogue aims the shot; Fan-out accelerates production only after the shot is locked.
 
-version: "0.5.0"
+version: "0.7.0"
 
 fanout:
   enabled: true
@@ -22,6 +22,8 @@ fanout:
     - "Keep coupled experience surfaces under one sequential owner."
     - "Keep one final integration owner."
     - "Speed may increase after precision is locked; evidence standards never decrease."
+    - "Delegation never transfers scheduling responsibility away from the Lead."
+    - "Maximize safe runnable work, not agent count."
 
   production_modes:
     focused:
@@ -102,6 +104,25 @@ fanout:
     read_only_investigation: may_parallelize_if_it_cannot_mutate_or_approve_the_product
     candidate_generation: may_parallelize_only_when_all_candidates_share_the_same_contract_and_fixed_evidence
     uncertain_independence: keep_sequential_until_boundary_is_proven
+    hard_dependency: block_direct_consumer_only
+    soft_advice: merge_at_next_safe_checkpoint_without_waiting
+    independent: dispatch_concurrently_when_write_ownership_is_safe
+
+  joins:
+    ALL_REQUIRED: use_only_when_every_named_result_is_required
+    FIRST_SUCCESS: release_on_the_first_acceptable_result_then_cancel_no_longer_useful_work
+    QUORUM: release_when_the_declared_number_of_results_succeeds
+    default_wait_all: forbidden
+
+  no_idle_guard:
+    rule: NO_IDLE_WHILE_RUNNABLE
+    before_wait:
+      - derive_safe_runnable_queue
+      - dispatch_every_safe_node
+      - name_running_wait_targets
+      - record_dependency_or_join_reason
+      - record_fallback
+    violation: waiting_for_advice_or_critic_while_an_independent_node_can_run
 
   worker_contract:
     inherit_unchanged:

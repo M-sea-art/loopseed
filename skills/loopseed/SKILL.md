@@ -1,6 +1,6 @@
 ---
 name: loopseed
-description: Run a game-first, dialogue-calibrated, evidence-governed production loop from an explicit `$loopseed` goal. Use `$loopseed one-shotted <goal>` when one authorization should launch autonomous planning, controlled fan-out, implementation, independent verification, repair, and fail-closed finalization.
+description: Run a game-first, dialogue-calibrated, evidence-governed production loop from an explicit `$loopseed` goal. Use `$loopseed one-shotted` followed by a goal when one authorization should launch autonomous planning, controlled fan-out, implementation, independent verification, repair, and fail-closed finalization.
 ---
 
 # LoopSeed
@@ -17,6 +17,8 @@ creative dialogue aims the shot
 One-Shot authorization ignites production
         ↓
 controlled Fan-out accelerates independent work
+        ↓
+no-idle scheduling keeps every safe node moving
         ↓
 evidence decides whether the result is complete
 ```
@@ -163,10 +165,25 @@ After the creative brief is locked:
 2. declare observable acceptance gates before substantial implementation;
 3. assign each gate an implementation owner and a different verifier;
 4. plan the smallest complete route that satisfies the chosen production mode;
-5. fan out only independently judgeable work with clean ownership and shared integrity references;
-6. keep coupled game identity, core loop, shared runtime state, architecture, composition, and final integration under one owner;
-7. merge into one product, run whole-product criticism, repair failures, and reverify;
-8. finalize only from direct evidence.
+5. record non-trivial work in `task-graph.json`; classify every relation as `HARD_DEPENDENCY`, `SOFT_ADVICE`, or `INDEPENDENT`;
+6. dispatch every safe runnable node before waiting; use `FIRST_SUCCESS`, `QUORUM`, or `ALL_REQUIRED` only at explicit joins;
+7. fan out only independently judgeable work with clean ownership and shared integrity references;
+8. keep coupled game identity, core loop, shared runtime state, architecture, composition, and final integration under one owner;
+9. merge into one product, run whole-product criticism, repair failures, and reverify;
+10. finalize only from direct evidence.
+
+## No-idle scheduling
+
+The Lead always retains scheduling responsibility after delegation. A specialist response is advice unless a named consumer truly cannot proceed without it.
+
+- `HARD_DEPENDENCY` blocks only its direct consumer.
+- `SOFT_ADVICE` never blocks execution; merge it at the next safe checkpoint.
+- `INDEPENDENT` explicitly permits concurrent progress when write ownership is safe.
+- A shared write scope has one writer. Separate worktrees or isolation boundaries may run overlapping scopes concurrently.
+- Before waiting, run the scheduler with the current surface's available subagent capacity when known. Waiting is legal only when no safe runnable node remains, the named tasks are already running, and a fallback is recorded.
+- If a task becomes runnable while a wait is declared, validation fails with `NO_IDLE_WHILE_RUNNABLE`.
+
+Use the bundled `add-task`, `task-status`, `schedule`, and `wait` commands for non-trivial Fan-out. Small Focused work may remain on the main thread without ceremonial task entries.
 
 State machine:
 
@@ -194,14 +211,17 @@ General projects use the same evidence engine with domain-appropriate product, f
 ## One-Shotted invariants
 
 - One lead owns creative integrity and final integration.
+- Delegation never transfers the Lead's scheduling responsibility.
 - Fan out work, not product identity or competing interpretations of the brief.
 - Parallel writers require isolation; coupled concerns stay sequential.
+- A runnable task forbids waiting; soft advice is never a global approval gate.
+- Waiting requires an explicit dependency or join, named running tasks, and a fallback.
 - A worker cannot approve its own gate.
 - A failed gate moves the run to `REPAIR`; repair must be reverified.
 - Keep only changes that preserve already-passed gates; otherwise repair or roll back.
 - Two no-progress rounds force root-cause replanning and a materially different route.
 - Only the finalizer may write `VERIFIED`.
-- `BLOCKED` requires the exact missing external condition and exact unblock condition.
+- `BLOCKED` requires the exact missing external condition and exact unblock condition, with no runnable or running internal task.
 - State and prose are control signals, never completion proof.
 - Do not fan out agents ceremonially. Use the chosen mode to determine the minimum useful topology.
 

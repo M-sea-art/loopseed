@@ -1,7 +1,7 @@
-# LOOPSEED One-Shot Gauntlet Integration Patch v0.4.1
+# LOOPSEED No-Idle Parallel Runtime v0.7.0
 # Task graph executes the compiled shot; it does not reopen product planning.
 
-version: "0.4.1"
+version: "0.7.0"
 
 task_graph:
   preconditions:
@@ -51,6 +51,12 @@ task_graph:
       - acceptance
       - evidence
       - dependencies
+      - relations
+      - join
+      - status
+      - read_only
+      - write_scope
+      - isolation
       - integrity_ref
       - improvement_unit
       - independently_judgeable
@@ -59,6 +65,12 @@ task_graph:
       improvement_unit: names_one_coherent_product_or_quality_change
       independently_judgeable: true_only_when_a_fresh_critic_can_inspect_the_output_directly_and_decide_without_builder_history
       coupling_group: shared_nonempty_value_for_tasks_that_jointly_determine_one_experience_quality_or_runtime_state
+      relations: each_relation_is_HARD_DEPENDENCY_SOFT_ADVICE_or_INDEPENDENT
+      join: explicit_ALL_REQUIRED_FIRST_SUCCESS_or_QUORUM_for_hard_dependencies
+      status: PENDING_RUNNING_SUCCEEDED_FAILED_BLOCKED_or_CANCELLED
+      read_only: true_means_no_product_write_ownership
+      write_scope: required_for_writers_and_empty_for_read_only_tasks
+      isolation: shared_or_a_distinct_worktree_or_equivalent_boundary
     rules:
       - artifact_must_contribute_to_locked_deliverable
       - acceptance_must_contribute_to_target_stage
@@ -69,6 +81,32 @@ task_graph:
       - tasks_in_the_same_coupling_group_use_one_sequential_owner_by_default
       - read_only_investigation_may_parallelize_without_claiming_product_ownership
       - builder_output_must_include_an_inspectable_artifact_or_runtime_state_not_only_a_summary
+      - hard_dependency_blocks_only_its_direct_consumer
+      - soft_advice_never_blocks_execution
+      - every_safe_runnable_node_is_dispatched_before_waiting
+      - shared_overlapping_write_scopes_use_one_writer
+      - separate_isolation_boundaries_may_run_overlapping_scopes
+
+  scheduler:
+    policy: NO_IDLE_WHILE_RUNNABLE
+    lead_retains_scheduling_after_delegation: true
+    runnable_when:
+      - status_is_PENDING
+      - hard_dependency_join_is_satisfied
+      - concurrency_capacity_is_available
+      - no_running_writer_conflicts_in_the_same_isolation_boundary
+    wait_allowed_only_when:
+      - runnable_queue_is_empty
+      - named_wait_targets_are_RUNNING
+      - reason_is_HARD_DEPENDENCY_or_JOIN
+      - fallback_is_recorded
+    wait_forbidden_for:
+      - soft_advice
+      - ceremonial_approval
+      - internal_work_that_can_continue
+    blocked_scope:
+      hard_dependency: direct_consumer_only
+      global_BLOCKED: no_runnable_or_running_internal_task
 
   blocked_when:
     - calibration_unresolved

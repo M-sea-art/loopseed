@@ -11,7 +11,7 @@ Creative dialogue and production runtime are separate decisions:
 |---|---|---|---|
 | 0 | Main-thread loop | Default | One goal, one writer, direct evidence |
 | 1 | `.loopseed.md` or One-Shotted control state | Cross-session/task relay is actually needed | Replace stale state; do not append a diary |
-| 2 | Subagents | Work is independent and parallelizable | Inherit one creative brief and integrity refs; return distilled results |
+| 2 | Subagents + no-idle scheduler | Work is independent and parallelizable | Inherit one creative brief and integrity refs; return distilled results; keep every safe runnable node moving |
 | 3 | Worktrees | Multiple writers need isolated experiments | Integrate centrally; do not edit the same files concurrently |
 | 4 | Trusted hooks | Active state needs resume or anti-early-stop behavior | State-scoped; one Stop continuation per turn |
 | 5 | Scheduled recovery | Work must wake later or poll an external event | Event-driven first; use the lowest useful cadence |
@@ -40,6 +40,7 @@ At the start of non-trivial production, answer internally from direct project an
 6. **Independence:** Which units can be judged and merged independently?
 7. **Minimum:** What is the cheapest level that can close the next gap at the selected mode?
 8. **Proof:** How will activation and progress be observed?
+9. **Join:** Is the next rendezvous `FIRST_SUCCESS`, `QUORUM`, or `ALL_REQUIRED`, and what can continue before it?
 
 If a mechanism cannot be confirmed, fall back one level. Never replace unavailable runtime support with prose claiming it exists.
 
@@ -76,6 +77,9 @@ If a mechanism cannot be confirmed, fall back one level. Never replace unavailab
 - No mechanism is assumed active without confirmation.
 - No fixed heartbeat while the active loop is progressing.
 - No parallel writers without isolation.
+- No waiting while a safe runnable node exists.
+- No soft-advice response may become a global approval gate.
+- No wait without named running tasks and a recorded fallback.
 - No Fan-out before the creative and integrity locks.
 - No continuation after `VERIFIED`, `BLOCKED`, or `ABORTED`.
 

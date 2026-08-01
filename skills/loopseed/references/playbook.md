@@ -26,8 +26,8 @@ Load only the card that materially changes the next action.
 ## 3. Plan and accelerate
 
 - **Trigger:** The shot and integrity locks are frozen.
-- **Action:** Choose the smallest complete production route for the selected mode. Fan out only independently judgeable work with isolated ownership and shared integrity references. Keep coupled game identity, core loop, shared state, architecture, composition, and final integration under one owner.
-- **Return:** Task graph, ownership, coupling groups, merge route, and acceptance plan.
+- **Action:** Choose the smallest complete production route for the selected mode. Classify relations as hard dependency, soft advice, or independent; dispatch every safe runnable node before waiting. Fan out only independently judgeable work with isolated ownership and shared integrity references. Keep coupled game identity, core loop, shared state, architecture, composition, and final integration under one owner.
+- **Return:** Task graph, runnable queue, ownership, coupling groups, explicit join strategy, merge route, and acceptance plan.
 
 ## 4. Explore
 

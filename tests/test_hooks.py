@@ -110,6 +110,7 @@ class HookTests(unittest.TestCase):
             self.assertIn("IMPLEMENT", context)
             self.assertIn("Build the primary flow", context)
             self.assertIn("independent verifier", context)
+            self.assertIn("runnable tasks before waiting", context)
 
     def test_one_shotted_terminal_allows_stop(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

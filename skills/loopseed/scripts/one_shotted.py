@@ -15,12 +15,16 @@ if str(SCRIPT_DIR) not in sys.path:
 from one_shotted_core import (  # noqa: E402
     OneShottedError,
     add_gate,
+    add_task,
+    declare_wait,
     finalize,
     initialize,
     lock_creative_brief_file,
     record_defect,
     record_dialogue_turn,
     record_gate_result,
+    schedule_tasks,
+    set_task_status,
     status,
     transition,
     validate,
@@ -33,6 +37,16 @@ def print_json(value: dict[str, object]) -> None:
 
 def add_root(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--root", default=".", help="Target project root; default: current directory")
+
+
+def parse_relation(value: str) -> tuple[str, str]:
+    try:
+        task_id, kind = value.rsplit(":", 1)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("relation must use TASK_ID:KIND") from exc
+    if not task_id.strip() or not kind.strip():
+        raise argparse.ArgumentTypeError("relation must use TASK_ID:KIND")
+    return task_id.strip(), kind.strip().upper()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -133,6 +147,51 @@ def build_parser() -> argparse.ArgumentParser:
     move.add_argument("--unblock")
     move.add_argument("--abort", action="store_true")
 
+    task = subparsers.add_parser("add-task", help="Add a bounded task to the no-idle scheduler")
+    add_root(task)
+    task.add_argument("--id", required=True)
+    task.add_argument("--purpose", required=True)
+    task.add_argument("--owner", required=True)
+    task.add_argument(
+        "--relation",
+        action="append",
+        type=parse_relation,
+        default=[],
+        help="TASK_ID:HARD_DEPENDENCY|SOFT_ADVICE|INDEPENDENT",
+    )
+    task.add_argument(
+        "--join",
+        choices=("ALL_REQUIRED", "FIRST_SUCCESS", "QUORUM"),
+    )
+    task.add_argument("--quorum", type=int)
+    task.add_argument("--write-scope", action="append", default=[])
+    task.add_argument("--read-only", action="store_true")
+    task.add_argument("--isolation", default="shared")
+    task.add_argument("--optional", action="store_true")
+
+    task_state = subparsers.add_parser("task-status", help="Start, finish, fail, block, or cancel a task")
+    add_root(task_state)
+    task_state.add_argument("--task", required=True)
+    task_state.add_argument(
+        "--status",
+        required=True,
+        choices=("PENDING", "RUNNING", "SUCCEEDED", "FAILED", "BLOCKED", "CANCELLED"),
+    )
+    task_state.add_argument("--actor", required=True)
+    task_state.add_argument("--summary", required=True)
+    task_state.add_argument("--unblock")
+
+    schedule = subparsers.add_parser("schedule", help="List the maximum safe runnable task batch")
+    add_root(schedule)
+    schedule.add_argument("--capacity", type=int)
+
+    wait = subparsers.add_parser("wait", help="Declare a legal dependency or join wait")
+    add_root(wait)
+    wait.add_argument("--for", dest="task_ids", action="append", required=True)
+    wait.add_argument("--reason", required=True, choices=("HARD_DEPENDENCY", "JOIN"))
+    wait.add_argument("--fallback", required=True)
+    wait.add_argument("--capacity", type=int)
+
     check = subparsers.add_parser("validate", help="Validate contracts, ledgers, and evidence references")
     add_root(check)
     check.add_argument("--require-final", action="store_true")
@@ -212,6 +271,39 @@ def main(argv: list[str] | None = None) -> int:
                 blocked_reason=args.blocker,
                 unblock_condition=args.unblock,
                 abort=args.abort,
+            )
+        elif args.command == "add-task":
+            result = add_task(
+                root,
+                args.id,
+                args.purpose,
+                args.owner,
+                relations=args.relation,
+                join_strategy=args.join,
+                quorum=args.quorum,
+                write_scope=args.write_scope,
+                read_only=args.read_only,
+                isolation=args.isolation,
+                required=not args.optional,
+            )
+        elif args.command == "task-status":
+            result = set_task_status(
+                root,
+                args.task,
+                args.status,
+                args.actor,
+                args.summary,
+                unblock_condition=args.unblock,
+            )
+        elif args.command == "schedule":
+            result = schedule_tasks(root, capacity=args.capacity)
+        elif args.command == "wait":
+            result = declare_wait(
+                root,
+                args.task_ids,
+                args.reason,
+                args.fallback,
+                capacity=args.capacity,
             )
         elif args.command == "validate":
             result = validate(root, require_final=args.require_final)
