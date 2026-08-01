@@ -44,6 +44,14 @@ def finalize(root: Path) -> dict[str, Any]:
         raise OneShottedError(
             "Open P0/P1 defects block finalization: " + ", ".join(data["blocking_open_defects"])
         )
+    scheduler = data.get("scheduler", {})
+    if scheduler.get("running_task_ids"):
+        raise OneShottedError(
+            "Running tasks must settle before finalization: "
+            + ", ".join(scheduler["running_task_ids"])
+        )
+    if state.get("scheduler_wait") is not None:
+        raise OneShottedError("A declared scheduler wait must settle before finalization")
 
     target: Path = data["target"]
     finished_at = utc_now()

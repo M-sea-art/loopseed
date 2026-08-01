@@ -27,7 +27,17 @@
     "no_progress_rounds": {"type": "integer", "minimum": 0},
     "max_no_progress_rounds": {"type": "integer", "minimum": 1},
     "next_action": {"type": "string"},
-    "true_blocker": {"type": ["object", "null"]}
+    "true_blocker": {"type": ["object", "null"]},
+    "scheduler_wait": {
+      "type": ["object", "null"],
+      "properties": {
+        "task_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "reason": {"enum": ["HARD_DEPENDENCY", "JOIN"]},
+        "fallback": {"type": "string", "minLength": 1},
+        "declared_at": {"type": "string", "minLength": 1}
+      },
+      "required": ["task_ids", "reason", "fallback", "declared_at"]
+    }
   },
   "additionalProperties": true
 }

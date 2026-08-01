@@ -1,6 +1,6 @@
 interface:
   display_name: "LoopSeed"
-  short_description: "Aim game ideas through dialogue, then launch verified One-Shot production"
-  default_prompt: "$loopseed one-shotted Preserve, improve, and amplify this game idea through meaningful options; once the creative brief is user-authorized, launch controlled Fan-out production and continue until independently verified or truly blocked."
+  short_description: "Aim game ideas, then launch verified One-Shot production"
+  default_prompt: "$loopseed one-shotted Co-direct and lock this game idea, then run no-idle controlled Fan-out until independently verified or truly blocked."
 policy:
   allow_implicit_invocation: false

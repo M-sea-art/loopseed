@@ -187,6 +187,16 @@ Fan‑out 是涡轮增压，不是多智能体表演。
 
 > Fan‑out 工作，不 Fan‑out 对游戏的不同理解。
 
+### 不空等调度
+
+非简单 Fan‑out 会写入一个很小的 `task-graph.json`，由运行时计算当前“最大安全可执行批次”。任务关系只有三类：
+
+- `HARD_DEPENDENCY`：只阻塞它的直接消费者；
+- `SOFT_ADVICE`：顾问意见，不得阻塞 Builder；
+- `INDEPENDENT`：写入边界安全时可以并行。
+
+汇合点显式选择 `FIRST_SUCCESS`、`QUORUM` 或 `ALL_REQUIRED`。只要还有安全可执行任务，系统就拒绝等待。共享写入范围保持单写者；不同 Worktree 可以并行。Lead 派出子智能体后仍然负责调度，不能变成“派活—等回信”。
+
 ## 证据驱动的完成
 
 创意简报锁定之后：
@@ -218,6 +228,7 @@ BIND → PLAN → IMPLEMENT → VERIFY
 ├── dialogue.jsonl
 ├── acceptance.json
 ├── expert-registry.json
+├── task-graph.json
 ├── state.json
 ├── evidence.jsonl
 ├── defects.jsonl
@@ -263,6 +274,7 @@ LoopSeed 优化的是协调成本，而不是 Agent 数量：
 - Focused 使用足够完成目标的最小拓扑；
 - Studio 只激活垂直切片真正需要的生产角色；
 - Moonshot 对独立质量面积极并行，但始终保留一个游戏身份与一个集成负责人；
+- 调度器追求最大安全可执行批次，而不是最大 Agent 数量；顾问软建议不得造成主线空等；
 - 状态只在决定、证据、换路、阻塞和终局时更新，不记录每个念头和工具调用。
 
 ## 本地验证

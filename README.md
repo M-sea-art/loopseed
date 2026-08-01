@@ -168,6 +168,16 @@ Keep product identity, core loop, shared game state, architecture, global lighti
 
 > Fan out work, not competing interpretations of the game.
 
+### No-idle scheduling
+
+For non-trivial Fan-out, LoopSeed records a small `task-graph.json` and derives the maximum safe runnable batch. Relations are explicit:
+
+- `HARD_DEPENDENCY` blocks only its direct consumer;
+- `SOFT_ADVICE` never blocks builders;
+- `INDEPENDENT` permits concurrent work when ownership is isolated.
+
+Joins choose `FIRST_SUCCESS`, `QUORUM`, or `ALL_REQUIRED`. Waiting is refused while any safe runnable task remains. Shared write scopes serialize; separate worktrees can proceed concurrently. The Lead keeps scheduling responsibility after delegation.
+
 ## Evidence-governed completion
 
 After the brief is locked:
@@ -199,6 +209,7 @@ BIND → PLAN → IMPLEMENT → VERIFY
 ├── dialogue.jsonl
 ├── acceptance.json
 ├── expert-registry.json
+├── task-graph.json
 ├── state.json
 ├── evidence.jsonl
 ├── defects.jsonl
@@ -244,6 +255,7 @@ LoopSeed minimizes coordination rather than maximizing agent count.
 - Focused uses the minimum useful topology.
 - Studio activates only the production disciplines required by the slice.
 - Moonshot fans out independent quality surfaces but keeps one game identity and one integration owner.
+- The scheduler maximizes safe runnable work, not agent count, and forbids idle waits for soft advice.
 - State is updated at decisions, evidence, route changes, blockers, and terminal results—not every thought or tool call.
 
 ## Validate locally

@@ -8,6 +8,7 @@ from typing import Any
 
 from one_shotted_io import read_json, read_jsonl
 from one_shotted_model import gate_map, latest_defects
+from one_shotted_tasks import scheduler_snapshot, task_graph_errors
 from one_shotted_types import (
     CALIBRATION_FILES,
     DIALOGUE_EFFECTS,
@@ -15,6 +16,7 @@ from one_shotted_types import (
     PRODUCTION_MODES,
     PROJECT_DOMAINS,
     REQUIRED_FILES,
+    SCHEDULER_FILE,
     VALID_GATE_STATUSES,
     VALID_PHASES,
     VALID_STATUSES,
@@ -29,6 +31,14 @@ def _non_empty_string(value: Any) -> bool:
 
 def _non_empty_list(value: Any) -> bool:
     return isinstance(value, list) and bool(value)
+
+
+def _version_at_least_0_7(value: Any) -> bool:
+    try:
+        major, minor, *_ = (int(part) for part in str(value).split("."))
+    except (TypeError, ValueError):
+        return False
+    return (major, minor) >= (0, 7)
 
 
 def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -66,6 +76,61 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
             blocker.get("reason")
         ) or not _non_empty_string(blocker.get("unblock_condition")):
             errors.append("BLOCKED requires true_blocker.reason and true_blocker.unblock_condition")
+
+    task_graph: dict[str, Any] = {}
+    scheduler: dict[str, Any] = {}
+    task_graph_path = target / SCHEDULER_FILE
+    if task_graph_path.is_file():
+        try:
+            task_graph = read_json(task_graph_path)
+        except OneShottedError as exc:
+            errors.append(str(exc))
+        if task_graph:
+            graph_errors = task_graph_errors(task_graph, str(goal.get("run_id", "")))
+            errors.extend(graph_errors)
+            if not graph_errors:
+                scheduler = scheduler_snapshot(task_graph)
+    elif _version_at_least_0_7(goal.get("loopseed_version")):
+        errors.append(f"Missing required file: {task_graph_path}")
+
+    scheduler_wait = state.get("scheduler_wait")
+    if scheduler_wait is not None:
+        if not isinstance(scheduler_wait, dict):
+            errors.append("state.scheduler_wait must be an object or null")
+        else:
+            wait_ids = scheduler_wait.get("task_ids")
+            if not isinstance(wait_ids, list) or not wait_ids or any(
+                not _non_empty_string(task_id) for task_id in wait_ids
+            ):
+                errors.append("scheduler_wait.task_ids must contain at least one task id")
+                wait_ids = []
+            if str(scheduler_wait.get("reason", "")).upper() not in {
+                "HARD_DEPENDENCY",
+                "JOIN",
+            }:
+                errors.append("scheduler_wait.reason must be HARD_DEPENDENCY or JOIN")
+            if not _non_empty_string(scheduler_wait.get("fallback")):
+                errors.append("scheduler_wait requires a fallback")
+            if scheduler.get("runnable_task_ids"):
+                errors.append(
+                    "NO_IDLE_WHILE_RUNNABLE: state declares a wait while runnable tasks exist: "
+                    + ", ".join(scheduler["runnable_task_ids"])
+                )
+            running_ids = set(scheduler.get("running_task_ids", []))
+            stale_ids = sorted(set(str(task_id) for task_id in wait_ids) - running_ids)
+            if stale_ids:
+                errors.append("scheduler_wait targets are not RUNNING: " + ", ".join(stale_ids))
+    if status == "BLOCKED" and scheduler:
+        internal_work = (
+            scheduler["runnable_task_ids"]
+            + scheduler["running_task_ids"]
+            + scheduler["failed_task_ids"]
+        )
+        if internal_work:
+            errors.append(
+                "A globally BLOCKED run cannot retain actionable internal work: "
+                + ", ".join(internal_work)
+            )
 
     project_domain = str(goal.get("project_domain", "general")).lower()
     production_mode = str(goal.get("production_mode", "focused")).lower()
@@ -407,6 +472,8 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         "project_domain": project_domain,
         "production_mode": production_mode,
         "calibration_status": calibration_status,
+        "task_graph": task_graph,
+        "scheduler": scheduler,
     }
     return {
         "ok": not errors,
@@ -423,4 +490,6 @@ def _validation_data(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         "gate_count": len(gates),
         "evidence_count": len(evidence),
         "blocking_open_defects": blocking_open,
+        "runnable_task_ids": scheduler.get("runnable_task_ids", []),
+        "running_task_ids": scheduler.get("running_task_ids", []),
     }, data

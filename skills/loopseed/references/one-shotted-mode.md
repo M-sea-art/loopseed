@@ -194,6 +194,7 @@ The initialized run contains:
 ├── dialogue.jsonl
 ├── acceptance.json
 ├── expert-registry.json
+├── task-graph.json
 ├── state.json
 ├── evidence.jsonl
 ├── defects.jsonl
@@ -212,7 +213,7 @@ BIND
   freeze project, artifact, and stage identity
     ↓
 PLAN
-  choose the smallest complete route and ownership boundaries
+  choose the smallest complete route, dependency kinds, ownership, and joins
     ↓
 IMPLEMENT
   execute; fan out only independently judgeable work
@@ -288,6 +289,62 @@ Keep the following under one sequential owner when coupled:
 - final approval.
 
 Fan out work, not competing interpretations of the game.
+
+### No-idle task graph
+
+For non-trivial Fan-out, register bounded tasks after entering `PLAN`:
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-task \
+  --root . \
+  --id R8-ARCH \
+  --purpose "Inspect the slab material route" \
+  --owner technical-architect \
+  --read-only
+
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-task \
+  --root . \
+  --id R8-A \
+  --purpose "Build isolated visual candidate A" \
+  --owner builder-a \
+  --relation R8-ARCH:SOFT_ADVICE \
+  --write-scope Assets/_Game \
+  --isolation worktree:r8-a
+```
+
+Relations mean:
+
+- `HARD_DEPENDENCY` — the named task must satisfy this consumer's join policy;
+- `SOFT_ADVICE` — useful input that never blocks the consumer;
+- `INDEPENDENT` — explicit evidence that the tasks may proceed independently.
+
+Hard dependencies use one explicit join:
+
+- `ALL_REQUIRED` — every hard dependency succeeds;
+- `FIRST_SUCCESS` — the first successful route releases the consumer;
+- `QUORUM` — the declared number of successful routes releases the consumer.
+
+Ask for the maximum safe batch, optionally bounded by the available subagent capacity:
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py schedule \
+  --root . \
+  --capacity 4
+```
+
+Pass the actual available subagent capacity when the surface exposes it; otherwise use the smallest profitable batch and reschedule as slots open. The scheduler derives readiness, respects shared write scopes, and permits overlapping scopes only across different isolation boundaries such as separate worktrees. Mark each task `RUNNING`, `SUCCEEDED`, `FAILED`, `BLOCKED`, or `CANCELLED` with `task-status`.
+
+Before using a platform wait mechanism, declare the rendezvous:
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py wait \
+  --root . \
+  --for R8-A \
+  --reason JOIN \
+  --fallback "continue with the best completed candidate or replan the failed route"
+```
+
+The command refuses to wait if any safe runnable task remains. A technical director, critic, or other advisor is `SOFT_ADVICE` unless a direct consumer has a real hard dependency on its output. Delegation never transfers scheduling responsibility away from the Lead.
 
 ## Acceptance gates
 
@@ -368,6 +425,8 @@ Successful finalization writes `final-report.json` and sets `VERIFIED`.
 
 - Dialogue rounds must buy precision, not ceremony.
 - One production authorization does not imply maximal Fan-out.
+- Maximum parallel efficiency means the largest safe runnable batch, not the largest possible agent count.
+- Never idle for advice while an independent builder, test, probe, or integration preparation task can run.
 - Focused uses the minimum useful topology.
 - Studio activates only the disciplines required by the slice.
 - Moonshot accelerates independent quality surfaces but remains bounded.

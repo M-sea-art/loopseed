@@ -80,6 +80,8 @@ def initialize(
     acceptance["run_id"] = run_id
     experts = load_template_json("expert-registry.json")
     experts["run_id"] = run_id
+    task_graph = load_template_json("task-graph.json")
+    task_graph.update({"loopseed_version": VERSION, "run_id": run_id})
     state = load_template_json("state.json")
     state.update(
         {
@@ -111,6 +113,7 @@ def initialize(
     write_json_atomic(target / "goal-contract.json", goal_contract)
     write_json_atomic(target / "acceptance.json", acceptance)
     write_json_atomic(target / "expert-registry.json", experts)
+    write_json_atomic(target / "task-graph.json", task_graph)
     write_json_atomic(target / "state.json", state)
     write_json_atomic(target / "creative-brief.json", creative_brief)
     (target / "project-identity.md").write_text(

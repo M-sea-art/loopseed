@@ -5,7 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from one_shotted_io import load_run, write_json_atomic
+from one_shotted_io import load_run, read_json, write_json_atomic
+from one_shotted_tasks import TASK_GRAPH_FILE, scheduler_snapshot, task_graph_errors
 from one_shotted_types import ALLOWED_TRANSITIONS, VALID_PHASES, OneShottedError, clean_line, utc_now
 
 
@@ -18,7 +19,7 @@ def transition(
     unblock_condition: str | None = None,
     abort: bool = False,
 ) -> dict[str, Any]:
-    target, _, _, state = load_run(root)
+    target, goal, _, state = load_run(root)
     status = str(state.get("status", "")).upper()
     current_phase = str(state.get("phase", "")).upper()
     if status != "ACTIVE":
@@ -38,6 +39,23 @@ def transition(
     if bool(blocked_reason) != bool(unblock_condition):
         raise OneShottedError("BLOCKED requires both --blocker and --unblock")
     if blocked_reason and unblock_condition:
+        graph_path = target / TASK_GRAPH_FILE
+        if graph_path.is_file():
+            graph = read_json(graph_path)
+            graph_errors = task_graph_errors(graph, str(goal.get("run_id", "")))
+            if graph_errors:
+                raise OneShottedError("Cannot block an invalid task graph: " + "; ".join(graph_errors))
+            scheduler = scheduler_snapshot(graph)
+            remaining_internal_work = (
+                scheduler["runnable_task_ids"]
+                + scheduler["running_task_ids"]
+                + scheduler["failed_task_ids"]
+            )
+            if remaining_internal_work:
+                raise OneShottedError(
+                    "Cannot mark the whole run BLOCKED while internal work remains: "
+                    + ", ".join(remaining_internal_work)
+                )
         state.update(
             {
                 "status": "BLOCKED",

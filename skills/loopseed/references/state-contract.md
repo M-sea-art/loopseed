@@ -10,7 +10,7 @@ Use project-root `.loopseed.md` only when work must survive a task/session, a he
 # LoopSeed State
 
 ```loopseed-state
-version=0.5.0
+version=0.7.0
 status=ACTIVE
 next=one concise, verifiable next action
 ```
@@ -49,11 +49,14 @@ Its state is split into:
 - `acceptance.json` — gates, owners, independent verifiers, and evidence references;
 - `state.json` — current phase, status, production round, dialogue rounds, and next action;
 - `expert-registry.json` — integration, verification, creative, and mode-aware Fan-out responsibilities;
+- `task-graph.json` — bounded tasks, dependency kinds, join policies, write isolation, and current task status;
 - `evidence.jsonl` — append-only verifier verdicts;
 - `defects.jsonl` — append-only defect status events;
 - `final-report.json` — generated only by the finalizer.
 
 The One-Shotted JSON state takes precedence over legacy `.loopseed.md` for bundled hooks.
+
+`state.json.scheduler_wait` is normally `null`. A non-null wait is valid only when the scheduler reports no safe runnable task, every named wait target is already `RUNNING`, the reason is `HARD_DEPENDENCY` or `JOIN`, and a fallback is recorded. It is a control signal, not permission to mark the project `BLOCKED`.
 
 ## Phases
 
@@ -144,3 +147,5 @@ Moonshot additionally requires an ambition expansion, scope guard, and explicit 
 8. Every model question has two to four meaningful options and one recommendation.
 9. Never store credentials, private absolute paths, customer data, proprietary excerpts, or chain of thought.
 10. Stop hooks request at most one continuation per turn and never continue after `VERIFIED`, `BLOCKED`, or `ABORTED`.
+11. Do not wait while `task-graph.json` contains a safe runnable task.
+12. Treat `SOFT_ADVICE` as non-blocking and `BLOCKED` as external-only.
