@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0
+
+- Added a dependency-free `task-graph.json` runtime for bounded One-Shotted Fan-out.
+- Classified task relations as `HARD_DEPENDENCY`, `SOFT_ADVICE`, or `INDEPENDENT`.
+- Added explicit `ALL_REQUIRED`, `FIRST_SUCCESS`, and `QUORUM` joins.
+- Added safe runnable-batch scheduling with capacity and write-isolation checks.
+- Added `NO_IDLE_WHILE_RUNNABLE`: a wait is rejected while safe work remains.
+- Added task-level status, legal-wait recording, global BLOCKED protection, audit coverage, and regression tests.
+
 ## 0.3.0
 
 - Added explicit `$loopseed one-shotted <goal>` autonomous completion mode.

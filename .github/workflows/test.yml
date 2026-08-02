@@ -25,12 +25,92 @@ jobs:
         run: python -m compileall -q hooks skills/loopseed/scripts tests
       - name: Run tests
         run: python -m unittest discover -s tests -v
-      - name: Smoke One-Shotted CLI
+      - name: Smoke general One-Shotted CLI
         run: |
           root="$(mktemp -d)"
           mkdir "$root/.git"
-          python skills/loopseed/scripts/one_shotted.py init --root "$root" --goal "Ship a verified demo"
+          python skills/loopseed/scripts/one_shotted.py init --root "$root" --goal "Ship a verified migration report"
           python skills/loopseed/scripts/one_shotted.py add-gate --root "$root" --id SMOKE --title Smoke --criterion "CLI completes" --owner lead --verifier verifier
           python skills/loopseed/scripts/one_shotted.py record --root "$root" --gate SMOKE --result PASS --actor verifier --summary "CLI smoke passed"
+          python skills/loopseed/scripts/one_shotted.py finalize --root "$root"
+          python skills/loopseed/scripts/one_shotted.py validate --root "$root" --require-final
+      - name: Smoke game dialogue and creative lock
+        run: |
+          root="$(mktemp -d)"
+          mkdir "$root/.git"
+          python skills/loopseed/scripts/one_shotted.py init \
+            --root "$root" \
+            --goal "Build a browser game where autonomous characters drive events"
+
+          model_json="$(python skills/loopseed/scripts/one_shotted.py dialogue-turn \
+            --root "$root" \
+            --actor model \
+            --kind question \
+            --summary "Choose how the first slice proves that the world is alive" \
+            --effect preserve \
+            --effect amplify \
+            --advance core_loop \
+            --advance hero_moment \
+            --option "A|Studio crisis|A complete bounded playable loop" \
+            --option "B|Cinematic scene|More spectacle but weaker gameplay proof" \
+            --recommended A)"
+          model_id="$(printf '%s' "$model_json" | python -c 'import json,sys; print(json.load(sys.stdin)["event_id"])')"
+
+          user_json="$(python skills/loopseed/scripts/one_shotted.py dialogue-turn \
+            --root "$root" \
+            --actor user \
+            --kind decision \
+            --summary "Choose A and preserve indirect control")"
+          user_id="$(printf '%s' "$user_json" | python -c 'import json,sys; print(json.load(sys.stdin)["event_id"])')"
+
+          cat > "$root/brief.json" <<JSON
+          {
+            "project_domain": "game",
+            "production_mode": "studio",
+            "seed_intent": "Build a browser game where autonomous characters drive events.",
+            "product_outcome": "A presentation-ready playable vertical slice.",
+            "north_star": "The world feels alive because characters act from their own motives.",
+            "original_user_ideas": ["autonomous characters"],
+            "preserved_ideas": ["indirect control"],
+            "revisions": [],
+            "amplifications": ["One crisis creates visible systemic consequences."],
+            "decisions": ["Studio mode", "bounded crisis"],
+            "bounded_scope": ["one level", "one complete loop"],
+            "non_goals": ["open world"],
+            "must_not_lose": ["autonomous behavior", "playable loop"],
+            "reference_roles": ["No external project defines identity"],
+            "required_evidence": ["complete playthrough", "fixed screenshot", "performance report"],
+            "game": {
+              "player_promise": "Influence a living world without puppeteering every character.",
+              "player_role": "Indirect director.",
+              "core_loop": "Observe, allocate, decide, witness consequences, restart.",
+              "world_response": "Characters act according to motives and relationships.",
+              "unique_hook": "Autonomous motives drive events.",
+              "art_direction": "Coherent stylized game world.",
+              "game_feel": "Immediate readable feedback.",
+              "hero_moment": "The whole level visibly reacts to one crisis.",
+              "vertical_slice": "One complete crisis loop.",
+              "asset_strategy": "Replace all visible placeholders before visual PASS.",
+              "performance_budget": {"fps": 60, "triangles": 2200000}
+            },
+            "general": {
+              "user_job": "",
+              "primary_flow": "",
+              "artifact_type": "",
+              "target_stage": "",
+              "success_metrics": ""
+            },
+            "moonshot": {
+              "ambition_expansion": "",
+              "scope_guard": ""
+            },
+            "authorization": {"user_event_id": "$user_id"},
+            "dialogue_event_ids": ["$model_id", "$user_id"]
+          }
+          JSON
+
+          python skills/loopseed/scripts/one_shotted.py lock-brief --root "$root" --file "$root/brief.json"
+          python skills/loopseed/scripts/one_shotted.py add-gate --root "$root" --id FLOW --title Flow --criterion "The slice completes" --owner lead --verifier verifier
+          python skills/loopseed/scripts/one_shotted.py record --root "$root" --gate FLOW --result PASS --actor verifier --summary "Game dialogue smoke passed"
           python skills/loopseed/scripts/one_shotted.py finalize --root "$root"
           python skills/loopseed/scripts/one_shotted.py validate --root "$root" --require-final

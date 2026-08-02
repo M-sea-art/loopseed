@@ -3,19 +3,41 @@
   "$id": "https://github.com/M-sea-art/loopseed/schemas/one-shotted/state.schema.json",
   "title": "LoopSeed One-Shotted State",
   "type": "object",
-  "required": ["schema_version", "loopseed_version", "mode", "run_id", "status", "phase", "round", "no_progress_rounds", "next_action"],
+  "required": [
+    "schema_version",
+    "loopseed_version",
+    "mode",
+    "run_id",
+    "status",
+    "phase",
+    "round",
+    "dialogue_rounds",
+    "no_progress_rounds",
+    "next_action"
+  ],
   "properties": {
     "schema_version": {"type": "string"},
     "loopseed_version": {"type": "string"},
     "mode": {"const": "one-shotted"},
     "run_id": {"type": "string", "minLength": 1},
     "status": {"enum": ["ACTIVE", "VERIFIED", "BLOCKED", "ABORTED"]},
-    "phase": {"enum": ["BIND", "PLAN", "IMPLEMENT", "VERIFY", "REPAIR", "FINALIZE"]},
+    "phase": {"enum": ["CALIBRATE", "BIND", "PLAN", "IMPLEMENT", "VERIFY", "REPAIR", "FINALIZE"]},
     "round": {"type": "integer", "minimum": 0},
+    "dialogue_rounds": {"type": "integer", "minimum": 0},
     "no_progress_rounds": {"type": "integer", "minimum": 0},
     "max_no_progress_rounds": {"type": "integer", "minimum": 1},
     "next_action": {"type": "string"},
-    "true_blocker": {"type": ["object", "null"]}
+    "true_blocker": {"type": ["object", "null"]},
+    "scheduler_wait": {
+      "type": ["object", "null"],
+      "properties": {
+        "task_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "reason": {"enum": ["HARD_DEPENDENCY", "JOIN"]},
+        "fallback": {"type": "string", "minLength": 1},
+        "declared_at": {"type": "string", "minLength": 1}
+      },
+      "required": ["task_ids", "reason", "fallback", "declared_at"]
+    }
   },
   "additionalProperties": true
 }

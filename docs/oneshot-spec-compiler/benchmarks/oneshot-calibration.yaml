@@ -1,0 +1,215 @@
+# LOOPSEED Game-First Creative Dialogue Benchmark v0.5.0
+
+version: "0.5.0"
+benchmark: game_first_creative_dialogue
+purpose: verify_that_dialogue_increases_precision_and_ambition_before_one_shot_without_becoming_bureaucratic
+
+cases:
+  - id: general_goal_keeps_direct_path
+    seed: "在现有项目中完成数据库迁移报告，并附验证命令与回滚说明。"
+    repository_evidence:
+      project_identity: clear
+      artifact: report
+      stage: shareable
+      acceptance: observable
+    expected:
+      domain: general
+      initial_phase: BIND
+      production_mode: focused
+      dialogue: skipped
+      repeated_confirmation: false
+
+  - id: game_seed_enters_co_director_dialogue
+    seed: "做一个弟子由欲望和前世记忆驱动的武侠门派经营游戏。"
+    expected:
+      domain: game
+      initial_phase: CALIBRATE
+      production_mode: undecided
+      preserves:
+        - autonomous_disciples
+        - desire_driven_behavior
+        - inherited_memory
+        - wuxia_sect_management
+      first_model_turn:
+        operations:
+          - preserve
+          - amplify
+        advances:
+          - player_promise
+          - production_mode
+        option_count_between: [2, 4]
+        recommendation_required: true
+
+  - id: later_round_continues_instead_of_resets
+    seed: "做一个弟子由欲望和前世记忆驱动的武侠门派经营游戏。"
+    accepted_round_1:
+      - player_controls_rules_resources_relationships_and_attention
+      - no_direct_unit_puppeteering
+      - studio_as_base_with_moonshot_living_world_ambition
+    round_2_question:
+      decision_surface:
+        - core_loop
+        - hero_moment
+      options:
+        - three_day_sect_crisis
+        - cinematic_scene
+        - large_sandbox
+      recommended: three_day_sect_crisis
+    expected:
+      inherited_decisions_preserved: true
+      generic_direct_control_reintroduced: false
+      options_have_material_consequences: true
+      user_may_combine_options: true
+      repeated_round_1_question: false
+
+  - id: visible_correction_without_erasing_the_seed
+    seed: "弟子完全自主，但玩家必须精确命令每个弟子完成指定结果。"
+    contradiction:
+      - complete_autonomy
+      - precise_direct_command
+    expected_model_behavior:
+      names_conflict: true
+      preserves_original_goal: living_autonomous_characters
+      offers:
+        - indirect_control
+        - costly_emergency_command
+        - autonomy_for_daily_life_human_decision_for_sect_crises
+      recommends_one: true
+      explains_gain_and_sacrifice: true
+      silent_replacement: false
+
+  - id: studio_lock_compiles_game_contract
+    accepted_decisions:
+      - indirect_control
+      - three_day_crisis
+      - high_fidelity_wuxia_cutaway
+      - desire_and_memory_drive_visible_consequences
+    expected_brief:
+      project_domain: game
+      production_mode: studio
+      required_fields:
+        - seed_intent
+        - product_outcome
+        - north_star
+        - preserved_ideas
+        - revisions
+        - amplifications
+        - bounded_scope
+        - non_goals
+        - must_not_lose
+        - player_promise
+        - player_role
+        - core_loop
+        - world_response
+        - unique_hook
+        - art_direction
+        - game_feel
+        - hero_moment
+        - vertical_slice
+        - asset_strategy
+        - performance_budget
+        - required_evidence
+        - user_authorization_event
+      writes:
+        - creative-brief.json
+        - compiled-shot.md
+      transition: CALIBRATE_to_BIND
+      second_confirmation: false
+
+  - id: moonshot_amplifies_experience_not_feature_count
+    seed: "做一个武侠门派经营游戏。"
+    selected_mode: moonshot
+    expected:
+      requires:
+        - explicit_ambition_expansion
+        - explicit_scope_guard
+        - at_least_one_documented_amplification
+      valid_amplification: "让一个三日危机中的弟子欲望、前世记忆与关系网同时在整座门派中产生可读后果。"
+      valid_scope_guard: "只做一座门派、一个危机、一个完整循环和一个英雄视图；不增加开放世界。"
+      forbidden:
+        - add_many_unrelated_systems
+        - lower_evidence_standard
+        - claim_AAA_without_production_evidence
+
+  - id: dialogue_round_limit_is_ceiling
+    configured_max_rounds: 5
+    ready_after_rounds: 2
+    expected:
+      stops_after_rounds: 2
+      does_not_fill_quota: true
+      locks_when_ready: true
+    forbidden:
+      - cosmetic_question_to_reach_round_5
+      - low_level_library_question
+      - repeat_answered_question
+
+  - id: no_progress_forces_synthesis
+    prior_rounds:
+      - asks_same_product_identity_question
+      - asks_same_product_identity_question_again
+    expected:
+      reroute_required: true
+      phase_remains: CALIBRATE
+      next_action:
+        - stop_repeating_discovery
+        - present_strongest_synthesis
+        - offer_final_bounded_options
+        - move_toward_lock
+
+  - id: creative_lock_cannot_be_bypassed
+    state:
+      phase: CALIBRATE
+      calibration_status: OPEN
+    forbidden_actions:
+      - ordinary_transition_to_BIND
+      - add_acceptance_gate
+      - worker_self_authorizes_brief
+      - verifier_authorizes_product_direction
+    expected_failure_code: BLOCK_CREATIVE_LOCK_REQUIRED
+
+  - id: seed_survives_easy_substitute_pressure
+    seed: "做一个有完整经营循环和代表性视觉品质的东方门派游戏。"
+    tempting_substitute: "几何体山院漫游场景"
+    expected:
+      preserve:
+        - management_game_identity
+        - complete_core_loop
+        - representative_visual_quality
+      reject:
+        - geometry_blockout_as_final
+        - scene_without_gameplay
+        - runnable_as_visual_completion
+      failure_code_on_drift: BLOCK_SEED_INTENT_DRIFT
+
+  - id: fanout_begins_only_after_lock
+    state_before:
+      phase: CALIBRATE
+      creative_brief: DRAFT
+    expected_before:
+      builders_started: 0
+      production_writes: 0
+    state_after:
+      phase: BIND
+      creative_brief: LOCKED
+      project_binding: FROZEN
+      artifact_contract: FROZEN
+      stage_target: FROZEN
+    expected_after:
+      task_graph_allowed: true
+      fanout_allowed_only_for_independent_units: true
+      one_final_integration_owner: true
+
+pass_conditions:
+  - game_goals_default_to_creative_dialogue
+  - general_clear_goals_keep_direct_path
+  - accepted_ideas_accumulate_across_rounds
+  - model_can_correct_amplify_complete_and_continue_without_erasing_authorship
+  - every_question_has_2_to_4_meaningful_options_and_one_recommendation
+  - dialogue_stops_when_ready_not_when_quota_is_full
+  - repeated_questions_are_rejected
+  - studio_and_moonshot_compile_distinct_production_strategies
+  - moonshot_requires_scope_guard_and_keeps_evidence_standard
+  - creative_lock_requires_user_answer_or_decision
+  - lock_cannot_be_bypassed
+  - fanout_begins_only_after_creative_and_integrity_locks
+  - no_second_confirmation_before_production

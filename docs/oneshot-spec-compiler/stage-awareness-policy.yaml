@@ -1,0 +1,71 @@
+# LOOPSEED One-Shot Production Integrity Patch v0.3.1
+
+version: "0.3.1"
+
+stage_awareness:
+  purpose: distinguish_technical_progress_from_target_completion
+
+  target_stage:
+    required:
+      - stage_target_id
+      - project_binding_id
+      - artifact_contract_id
+      - name
+      - acceptance_axes
+
+  stages:
+    blockout:
+      proves:
+        - spatial_or_structural_direction
+      does_not_prove:
+        - finished_visual_quality
+        - complete_product
+
+    functional_prototype:
+      proves:
+        - core_function_or_loop
+      does_not_prove:
+        - representative_visual_quality
+        - product_completeness
+
+    playable_demo:
+      proves:
+        - bounded_user_ready_play
+
+    visual_vertical_slice:
+      proves:
+        - representative_target_visual_quality
+
+    finished_candidate:
+      proves:
+        - contracted_functionality
+        - contracted_visual_quality
+        - contracted_completeness
+        - verification_readiness
+
+  acceptance_axes:
+    allowed:
+      - functionality
+      - visual_fidelity
+      - completeness
+      - stability
+      - usability
+
+  rules:
+    - produced_stage_must_be_assessed_from_evidence
+    - target_axes_must_all_pass
+    - no_implicit_stage_downgrade
+    - runnable_does_not_imply_visual_completion
+    - blockout_passes_only_when_blockout_is_the_target
+
+  immutable_after_lock:
+    - stage_target_id
+    - project_binding_id
+    - artifact_contract_id
+    - name
+    - acceptance_axes
+
+failure_codes:
+  missing_target: BLOCK_STAGE_TARGET_MISSING
+  downgrade: BLOCK_STAGE_DOWNGRADE
+  insufficient_evidence: BLOCK_STAGE_EVIDENCE

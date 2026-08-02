@@ -6,14 +6,26 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-VERSION = "0.3.0"
+VERSION = "0.7.0"
 RUN_RELATIVE = Path(".loopseed") / "one-shotted"
 VALID_STATUSES = {"ACTIVE", "VERIFIED", "BLOCKED", "ABORTED"}
-VALID_PHASES = {"BIND", "PLAN", "IMPLEMENT", "VERIFY", "REPAIR", "FINALIZE"}
+VALID_PHASES = {"CALIBRATE", "BIND", "PLAN", "IMPLEMENT", "VERIFY", "REPAIR", "FINALIZE"}
 VALID_GATE_STATUSES = {"PENDING", "PASS", "FAIL", "BLOCKED"}
 VALID_RESULTS = {"PASS", "FAIL"}
 VALID_SEVERITIES = {"P0", "P1", "P2", "P3"}
 VALID_DEFECT_STATUSES = {"OPEN", "RESOLVED"}
+PROJECT_DOMAINS = {"game", "general"}
+PRODUCTION_MODES = {"focused", "studio", "moonshot"}
+DIALOGUE_KINDS = {"seed", "synthesis", "question", "answer", "decision"}
+DIALOGUE_EFFECTS = {
+    "preserve",
+    "clarify",
+    "correct",
+    "amplify",
+    "complete",
+    "continue",
+    "offer_options",
+}
 REQUIRED_FILES = (
     "project-identity.md",
     "architecture-contract.md",
@@ -24,7 +36,13 @@ REQUIRED_FILES = (
     "evidence.jsonl",
     "defects.jsonl",
 )
+CALIBRATION_FILES = (
+    "creative-brief.json",
+    "dialogue.jsonl",
+)
+SCHEDULER_FILE = "task-graph.json"
 ALLOWED_TRANSITIONS = {
+    "CALIBRATE": set(),
     "BIND": {"PLAN"},
     "PLAN": {"IMPLEMENT"},
     "IMPLEMENT": {"VERIFY", "PLAN"},
@@ -60,4 +78,3 @@ def run_dir(root: Path) -> Path:
 
 def template_dir() -> Path:
     return Path(__file__).resolve().parents[1] / "templates" / "one-shotted"
-

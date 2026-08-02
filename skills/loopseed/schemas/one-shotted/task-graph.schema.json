@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/M-sea-art/loopseed/schemas/one-shotted/task-graph.schema.json",
+  "title": "LoopSeed One-Shotted Task Graph",
+  "type": "object",
+  "required": ["schema_version", "loopseed_version", "run_id", "policy", "tasks"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "loopseed_version": {"type": "string"},
+    "run_id": {"type": "string", "minLength": 1},
+    "policy": {
+      "type": "object",
+      "required": ["no_idle_while_runnable", "soft_advice_never_blocks", "main_agent_retains_scheduling"],
+      "properties": {
+        "no_idle_while_runnable": {"const": true},
+        "soft_advice_never_blocks": {"const": true},
+        "main_agent_retains_scheduling": {"const": true}
+      },
+      "additionalProperties": true
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "purpose",
+          "owner",
+          "required",
+          "status",
+          "relations",
+          "join",
+          "read_only",
+          "write_scope",
+          "isolation"
+        ],
+        "properties": {
+          "id": {"type": "string", "pattern": "^\\S+$"},
+          "purpose": {"type": "string", "minLength": 1},
+          "owner": {"type": "string", "minLength": 1},
+          "required": {"type": "boolean"},
+          "status": {"enum": ["PENDING", "RUNNING", "SUCCEEDED", "FAILED", "BLOCKED", "CANCELLED"]},
+          "relations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["task_id", "kind"],
+              "properties": {
+                "task_id": {"type": "string", "minLength": 1},
+                "kind": {"enum": ["HARD_DEPENDENCY", "SOFT_ADVICE", "INDEPENDENT"]}
+              },
+              "additionalProperties": false
+            }
+          },
+          "join": {
+            "type": "object",
+            "required": ["strategy", "quorum"],
+            "properties": {
+              "strategy": {"enum": ["ALL_REQUIRED", "FIRST_SUCCESS", "QUORUM"]},
+              "quorum": {"type": ["integer", "null"], "minimum": 1}
+            },
+            "additionalProperties": false
+          },
+          "read_only": {"type": "boolean"},
+          "write_scope": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "isolation": {"type": "string", "minLength": 1},
+          "unblock_condition": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

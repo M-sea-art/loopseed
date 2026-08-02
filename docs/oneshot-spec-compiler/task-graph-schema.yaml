@@ -1,0 +1,126 @@
+# LOOPSEED No-Idle Parallel Runtime v0.7.0
+# Task graph executes the compiled shot; it does not reopen product planning.
+
+version: "0.7.0"
+
+task_graph:
+  preconditions:
+    - calibration_resolved_by_direct_or_calibrated_shot
+    - compiled_shot_ready
+    - project_binding_passed
+    - artifact_contract_passed
+    - stage_target_resolved
+
+  goal:
+    required: true
+    source: compiled_shot
+    must_preserve:
+      - seed_intent
+      - product_outcome
+      - core_experience_or_job
+      - bounded_scope
+
+  integrity_ref:
+    required:
+      - project_binding_id
+      - artifact_contract_id
+      - stage_target_id
+    rule: inherited_unchanged_by_every_task
+
+  implementation_strategy:
+    source: artifact_contract
+    rules:
+      - tasks_may_choose_reversible_details_within_the_strategy
+      - tasks_may_not_switch_product_form_or_delivery_target
+      - material_strategy_change_requires_recompile_from_existing_user_authority
+
+  decomposition:
+    objective: create_the_smallest_coherent_improvement_units_that_can_be_judged_without_builder_explanation
+    rules:
+      - do_not_split_work_only_because_files_or_directories_differ
+      - preserve_shared_experience_quality_and_runtime_state_when_they_form_one_coupled_concern
+      - use_direct_execution_for_small_self_contained_tasks
+      - use_builder_critic_loops_only_where_quality_or_risk_justifies_them
+      - create_reference_acquisition_or_fixture_work_when_a_required_inspectable_bar_is_missing
+
+  task:
+    fields:
+      - id
+      - purpose
+      - artifact
+      - acceptance
+      - evidence
+      - dependencies
+      - relations
+      - join
+      - status
+      - read_only
+      - write_scope
+      - isolation
+      - integrity_ref
+      - improvement_unit
+      - independently_judgeable
+      - coupling_group
+    field_rules:
+      improvement_unit: names_one_coherent_product_or_quality_change
+      independently_judgeable: true_only_when_a_fresh_critic_can_inspect_the_output_directly_and_decide_without_builder_history
+      coupling_group: shared_nonempty_value_for_tasks_that_jointly_determine_one_experience_quality_or_runtime_state
+      relations: each_relation_is_HARD_DEPENDENCY_SOFT_ADVICE_or_INDEPENDENT
+      join: explicit_ALL_REQUIRED_FIRST_SUCCESS_or_QUORUM_for_hard_dependencies
+      status: PENDING_RUNNING_SUCCEEDED_FAILED_BLOCKED_or_CANCELLED
+      read_only: true_means_no_product_write_ownership
+      write_scope: required_for_writers_and_empty_for_read_only_tasks
+      isolation: shared_or_a_distinct_worktree_or_equivalent_boundary
+    rules:
+      - artifact_must_contribute_to_locked_deliverable
+      - acceptance_must_contribute_to_target_stage
+      - purpose_must_contribute_to_seed_intent_and_product_outcome
+      - task_must_not_reinterpret_integrity_ref
+      - task_must_not_reopen_calibration_or_delegate_low_level_choices_to_user
+      - independently_judgeable_false_blocks_parallel_builder_fanout
+      - tasks_in_the_same_coupling_group_use_one_sequential_owner_by_default
+      - read_only_investigation_may_parallelize_without_claiming_product_ownership
+      - builder_output_must_include_an_inspectable_artifact_or_runtime_state_not_only_a_summary
+      - hard_dependency_blocks_only_its_direct_consumer
+      - soft_advice_never_blocks_execution
+      - every_safe_runnable_node_is_dispatched_before_waiting
+      - shared_overlapping_write_scopes_use_one_writer
+      - separate_isolation_boundaries_may_run_overlapping_scopes
+
+  scheduler:
+    policy: NO_IDLE_WHILE_RUNNABLE
+    lead_retains_scheduling_after_delegation: true
+    runnable_when:
+      - status_is_PENDING
+      - hard_dependency_join_is_satisfied
+      - concurrency_capacity_is_available
+      - no_running_writer_conflicts_in_the_same_isolation_boundary
+    wait_allowed_only_when:
+      - runnable_queue_is_empty
+      - named_wait_targets_are_RUNNING
+      - reason_is_HARD_DEPENDENCY_or_JOIN
+      - fallback_is_recorded
+    wait_forbidden_for:
+      - soft_advice
+      - ceremonial_approval
+      - internal_work_that_can_continue
+    blocked_scope:
+      hard_dependency: direct_consumer_only
+      global_BLOCKED: no_runnable_or_running_internal_task
+
+  blocked_when:
+    - calibration_unresolved
+    - missing_integrity_ref
+    - seed_intent_drift
+    - foreign_project_source
+    - forbidden_artifact_substitution
+    - unauthorized_material_strategy_switch
+    - implicit_stage_downgrade
+    - required_quality_bar_missing
+    - coupled_work_split_without_one_owner
+
+  merge:
+    owner: primary_executor
+    requires_identical_integrity_ref: true
+    requires_seed_intent_preservation: true
+    requires_whole_product_review_after_multiple_builders: true
