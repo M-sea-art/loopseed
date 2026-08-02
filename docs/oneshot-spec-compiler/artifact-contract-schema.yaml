@@ -1,0 +1,142 @@
+# LOOPSEED One-Shot Gauntlet Integration Patch v0.4.1
+
+version: "0.4.1"
+
+artifact_contract:
+  purpose: prevent_unrequested_artifact_substitution_and_bind_strategy_quality_and_completion_to_real_delivery
+
+  required:
+    - contract_id
+    - project_binding_id
+    - seed_intent
+    - artifact_type
+    - deliverables
+    - acceptance
+    - forbidden_substitutions
+    - required_evidence
+    - implementation_strategy
+    - quality_reference
+
+  seed_intent:
+    role: semantic_anchor_from_user_seed_and_calibration_answer
+    rule: may_be_clarified_but_not_replaced_or_weakened_without_user_authority
+
+  deliverables:
+    rule: every_deliverable_has_acceptance_and_evidence
+
+  implementation_strategy:
+    role: selected_delivery_route_not_a_fourth_integrity_lock
+    fields:
+      - recommended_stack
+      - repository_fit
+      - artifact_fit
+      - stage_fit
+      - strategic_tradeoffs
+      - rejected_alternatives
+    rules:
+      - infer_and_recommend_before_asking
+      - prefer_project_native_stack_when_sufficient
+      - user_decides_only_material_product_tradeoffs
+      - reversible_low_level_choices_remain_executor_owned
+      - strategy_must_serve_seed_intent_artifact_and_stage
+      - strategy_must_not_downgrade_product_form_or_quality_target
+    freeze_when:
+      - stack_choice_changes_product_form
+      - stack_choice_changes_delivery_target
+      - stack_choice_changes_required_evidence
+      - strategy_is_required_for_task_graph_consistency
+
+  quality_reference:
+    purpose: separate_semantic_activation_quality_ascent_and_honest_completion
+
+    semantic_anchor:
+      required: false
+      role: activate_relevant_product_and_domain_knowledge
+      fields:
+        - name
+        - source
+        - transferable_dimensions
+        - excluded_authority
+      rules:
+        - may_expand_expected_product_capabilities
+        - may_not_override_project_binding_artifact_contract_or_stage_target
+        - named_brand_or_product_is_not_by_itself_an_inspectable_quality_bar
+
+    inspectable_bar:
+      role: concrete_reference_or_measurement_for_direct_critic_comparison
+      required_when:
+        - target_stage_contains_visual_experiential_or_performance_quality
+        - quality_claim_depends_on_external_comparison
+      fields:
+        - type
+        - source
+        - observable_dimensions
+        - comparison_method
+        - access_or_artifact_reference
+      rules:
+        - vague_adjectives_are_not_an_inspectable_bar
+        - critic_must_access_reference_and_candidate_directly
+        - compare_equivalent_states_conditions_or_tasks
+        - if_user_did_not_supply_one_system_may_find_or_construct_a_concrete_bar
+        - found_or_constructed_bar_must_not_override_locked_project_identity
+        - absence_or_limit_of_a_bar_must_be_recorded_not_hidden
+
+    completion_gate:
+      role: reachable_stage_specific_condition_that_alone_can_authorize_completion
+      source:
+        - artifact_acceptance
+        - stage_target
+        - required_evidence
+      rules:
+        - north_star_benchmark_drives_improvement_but_does_not_define_completion_by_itself
+        - completion_gate_must_be_reachable_and_observable_in_the_current_run
+        - beating_an_unbounded_reference_is_not_required_unless_explicitly_contracted
+        - passing_local_components_does_not_replace_whole_product_completion_evidence
+        - only_stage_specific_evidence_may_authorize_complete_or_verified
+
+  non_degradable:
+    description: qualities_that_must_survive_implementation_choices
+    default:
+      - seed_intent
+      - project_identity
+      - requested_artifact_type
+      - target_stage
+      - explicit_user_constraints
+
+  substitution:
+    default: forbidden
+    allowed_only_when:
+      - user_explicitly_accepts_substitute
+      - substitute_preserves_non_degradable_requirements
+      - stage_target_remains_satisfied
+
+  evidence:
+    rules:
+      - runnable_evidence_proves_function_only
+      - visual_completion_requires_visual_evidence
+      - source_presence_does_not_prove_deliverable_quality
+      - every_acceptance_item_must_be_observed
+      - implementation_strategy_claims_require_build_or_runtime_evidence
+      - benchmark_claims_require_direct_candidate_reference_comparison
+      - inspectable_bar_and_candidate_must_be_available_to_the_quality_critic
+      - completion_evidence_must_be_distinct_from_north_star_aspiration
+
+  immutable_after_lock:
+    - contract_id
+    - project_binding_id
+    - seed_intent
+    - artifact_type
+    - non_degradable
+    - forbidden_substitutions
+    - material_implementation_strategy
+    - completion_gate
+
+failure_codes:
+  missing_contract: BLOCK_ARTIFACT_CONTRACT_MISSING
+  seed_intent_drift: BLOCK_SEED_INTENT_DRIFT
+  wrong_artifact_type: BLOCK_WRONG_ARTIFACT
+  forbidden_substitution: BLOCK_FORBIDDEN_SUBSTITUTION
+  strategy_mismatch: BLOCK_IMPLEMENTATION_STRATEGY
+  missing_inspectable_bar: BLOCK_QUALITY_BAR_MISSING
+  benchmark_completion_confusion: BLOCK_COMPLETION_GATE_CONFUSION
+  insufficient_evidence: BLOCK_ARTIFACT_EVIDENCE

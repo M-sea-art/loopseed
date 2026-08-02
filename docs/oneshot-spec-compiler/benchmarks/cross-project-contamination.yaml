@@ -1,0 +1,43 @@
+# Negative benchmark: cross-project contract contamination
+
+version: "0.3.1"
+
+negative_cases:
+  - id: xuanmi_receives_wuxiang_contract
+    active_integrity_ref:
+      project_binding_id: bind_xuanmi_sect
+      artifact_contract_id: artifact_xuanmi_production_visual_rework
+      stage_target_id: stage_xuanmi_finished_candidate
+    injected_source:
+      project_id: wuxiang_zen_hall
+      type: prompt_and_visual_acceptance_contract
+      user_explicitly_requested_transfer: false
+    attempted_output:
+      artifact_type: programmatic_3d_blockout
+      observed_stage: blockout
+    expected:
+      project_binding: BLOCK_CROSS_PROJECT_CONTAMINATION
+      artifact_contract: BLOCK_FORBIDDEN_SUBSTITUTION
+      stage_awareness: BLOCK_STAGE_DOWNGRADE
+      task_graph: NOT_STARTED
+      fanout: NOT_STARTED
+      completion_claim: FORBIDDEN
+
+  - id: wuxiang_receives_xuanmi_contract
+    active_integrity_ref:
+      project_binding_id: bind_wuxiang_zen_hall
+      artifact_contract_id: artifact_wuxiang_playable_visual_rework
+      stage_target_id: stage_wuxiang_playable_demo
+    injected_source:
+      project_id: xuanmi_sect
+      type: project_visual_and_acceptance_contract
+      user_explicitly_requested_transfer: false
+    expected:
+      project_binding: BLOCK_CROSS_PROJECT_CONTAMINATION
+      task_graph: NOT_STARTED
+      fanout: NOT_STARTED
+      completion_claim: FORBIDDEN
+
+pass_condition:
+  - both_cross_project_sources_blocked_before_execution
+  - no_foreign_contract_reaches_task_graph

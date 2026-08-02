@@ -1,10 +1,22 @@
 {
-  "schema_version": "1.0",
-  "loopseed_version": "0.3.0",
+  "schema_version": "1.1",
+  "loopseed_version": "0.7.0",
   "mode": "one-shotted",
   "run_id": "",
   "root_goal": "",
   "terminal_goal": "",
+  "project_domain": "general",
+  "production_mode": "focused",
+  "calibration": {
+    "enabled": false,
+    "status": "SKIPPED",
+    "policy": "game-first-creative-co-director",
+    "max_rounds": 5,
+    "dialogue_rounds": 0,
+    "brief_id": null,
+    "locked_at": null
+  },
+  "compiled_shot": null,
   "authority": {
     "user_instruction": "",
     "project_plan": "",

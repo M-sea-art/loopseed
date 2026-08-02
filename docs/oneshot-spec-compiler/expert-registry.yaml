@@ -1,0 +1,27 @@
+experts:
+  game_director:
+    principles:
+      - core_game_loop
+      - player_feedback
+      - pacing
+      - retention
+
+  visual_director:
+    principles:
+      - composition
+      - hierarchy
+      - readability
+      - style_consistency
+
+  ui_designer:
+    principles:
+      - information_architecture
+      - interaction_clarity
+      - design_system
+
+  technical_architect:
+    principles:
+      - modularity
+      - maintainability
+      - performance
+      - scalability

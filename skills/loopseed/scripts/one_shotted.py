@@ -15,10 +15,16 @@ if str(SCRIPT_DIR) not in sys.path:
 from one_shotted_core import (  # noqa: E402
     OneShottedError,
     add_gate,
+    add_task,
+    declare_wait,
     finalize,
     initialize,
+    lock_creative_brief_file,
     record_defect,
+    record_dialogue_turn,
     record_gate_result,
+    schedule_tasks,
+    set_task_status,
     status,
     transition,
     validate,
@@ -33,6 +39,16 @@ def add_root(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--root", default=".", help="Target project root; default: current directory")
 
 
+def parse_relation(value: str) -> tuple[str, str]:
+    try:
+        task_id, kind = value.rsplit(":", 1)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("relation must use TASK_ID:KIND") from exc
+    if not task_id.strip() or not kind.strip():
+        raise argparse.ArgumentTypeError("relation must use TASK_ID:KIND")
+    return task_id.strip(), kind.strip().upper()
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Initialize and enforce a LoopSeed One-Shotted evidence loop"
@@ -42,7 +58,55 @@ def build_parser() -> argparse.ArgumentParser:
     init = subparsers.add_parser("init", help="Create a project-local One-Shotted control plane")
     add_root(init)
     init.add_argument("--goal", required=True, help="The single human-authorized root goal")
+    init.add_argument("--domain", default="auto", choices=("auto", "game", "general"))
+    init.add_argument(
+        "--production-mode",
+        default="auto",
+        choices=("auto", "focused", "studio", "moonshot"),
+    )
+    init.add_argument("--dialogue", default="auto", choices=("auto", "on", "off"))
+    init.add_argument("--max-dialogue-rounds", type=int, default=5)
     init.add_argument("--force", action="store_true", help="Replace an existing One-Shotted run")
+
+    dialogue = subparsers.add_parser(
+        "dialogue-turn",
+        help="Record a creative co-director turn before the One-Shot production lock",
+    )
+    add_root(dialogue)
+    dialogue.add_argument("--actor", required=True, choices=("user", "model"))
+    dialogue.add_argument(
+        "--kind",
+        required=True,
+        choices=("seed", "synthesis", "question", "answer", "decision"),
+    )
+    dialogue.add_argument("--summary", required=True)
+    dialogue.add_argument(
+        "--effect",
+        action="append",
+        default=[],
+        help="Model effect: preserve, clarify, correct, amplify, complete, continue, offer_options",
+    )
+    dialogue.add_argument(
+        "--advance",
+        action="append",
+        default=[],
+        help="Material decision surface advanced by this turn",
+    )
+    dialogue.add_argument(
+        "--option",
+        action="append",
+        default=[],
+        help="Question option in ID|label|consequence format; repeat 2-4 times",
+    )
+    dialogue.add_argument("--recommended", help="Recommended option ID")
+
+    lock = subparsers.add_parser(
+        "lock-brief",
+        help="Validate and freeze a user-authorized creative brief, then enter BIND",
+    )
+    add_root(lock)
+    lock.add_argument("--file", required=True, help="Path to the compiled creative brief JSON")
+    lock.add_argument("--actor", default="lead", help="Actor performing the lock")
 
     gate = subparsers.add_parser("add-gate", help="Add an observable acceptance gate")
     add_root(gate)
@@ -73,12 +137,60 @@ def build_parser() -> argparse.ArgumentParser:
 
     move = subparsers.add_parser("transition", help="Advance, reroute, block, or abort the run")
     add_root(move)
-    move.add_argument("--phase", choices=("BIND", "PLAN", "IMPLEMENT", "VERIFY", "REPAIR"))
+    move.add_argument(
+        "--phase",
+        choices=("CALIBRATE", "BIND", "PLAN", "IMPLEMENT", "VERIFY", "REPAIR"),
+    )
     move.add_argument("--next", dest="next_action")
     move.add_argument("--no-progress", action="store_true")
     move.add_argument("--blocker")
     move.add_argument("--unblock")
     move.add_argument("--abort", action="store_true")
+
+    task = subparsers.add_parser("add-task", help="Add a bounded task to the no-idle scheduler")
+    add_root(task)
+    task.add_argument("--id", required=True)
+    task.add_argument("--purpose", required=True)
+    task.add_argument("--owner", required=True)
+    task.add_argument(
+        "--relation",
+        action="append",
+        type=parse_relation,
+        default=[],
+        help="TASK_ID:HARD_DEPENDENCY|SOFT_ADVICE|INDEPENDENT",
+    )
+    task.add_argument(
+        "--join",
+        choices=("ALL_REQUIRED", "FIRST_SUCCESS", "QUORUM"),
+    )
+    task.add_argument("--quorum", type=int)
+    task.add_argument("--write-scope", action="append", default=[])
+    task.add_argument("--read-only", action="store_true")
+    task.add_argument("--isolation", default="shared")
+    task.add_argument("--optional", action="store_true")
+
+    task_state = subparsers.add_parser("task-status", help="Start, finish, fail, block, or cancel a task")
+    add_root(task_state)
+    task_state.add_argument("--task", required=True)
+    task_state.add_argument(
+        "--status",
+        required=True,
+        choices=("PENDING", "RUNNING", "SUCCEEDED", "FAILED", "BLOCKED", "CANCELLED"),
+    )
+    task_state.add_argument("--actor", required=True)
+    task_state.add_argument("--summary", required=True)
+    task_state.add_argument("--unblock")
+
+    schedule = subparsers.add_parser("schedule", help="List the maximum safe runnable task batch")
+    add_root(schedule)
+    schedule.add_argument("--capacity", type=int)
+
+    wait = subparsers.add_parser("wait", help="Declare a legal dependency or join wait")
+    add_root(wait)
+    wait.add_argument("--for", dest="task_ids", action="append", required=True)
+    wait.add_argument("--reason", required=True, choices=("HARD_DEPENDENCY", "JOIN"))
+    wait.add_argument("--fallback", required=True)
+    wait.add_argument("--capacity", type=int)
 
     check = subparsers.add_parser("validate", help="Validate contracts, ledgers, and evidence references")
     add_root(check)
@@ -98,7 +210,28 @@ def main(argv: list[str] | None = None) -> int:
     root = Path(args.root)
     try:
         if args.command == "init":
-            result = initialize(root, args.goal, force=args.force)
+            result = initialize(
+                root,
+                args.goal,
+                force=args.force,
+                domain=args.domain,
+                production_mode=args.production_mode,
+                dialogue=args.dialogue,
+                max_dialogue_rounds=args.max_dialogue_rounds,
+            )
+        elif args.command == "dialogue-turn":
+            result = record_dialogue_turn(
+                root,
+                args.actor,
+                args.kind,
+                args.summary,
+                effects=args.effect,
+                advances=args.advance,
+                options=args.option,
+                recommended=args.recommended,
+            )
+        elif args.command == "lock-brief":
+            result = lock_creative_brief_file(root, Path(args.file), actor=args.actor)
         elif args.command == "add-gate":
             result = add_gate(
                 root,
@@ -138,6 +271,39 @@ def main(argv: list[str] | None = None) -> int:
                 blocked_reason=args.blocker,
                 unblock_condition=args.unblock,
                 abort=args.abort,
+            )
+        elif args.command == "add-task":
+            result = add_task(
+                root,
+                args.id,
+                args.purpose,
+                args.owner,
+                relations=args.relation,
+                join_strategy=args.join,
+                quorum=args.quorum,
+                write_scope=args.write_scope,
+                read_only=args.read_only,
+                isolation=args.isolation,
+                required=not args.optional,
+            )
+        elif args.command == "task-status":
+            result = set_task_status(
+                root,
+                args.task,
+                args.status,
+                args.actor,
+                args.summary,
+                unblock_condition=args.unblock,
+            )
+        elif args.command == "schedule":
+            result = schedule_tasks(root, capacity=args.capacity)
+        elif args.command == "wait":
+            result = declare_wait(
+                root,
+                args.task_ids,
+                args.reason,
+                args.fallback,
+                capacity=args.capacity,
             )
         elif args.command == "validate":
             result = validate(root, require_final=args.require_final)

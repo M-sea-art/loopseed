@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/M-sea-art/loopseed/schemas/one-shotted/creative-brief.schema.json",
+  "title": "LoopSeed Creative Brief",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "loopseed_version",
+    "run_id",
+    "status",
+    "project_domain",
+    "production_mode",
+    "seed_intent",
+    "product_outcome",
+    "north_star",
+    "original_user_ideas",
+    "preserved_ideas",
+    "revisions",
+    "amplifications",
+    "decisions",
+    "bounded_scope",
+    "non_goals",
+    "must_not_lose",
+    "reference_roles",
+    "required_evidence",
+    "authorization",
+    "dialogue_event_ids"
+  ],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "loopseed_version": {"type": "string"},
+    "run_id": {"type": "string"},
+    "status": {"enum": ["DRAFT", "LOCKED", "SKIPPED"]},
+    "brief_id": {"type": "string"},
+    "project_domain": {"enum": ["game", "general"]},
+    "production_mode": {"enum": ["undecided", "focused", "studio", "moonshot"]},
+    "seed_intent": {"type": "string"},
+    "product_outcome": {"type": "string"},
+    "north_star": {"type": "string"},
+    "original_user_ideas": {"type": "array", "items": {"type": "string"}},
+    "preserved_ideas": {"type": "array", "items": {"type": "string"}},
+    "revisions": {"type": "array", "items": {"type": "string"}},
+    "amplifications": {"type": "array", "items": {"type": "string"}},
+    "decisions": {"type": "array", "items": {"type": "string"}},
+    "bounded_scope": {"type": "array", "items": {"type": "string"}},
+    "non_goals": {"type": "array", "items": {"type": "string"}},
+    "must_not_lose": {"type": "array", "items": {"type": "string"}},
+    "reference_roles": {"type": "array", "items": {"type": "string"}},
+    "required_evidence": {"type": "array", "items": {"type": "string"}},
+    "game": {
+      "type": "object",
+      "properties": {
+        "player_promise": {"type": "string"},
+        "player_role": {"type": "string"},
+        "core_loop": {"type": "string"},
+        "world_response": {"type": "string"},
+        "unique_hook": {"type": "string"},
+        "art_direction": {"type": "string"},
+        "game_feel": {"type": "string"},
+        "hero_moment": {"type": "string"},
+        "vertical_slice": {"type": "string"},
+        "asset_strategy": {"type": "string"},
+        "performance_budget": {"type": "object"}
+      },
+      "additionalProperties": true
+    },
+    "general": {
+      "type": "object",
+      "properties": {
+        "user_job": {"type": "string"},
+        "primary_flow": {"type": "string"},
+        "artifact_type": {"type": "string"},
+        "target_stage": {"type": "string"},
+        "success_metrics": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "moonshot": {
+      "type": "object",
+      "properties": {
+        "ambition_expansion": {"type": "string"},
+        "scope_guard": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "authorization": {
+      "type": "object",
+      "required": ["user_event_id"],
+      "properties": {
+        "user_event_id": {"type": "string"},
+        "authorized_by": {"type": "string"},
+        "locked_by": {"type": "string"}
+      }
+    },
+    "dialogue_event_ids": {"type": "array", "items": {"type": "string"}},
+    "locked_at": {"type": "string"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"project_domain": {"const": "game"}}},
+      "then": {
+        "properties": {
+          "game": {
+            "required": [
+              "player_promise",
+              "player_role",
+              "core_loop",
+              "world_response",
+              "unique_hook",
+              "art_direction",
+              "game_feel",
+              "hero_moment",
+              "vertical_slice",
+              "asset_strategy",
+              "performance_budget"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"project_domain": {"const": "general"}}},
+      "then": {
+        "properties": {
+          "general": {
+            "required": ["user_job", "primary_flow", "artifact_type", "target_stage", "success_metrics"]
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"production_mode": {"const": "moonshot"}}},
+      "then": {
+        "properties": {
+          "moonshot": {"required": ["ambition_expansion", "scope_guard"]}
+        }
+      }
+    }
+  ],
+  "additionalProperties": true
+}
