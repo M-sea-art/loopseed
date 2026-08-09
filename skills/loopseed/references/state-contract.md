@@ -10,7 +10,7 @@ Use project-root `.loopseed.md` only when work must survive a task/session, a he
 # LoopSeed State
 
 ```loopseed-state
-version=0.7.0
+version=0.7.1
 status=ACTIVE
 next=one concise, verifiable next action
 ```
@@ -47,7 +47,7 @@ Its state is split into:
 - `compiled-shot.md` — human-readable production brief generated only after lock;
 - `dialogue.jsonl` — compact append-only creative decisions and option turns;
 - `acceptance.json` — gates, owners, independent verifiers, and evidence references;
-- `state.json` — current phase, status, production round, dialogue rounds, and next action;
+- `state.json` — current phase, status, production round, dialogue rounds, next action, and verification-binding generations;
 - `expert-registry.json` — integration, verification, creative, and mode-aware Fan-out responsibilities;
 - `task-graph.json` — bounded tasks, dependency kinds, join policies, write isolation, and current task status;
 - `evidence.jsonl` — append-only verifier verdicts;
@@ -82,6 +82,10 @@ Only `lock-brief` may move `CALIBRATE → BIND`.
 ### BIND and later
 
 The locked creative brief compiles into project, artifact, and stage authority. Production then follows the ordinary One-Shotted state machine.
+
+This semantic project binding is distinct from `state.json.verification_binding`. The latter is created only in `VERIFY`, after a concrete candidate is built. It freezes a generated binding ID, generation number, evidence-ledger boundary, real Git HEAD, and one project-local file or directory SHA-256. Candidate and verifier source must be committed: tracked content must match HEAD, while non-ignored untracked content must be the bound or current hashed evidence artifact. `.loopseed` remains control data; `.git`, `.loopseed`, the whole project root, external paths, and every symlinked artifact path/tree are forbidden.
+
+If repair changes the candidate, bind again in `VERIFY`. The old receipt moves to `verification_history`, the generation increments, `evidence_ledger_count` fixes the new generation boundary without relying on timestamps, and all old gate statuses and evidence references reset to `PENDING`.
 
 ## Calibration state
 
@@ -149,3 +153,7 @@ Moonshot additionally requires an ambition expansion, scope guard, and explicit 
 10. Stop hooks request at most one continuation per turn and never continue after `VERIFIED`, `BLOCKED`, or `ABORTED`.
 11. Do not wait while `task-graph.json` contains a safe runnable task.
 12. Treat `SOFT_ADVICE` as non-blocking and `BLOCKED` as external-only.
+13. Treat commands as machine evidence only when `run-evidence` executed them successfully without timeout.
+14. Require a project-local hashed screenshot, recording, or report for human or visual PASS evidence.
+15. Require every `required:true` task to be `SUCCEEDED`; mark disposable candidate arms optional and explicitly `CANCELLED` when discarded.
+16. Cross-check the terminal report against the current contracts, ledgers, task graph, verification binding, and verified timestamp.

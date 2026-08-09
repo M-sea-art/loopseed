@@ -216,6 +216,14 @@ BIND → PLAN → IMPLEMENT → VERIFY
 - `BLOCKED` 必须写清真实外部阻塞和精确解除条件；
 - 低质量、测试失败或第一条路线走不通都不是停止借口，而是修复信号。
 
+### 真实性桥
+
+实现完成后，LoopSeed 会另外冻结一份 `verification_binding`，把真实 Git HEAD 与一个稳定交付产物绑定。绑定前必须先提交候选代码和验证器代码：受 Git 跟踪的产品内容必须与 HEAD 一致；未被 Git 忽略的未跟踪内容，只能是绑定产物或当前已哈希证据产物。`.loopseed` 控制数据和被 Git 忽略的环境/构建内容不参与这项洁净检查，因此验证流程不得依赖可变的、被忽略的源码。
+
+机器 Gate 必须由证据 Runner 真正执行命令，并记录退出码、超时、有界输出、HEAD、工作树洁净状态，以及执行前后的产物 SHA‑256。不同 Gate 的验证命令可并行执行，收据通过短事务合并。人工或视觉 PASS 必须引用项目内真实存在的截图、录像或报告，并在记录时计算哈希。把命令写进说明文字，不算执行证据。
+
+如果返修改变了候选产物，新一代绑定会归档旧候选并重置旧 Gate 的 PASS。所有必需任务只能以 `SUCCEEDED` 进入终局；optional 任务也必须明确收口，被淘汰的实验候选通常应设为 `CANCELLED`。
+
 ## 控制面
 
 ```text
@@ -246,16 +254,43 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
   --title "完整游戏循环" \
   --criterion "新玩家能够完成、失败并重新开始规定的垂直切片" \
   --owner lead \
-  --verifier verifier
+  --verifier verifier \
+  --machine
 
-python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py record \
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition \
+  --root . --phase PLAN --next "规划有边界的实现"
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition \
+  --root . --phase IMPLEMENT --next "构建并提交候选版本"
+
+# 在这里运行项目自己的构建命令，然后提交候选代码和验证器代码。
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition \
+  --root . --phase VERIFY --next "冻结并验证候选版本"
+
+head="$(git rev-parse HEAD)"
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py bind \
+  --root . \
+  --project "my-game" \
+  --candidate "$head" \
+  --artifact build/game.zip
+
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py run-evidence \
   --root . \
   --gate FLOW \
-  --result PASS \
   --actor verifier \
-  --summary "完整切片已从开始实际玩到重开" \
-  --command "python tools/playtest.py"
+  --command "python tools/playtest.py" \
+  --project "my-game" \
+  --candidate "$head" \
+  --artifact build/game.zip
 ```
+
+人工或视觉 Gate 使用 `record --artifact captures/flow-pass.mp4`；文件必须真实存在于项目内，并持续接受哈希复核。
+
+### 从 v0.7 升级
+
+- ACTIVE 的 v0.7 run 可以继续；首次执行 v0.7.1 `bind` 时，会重置绑定前的旧 PASS，随后必须用 `run-evidence` 或已哈希产物重新验证。
+- `record --command` 会被明确拒绝，因为旧入口从未执行命令；请改用 `bind` + `run-evidence`。
+- 旧 `FIRST_SUCCESS`/`QUORUM` 中已取消但默认 required 的候选臂，可运行 `task-requirement --task <ID> --optional --actor lead --summary "legacy candidate arm"` 迁移。
+- 已经是 `VERIFIED` 的 v0.7 run 只保留为旧版、未证明真实性的历史收据。若需要 v0.7.1 完整性收据，请新建 run；系统不会静默重签旧终态。
 
 ## 终局判断
 
@@ -263,7 +298,7 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py record \
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py finalize --root .
 ```
 
-以下任一条件不满足都会拒绝完成：创意锁有效；至少存在一个必需 Gate；所有必需 Gate 均有指定 Verifier 写入的 PASS 证据；合同与证据引用一致；不存在仍开放的 P0/P1 缺陷。
+以下任一条件不满足都会拒绝完成：创意锁有效；当前验证绑定没有漂移；所有必需任务均为 `SUCCEEDED`；所有 optional 任务也已明确收口；至少存在一个必需 Gate；所有必需 Gate 均有真实机器证据或已哈希人工产物证据；合同与证据引用一致；不存在仍开放的 P0/P1 缺陷。终局报告还必须与当前 run、Gate、证据、任务、绑定和时间戳逐项一致。
 
 完整协议见 [One‑Shotted Mode](skills/loopseed/references/one-shotted-mode.md)。
 

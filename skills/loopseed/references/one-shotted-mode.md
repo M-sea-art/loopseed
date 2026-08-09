@@ -334,6 +334,19 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py schedule \
 
 Pass the actual available subagent capacity when the surface exposes it; otherwise use the smallest profitable batch and reschedule as slots open. The scheduler derives readiness, respects shared write scopes, and permits overlapping scopes only across different isolation boundaries such as separate worktrees. Mark each task `RUNNING`, `SUCCEEDED`, `FAILED`, `BLOCKED`, or `CANCELLED` with `task-status`.
 
+Every task is required unless added with `--optional`. Finalization accepts required tasks only as `SUCCEEDED`, and every optional task must also leave `PENDING`, `RUNNING`, `FAILED`, or `BLOCKED`; discarded arms end `CANCELLED`. For `FIRST_SUCCESS` or `QUORUM`, declare disposable candidate arms optional and keep the merge or consumer task required.
+
+To migrate a v0.7 arm that was cancelled before optionality was explicit:
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py task-requirement \
+  --root . \
+  --task CANDIDATE-B \
+  --optional \
+  --actor lead \
+  --summary "Legacy disposable candidate arm"
+```
+
 Before using a platform wait mechanism, declare the rendezvous:
 
 ```bash
@@ -367,26 +380,45 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
   --title "Complete game loop" \
   --criterion "A fresh player can complete, fail, and restart the documented slice" \
   --owner lead \
-  --verifier verifier
+  --verifier verifier \
+  --machine
 ```
 
 Choose gates close to the real product. Do not replace player experience with build-only checks.
 
 ## Independent evidence
 
-Only the declared verifier may record a verdict:
+After the candidate is built and the run is in `VERIFY`, commit candidate and verifier source, then freeze the actual Git HEAD and one stable deliverable artifact:
 
 ```bash
-python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py record \
+head="$(git rev-parse HEAD)"
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py bind \
+  --root . \
+  --project "my-game" \
+  --candidate "$head" \
+  --artifact build/game.zip
+
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py run-evidence \
   --root . \
   --gate FLOW \
-  --result PASS \
   --actor verifier \
-  --summary "The complete slice was played from start through restart" \
-  --command "python tools/playtest.py"
+  --command "python tools/playtest.py" \
+  --project "my-game" \
+  --candidate "$head" \
+  --artifact build/game.zip
 ```
 
-A `FAIL` moves the run to `REPAIR`. Repair must be rerun by the verifier. Changing prose does not change a gate.
+`bind` and `run-evidence` reject tracked product/verifier changes relative to HEAD. Non-ignored untracked content must be inside the bound artifact or a current, still-matching hashed evidence artifact. `.loopseed` control state and Git-ignored environment/build content are excluded; do not place mutable source that affects verification behind Git ignore rules.
+
+`run-evidence` is the only command path that treats a command as executed. It preserves the supplied shell command, records exit code, timeout, bounded stdout/stderr, Git HEAD, tracked/untracked cleanliness, and artifact identity before and after execution. A PASS requires exit code zero, no timeout, and a stable binding. Independent gates may execute concurrently; receipt commits merge under a short project-local transaction, while bind/finalize wait for active verifier commands.
+
+The bridge proves observed command/HEAD/artifact/ledger consistency and fails closed on mismatches. Plain project-local JSON cannot cryptographically authenticate a human or agent identity against an attacker who can rewrite the whole control plane; deployments needing that guarantee must add externally signed runner/verifier receipts.
+
+For a human or visual gate, use `record --artifact <screenshot-or-recording>`. PASS requires at least one existing project-local artifact and stores its SHA-256. Only the latest current-generation event decides a gate, so a fresh artifact PASS can supersede a stale rejected capture. A `FAIL` moves the run to `REPAIR`. Repair must be rerun by the verifier. If repair changes the candidate, return to `VERIFY` and bind a new generation; the ledger boundary advances and old gate passes are reset.
+
+### v0.7 migration
+
+The first v0.7.1 binding on an ACTIVE v0.7 run treats earlier PASS claims as legacy/unattested, clears their gate references, and requires fresh evidence. Old `record --command` invocations must be rerun with `run-evidence`. An already terminal v0.7 `VERIFIED` report stays historical and cannot be silently upgraded; start a fresh run when a v0.7.1 integrity receipt is required. The published v1.2 evidence schemas describe new receipts; legacy pre-binding ledger rows remain readable only as unattested history.
 
 ## Defects
 
@@ -415,9 +447,13 @@ Finalization fails closed unless:
 - the creative brief is locked when calibration is enabled;
 - at least one required gate exists;
 - every required gate is `PASS`;
-- each PASS references evidence written by its declared verifier;
+- each PASS references current-generation machine evidence or verifier-authored hashed artifact evidence;
+- a real Git verification binding still matches the candidate HEAD and artifact SHA-256;
+- every required task is `SUCCEEDED`;
+- every optional task has an explicit `SUCCEEDED` or `CANCELLED` disposition;
 - no P0/P1 defect remains open;
-- contracts and ledgers are internally consistent.
+- contracts and ledgers are internally consistent;
+- `final-report.json` matches the current run, gates, evidence, tasks, binding, and timestamp.
 
 Successful finalization writes `final-report.json` and sets `VERIFIED`.
 

@@ -13,10 +13,16 @@ from one_shotted_calibration import (
     resolve_initial_mode,
     validate_max_rounds,
 )
-from one_shotted_io import load_template_json, load_template_text, write_json_atomic
+from one_shotted_io import (
+    exclusive_verification_mutation,
+    load_template_json,
+    load_template_text,
+    write_json_atomic,
+)
 from one_shotted_types import VERSION, OneShottedError, clean_line, new_id, run_dir, utc_now
 
 
+@exclusive_verification_mutation
 def initialize(
     root: Path,
     goal: str,

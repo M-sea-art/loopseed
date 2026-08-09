@@ -161,8 +161,10 @@ This writes a stable `creative-brief.json` and human-readable `compiled-shot.md`
 
 After the creative brief is locked:
 
+For an ACTIVE v0.7 run, migrate in the background without a new user question: preserve the creative lock, let the first v0.7.1 binding reset legacy PASS claims, infer machine gates from old command claims, explicitly mark disposable cancelled arms optional, and rerun evidence. Never present an old terminal v0.7 receipt as v0.7.1-attested.
+
 1. freeze Project Binding, Artifact Contract, and Stage Target from the compiled shot;
-2. declare observable acceptance gates before substantial implementation;
+2. declare observable acceptance gates in `BIND` or `PLAN`, before substantial implementation;
 3. assign each gate an implementation owner and a different verifier;
 4. plan the smallest complete route that satisfies the chosen production mode;
 5. record non-trivial work in `task-graph.json`; classify every relation as `HARD_DEPENDENCY`, `SOFT_ADVICE`, or `INDEPENDENT`;
@@ -170,7 +172,9 @@ After the creative brief is locked:
 7. fan out only independently judgeable work with clean ownership and shared integrity references;
 8. keep coupled game identity, core loop, shared runtime state, architecture, composition, and final integration under one owner;
 9. merge into one product, run whole-product criticism, repair failures, and reverify;
-10. finalize only from direct evidence.
+10. commit candidate and verifier source, then in `VERIFY` freeze the clean real Git HEAD and stable deliverable as `verification_binding`;
+11. execute machine gates with `run-evidence`; hash screenshots, recordings, or reports for human gates;
+12. finalize only when required tasks succeeded, optional tasks are explicitly settled, and the terminal receipt cross-validates.
 
 ## No-idle scheduling
 
@@ -218,6 +222,11 @@ General projects use the same evidence engine with domain-appropriate product, f
 - Waiting requires an explicit dependency or join, named running tasks, and a fallback.
 - A worker cannot approve its own gate.
 - A failed gate moves the run to `REPAIR`; repair must be reverified.
+- A repaired candidate receives a new verification-binding generation; old gate passes reset.
+- Required tasks must end `SUCCEEDED`; disposable `FIRST_SUCCESS` or `QUORUM` candidate arms are optional and end `CANCELLED` when discarded.
+- Bind rejects tracked candidate drift and non-ignored untracked content outside the bound/current evidence artifacts; `.loopseed` is control data, not candidate source.
+- A command string is not evidence unless `run-evidence` executed it without timeout against the bound HEAD, clean candidate content, and artifact.
+- Human or visual PASS evidence names at least one real project-local artifact whose SHA-256 remains stable.
 - Keep only changes that preserve already-passed gates; otherwise repair or roll back.
 - Two no-progress rounds force root-cause replanning and a materially different route.
 - Only the finalizer may write `VERIFIED`.
@@ -227,7 +236,7 @@ General projects use the same evidence engine with domain-appropriate product, f
 
 ## Terminal states
 
-- `VERIFIED` — every required acceptance gate has direct, verifier-authored PASS evidence and no open P0/P1 defect.
+- `VERIFIED` — every required task succeeded, every optional task settled, every required gate has current bound evidence, the terminal receipt cross-validates, and no open P0/P1 defect remains.
 - `BLOCKED` — an exact, irreplaceable external gate prevents further safe progress and has a stated unblock condition.
 - `ABORTED` — the owner explicitly stops the run.
 

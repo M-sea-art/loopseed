@@ -197,6 +197,14 @@ BIND → PLAN → IMPLEMENT → VERIFY
 - `BLOCKED` requires an exact external blocker and exact unblock condition;
 - low quality, a failing test, or an exhausted first route are repair signals, not excuses to stop.
 
+### Integrity Bridge
+
+After implementation, LoopSeed freezes a separate `verification_binding` for the real Git HEAD and one stable deliverable artifact. Bind only after committing candidate and verifier source: tracked product content must match HEAD, and non-ignored untracked content must be the bound deliverable or a current hashed evidence artifact. `.loopseed` control data and Git-ignored environment/build content are outside that candidate-cleanliness check, so verification must not depend on mutable ignored source.
+
+Machine gates run their commands through the evidence runner, which records exit code, timeout, bounded output, HEAD, tracked/untracked cleanliness, and artifact SHA-256 before and after execution. Independent gate commands may run in parallel; their receipts merge under a short project transaction. Human or visual PASS gates must point to an existing screenshot, recording, or report that is hashed when recorded. A command merely written into prose is never execution evidence.
+
+If repair changes the candidate, a new binding generation archives the old subject and resets its old gate passes. Required tasks must be `SUCCEEDED`; every optional task must also be explicitly settled, normally `CANCELLED` when a candidate is discarded.
+
 ## Control plane
 
 ```text
@@ -227,16 +235,43 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
   --title "Complete game loop" \
   --criterion "A fresh player can complete, fail, and restart the documented slice" \
   --owner lead \
-  --verifier verifier
+  --verifier verifier \
+  --machine
 
-python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py record \
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition \
+  --root . --phase PLAN --next "Plan the bounded implementation"
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition \
+  --root . --phase IMPLEMENT --next "Build and commit the candidate"
+
+# Run the project-specific build, then commit candidate and verifier source.
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition \
+  --root . --phase VERIFY --next "Freeze and verify the candidate"
+
+head="$(git rev-parse HEAD)"
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py bind \
+  --root . \
+  --project "my-game" \
+  --candidate "$head" \
+  --artifact build/game.zip
+
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py run-evidence \
   --root . \
   --gate FLOW \
-  --result PASS \
   --actor verifier \
-  --summary "The complete slice was played through restart" \
-  --command "python tools/playtest.py"
+  --command "python tools/playtest.py" \
+  --project "my-game" \
+  --candidate "$head" \
+  --artifact build/game.zip
 ```
+
+For a human or visual gate, use `record --artifact captures/flow-pass.mp4`; the file must exist inside the project and remains hash-checked through finalization.
+
+### Upgrade from v0.7
+
+- An ACTIVE v0.7 run may continue. Its first v0.7.1 `bind` resets pre-binding PASS claims, then the verifier must rerun them with `run-evidence` or hashed artifacts.
+- `record --command` is intentionally rejected because it never executed the command. Use `bind` plus `run-evidence`.
+- For a legacy cancelled `FIRST_SUCCESS`/`QUORUM` arm that was implicitly required, run `task-requirement --task <ID> --optional --actor lead --summary "legacy candidate arm"`.
+- A v0.7 run already marked `VERIFIED` remains a legacy, unattested historical receipt. Start a fresh run if a v0.7.1 integrity receipt is required; terminal history is not silently re-signed.
 
 ## Finalize
 
@@ -244,7 +279,7 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py record \
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py finalize --root .
 ```
 
-Finalization fails closed unless the creative lock is valid, at least one required gate exists, every required gate has verifier-authored PASS evidence, contracts are consistent, and no P0/P1 defect is open.
+Finalization fails closed unless the creative lock is valid, the verification binding is current, every required task is `SUCCEEDED`, every optional task is explicitly settled, at least one required gate exists, every required gate has real machine or hashed-artifact PASS evidence, contracts are consistent, and no P0/P1 defect is open. The terminal report is then cross-checked against the current run, gates, evidence, tasks, binding, and timestamp.
 
 See [One-Shotted Mode](skills/loopseed/references/one-shotted-mode.md) for the complete workflow.
 

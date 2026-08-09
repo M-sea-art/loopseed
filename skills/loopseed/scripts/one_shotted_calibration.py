@@ -7,12 +7,20 @@ import json
 from pathlib import Path
 from typing import Any, Iterable
 
-from one_shotted_io import append_jsonl, load_run, read_json, read_jsonl, write_json_atomic
+from one_shotted_io import (
+    append_jsonl,
+    load_run,
+    locked_mutation,
+    read_json,
+    read_jsonl,
+    write_json_atomic,
+)
 from one_shotted_types import (
     DIALOGUE_EFFECTS,
     DIALOGUE_KINDS,
     PRODUCTION_MODES,
     PROJECT_DOMAINS,
+    VERSION,
     OneShottedError,
     clean_line,
     new_id,
@@ -135,6 +143,7 @@ def _parse_options(values: Iterable[str] | None) -> list[dict[str, str]]:
     return options
 
 
+@locked_mutation
 def record_dialogue_turn(
     root: Path,
     actor: str,
@@ -372,6 +381,7 @@ def _render_compiled_shot(brief: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+@locked_mutation
 def lock_creative_brief(
     root: Path,
     brief: dict[str, Any],
@@ -483,6 +493,9 @@ def lock_creative_brief(
     authorization["locked_by"] = clean_line(actor, name="brief locking actor")
 
     locked_at = utc_now()
+    stored_brief = read_json(target / "creative-brief.json")
+    brief["schema_version"] = stored_brief.get("schema_version", "1.0")
+    brief["loopseed_version"] = goal.get("loopseed_version", VERSION)
     brief["run_id"] = goal.get("run_id")
     brief["project_domain"] = project_domain
     brief["production_mode"] = production_mode

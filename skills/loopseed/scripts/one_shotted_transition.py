@@ -5,11 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from one_shotted_io import load_run, read_json, write_json_atomic
+from one_shotted_io import load_run, locked_mutation, read_json, write_json_atomic
 from one_shotted_tasks import TASK_GRAPH_FILE, scheduler_snapshot, task_graph_errors
 from one_shotted_types import ALLOWED_TRANSITIONS, VALID_PHASES, OneShottedError, clean_line, utc_now
 
 
+@locked_mutation
 def transition(
     root: Path,
     phase: str | None = None,
