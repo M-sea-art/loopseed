@@ -16,6 +16,7 @@ from one_shotted_core import (  # noqa: E402
     OneShottedError,
     add_gate,
     add_task,
+    bind_project,
     declare_wait,
     finalize,
     initialize,
@@ -23,7 +24,9 @@ from one_shotted_core import (  # noqa: E402
     record_defect,
     record_dialogue_turn,
     record_gate_result,
+    run_evidence,
     schedule_tasks,
+    set_task_required,
     set_task_status,
     status,
     transition,
@@ -67,6 +70,15 @@ def build_parser() -> argparse.ArgumentParser:
     init.add_argument("--dialogue", default="auto", choices=("auto", "on", "off"))
     init.add_argument("--max-dialogue-rounds", type=int, default=5)
     init.add_argument("--force", action="store_true", help="Replace an existing One-Shotted run")
+
+    bind = subparsers.add_parser(
+        "bind",
+        help="Freeze the built candidate's Git HEAD and primary artifact before verification",
+    )
+    add_root(bind)
+    bind.add_argument("--project", required=True)
+    bind.add_argument("--candidate", required=True)
+    bind.add_argument("--artifact", required=True)
 
     dialogue = subparsers.add_parser(
         "dialogue-turn",
@@ -116,6 +128,11 @@ def build_parser() -> argparse.ArgumentParser:
     gate.add_argument("--owner", required=True, help="Implementation owner")
     gate.add_argument("--verifier", required=True, help="Independent verifier")
     gate.add_argument("--optional", action="store_true")
+    gate.add_argument(
+        "--machine",
+        action="store_true",
+        help="Require a command executed by run-evidence; artifact-only PASS cannot satisfy this gate",
+    )
 
     record = subparsers.add_parser("record", help="Record an independent gate verdict")
     add_root(record)
@@ -123,8 +140,27 @@ def build_parser() -> argparse.ArgumentParser:
     record.add_argument("--result", required=True, choices=("PASS", "FAIL", "pass", "fail"))
     record.add_argument("--actor", required=True)
     record.add_argument("--summary", required=True)
-    record.add_argument("--command", dest="commands", action="append", default=[])
+    record.add_argument(
+        "--command",
+        dest="commands",
+        action="append",
+        default=[],
+        help="Rejected: record never executes commands; use run-evidence",
+    )
     record.add_argument("--artifact", action="append", default=[])
+
+    machine = subparsers.add_parser(
+        "run-evidence",
+        help="Execute a verifier command and bind its result to Git HEAD and artifact SHA-256",
+    )
+    add_root(machine)
+    machine.add_argument("--gate", required=True)
+    machine.add_argument("--actor", required=True)
+    machine.add_argument("--command", dest="exec_command", required=True)
+    machine.add_argument("--project", required=True)
+    machine.add_argument("--candidate", required=True)
+    machine.add_argument("--artifact", required=True)
+    machine.add_argument("--timeout", type=int, default=120)
 
     defect = subparsers.add_parser("defect", help="Append an OPEN or RESOLVED defect event")
     add_root(defect)
@@ -181,6 +217,18 @@ def build_parser() -> argparse.ArgumentParser:
     task_state.add_argument("--summary", required=True)
     task_state.add_argument("--unblock")
 
+    task_requirement = subparsers.add_parser(
+        "task-requirement",
+        help="Explicitly mark an existing task required or optional",
+    )
+    add_root(task_requirement)
+    task_requirement.add_argument("--task", required=True)
+    requirement = task_requirement.add_mutually_exclusive_group(required=True)
+    requirement.add_argument("--required", action="store_true")
+    requirement.add_argument("--optional", action="store_true")
+    task_requirement.add_argument("--actor", required=True)
+    task_requirement.add_argument("--summary", required=True)
+
     schedule = subparsers.add_parser("schedule", help="List the maximum safe runnable task batch")
     add_root(schedule)
     schedule.add_argument("--capacity", type=int)
@@ -219,6 +267,8 @@ def main(argv: list[str] | None = None) -> int:
                 dialogue=args.dialogue,
                 max_dialogue_rounds=args.max_dialogue_rounds,
             )
+        elif args.command == "bind":
+            result = bind_project(root, args.project, args.candidate, args.artifact)
         elif args.command == "dialogue-turn":
             result = record_dialogue_turn(
                 root,
@@ -241,6 +291,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.owner,
                 args.verifier,
                 required=not args.optional,
+                requires_machine_evidence=args.machine,
             )
         elif args.command == "record":
             result = record_gate_result(
@@ -251,6 +302,17 @@ def main(argv: list[str] | None = None) -> int:
                 args.summary,
                 commands=args.commands,
                 artifacts=args.artifact,
+            )
+        elif args.command == "run-evidence":
+            result = run_evidence(
+                root,
+                args.gate,
+                args.actor,
+                args.exec_command,
+                args.project,
+                args.candidate,
+                args.artifact,
+                timeout_seconds=args.timeout,
             )
         elif args.command == "defect":
             result = record_defect(
@@ -294,6 +356,14 @@ def main(argv: list[str] | None = None) -> int:
                 args.actor,
                 args.summary,
                 unblock_condition=args.unblock,
+            )
+        elif args.command == "task-requirement":
+            result = set_task_required(
+                root,
+                args.task,
+                args.required and not args.optional,
+                args.actor,
+                args.summary,
             )
         elif args.command == "schedule":
             result = schedule_tasks(root, capacity=args.capacity)

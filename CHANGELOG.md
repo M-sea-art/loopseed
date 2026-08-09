@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.7.1
+
+- Restored the C1.1 machine-evidence core without replacing v0.7 creative calibration or scheduling.
+- Added real verifier command execution with preserved shell input, exit code, timeout, bounded output, Git HEAD, tracked/untracked candidate cleanliness, and artifact SHA-256 receipts.
+- Added generation- and ledger-boundary-aware verification bindings so repaired candidates invalidate stale gate passes without timestamp races.
+- Required human and visual PASS evidence to reference existing, hashed project artifacts.
+- Required every `required:true` task to finish as `SUCCEEDED` and every optional task to receive an explicit terminal disposition before finalization.
+- Added schema-backed, cross-ledger final-report validation with rollback on failed terminal writes.
+- Added short transactional state locks and parallel verifier activity coordination so concurrent gate receipts merge without blocking task updates.
+- Added ACTIVE v0.7 migration: legacy command claims become machine gates, pre-binding PASS references reset, cancelled legacy candidate arms can be marked optional, and locked creative briefs remain resumable.
+- Classified terminal v0.7 receipts as legacy/unattested rather than silently re-signing them.
+- Added deterministic attacks for false commands, timeouts, missing/drifting/symlinked artifacts, dirty or untracked candidate inputs, wrong HEAD, forged/orphaned evidence, unsettled tasks, concurrency, version downgrade, and terminal-report tampering.
+
 ## 0.7.0
 
 - Added a dependency-free `task-graph.json` runtime for bounded One-Shotted Fan-out.

@@ -21,23 +21,46 @@ jobs:
           python -m json.tool hooks/hooks.json > /dev/null
           find skills/loopseed/schemas skills/loopseed/templates -name '*.json' -print0 \
             | xargs -0 -n1 python -m json.tool > /dev/null
+      - name: Validate production usage guide version
+        run: python tools/verify_usage_guide_version.py
       - name: Compile Python
-        run: python -m compileall -q hooks skills/loopseed/scripts tests
+        run: python -m compileall -q hooks skills/loopseed/scripts tests tools
       - name: Run tests
         run: python -m unittest discover -s tests -v
       - name: Smoke general One-Shotted CLI
         run: |
           root="$(mktemp -d)"
-          mkdir "$root/.git"
+          git -C "$root" init -q
+          git -C "$root" config user.email "ci@example.invalid"
+          git -C "$root" config user.name "LoopSeed CI"
+          printf 'frozen candidate\n' > "$root/artifact.txt"
+          printf 'print("verified")\n' > "$root/verify.py"
+          git -C "$root" add artifact.txt verify.py
+          git -C "$root" commit -qm "candidate"
+          head="$(git -C "$root" rev-parse HEAD)"
           python skills/loopseed/scripts/one_shotted.py init --root "$root" --goal "Ship a verified migration report"
-          python skills/loopseed/scripts/one_shotted.py add-gate --root "$root" --id SMOKE --title Smoke --criterion "CLI completes" --owner lead --verifier verifier
-          python skills/loopseed/scripts/one_shotted.py record --root "$root" --gate SMOKE --result PASS --actor verifier --summary "CLI smoke passed"
+          python skills/loopseed/scripts/one_shotted.py add-gate --root "$root" --id SMOKE --title Smoke --criterion "CLI completes" --owner lead --verifier verifier --machine
+          python skills/loopseed/scripts/one_shotted.py transition --root "$root" --phase PLAN --next "Declare work"
+          python skills/loopseed/scripts/one_shotted.py add-task --root "$root" --id BUILD --purpose "Build frozen candidate" --owner lead --write-scope artifact.txt
+          python skills/loopseed/scripts/one_shotted.py task-status --root "$root" --task BUILD --status RUNNING --actor lead --summary "Build started"
+          python skills/loopseed/scripts/one_shotted.py task-status --root "$root" --task BUILD --status SUCCEEDED --actor lead --summary "Build completed"
+          python skills/loopseed/scripts/one_shotted.py transition --root "$root" --phase IMPLEMENT --next "Build candidate"
+          python skills/loopseed/scripts/one_shotted.py transition --root "$root" --phase VERIFY --next "Freeze candidate"
+          python skills/loopseed/scripts/one_shotted.py bind --root "$root" --project general-smoke --candidate "$head" --artifact artifact.txt
+          python skills/loopseed/scripts/one_shotted.py run-evidence --root "$root" --gate SMOKE --actor verifier --command "python verify.py" --project general-smoke --candidate "$head" --artifact artifact.txt
           python skills/loopseed/scripts/one_shotted.py finalize --root "$root"
           python skills/loopseed/scripts/one_shotted.py validate --root "$root" --require-final
       - name: Smoke game dialogue and creative lock
         run: |
           root="$(mktemp -d)"
-          mkdir "$root/.git"
+          git -C "$root" init -q
+          git -C "$root" config user.email "ci@example.invalid"
+          git -C "$root" config user.name "LoopSeed CI"
+          printf 'frozen game candidate\n' > "$root/artifact.txt"
+          printf 'print("game verified")\n' > "$root/verify.py"
+          git -C "$root" add artifact.txt verify.py
+          git -C "$root" commit -qm "game candidate"
+          head="$(git -C "$root" rev-parse HEAD)"
           python skills/loopseed/scripts/one_shotted.py init \
             --root "$root" \
             --goal "Build a browser game where autonomous characters drive events"
@@ -63,7 +86,7 @@ jobs:
             --summary "Choose A and preserve indirect control")"
           user_id="$(printf '%s' "$user_json" | python -c 'import json,sys; print(json.load(sys.stdin)["event_id"])')"
 
-          cat > "$root/brief.json" <<JSON
+          cat > "$root/.loopseed/brief.json" <<JSON
           {
             "project_domain": "game",
             "production_mode": "studio",
@@ -109,8 +132,50 @@ jobs:
           }
           JSON
 
-          python skills/loopseed/scripts/one_shotted.py lock-brief --root "$root" --file "$root/brief.json"
-          python skills/loopseed/scripts/one_shotted.py add-gate --root "$root" --id FLOW --title Flow --criterion "The slice completes" --owner lead --verifier verifier
-          python skills/loopseed/scripts/one_shotted.py record --root "$root" --gate FLOW --result PASS --actor verifier --summary "Game dialogue smoke passed"
+          python skills/loopseed/scripts/one_shotted.py lock-brief --root "$root" --file "$root/.loopseed/brief.json"
+          python skills/loopseed/scripts/one_shotted.py add-gate --root "$root" --id FLOW --title Flow --criterion "The slice completes" --owner lead --verifier verifier --machine
+          python skills/loopseed/scripts/one_shotted.py transition --root "$root" --phase PLAN --next "Plan the slice"
+          python skills/loopseed/scripts/one_shotted.py transition --root "$root" --phase IMPLEMENT --next "Build the slice"
+          python skills/loopseed/scripts/one_shotted.py transition --root "$root" --phase VERIFY --next "Freeze the slice"
+          python skills/loopseed/scripts/one_shotted.py bind --root "$root" --project game-smoke --candidate "$head" --artifact artifact.txt
+          python skills/loopseed/scripts/one_shotted.py run-evidence --root "$root" --gate FLOW --actor verifier --command "python verify.py" --project game-smoke --candidate "$head" --artifact artifact.txt
           python skills/loopseed/scripts/one_shotted.py finalize --root "$root"
           python skills/loopseed/scripts/one_shotted.py validate --root "$root" --require-final
+
+  windows-integrity-smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile Windows runtime paths
+        run: python -m compileall -q hooks skills/loopseed/scripts tools
+      - name: Exercise concurrent verifier locking on Windows
+        run: python -m unittest tests.test_integrity_adversarial.IntegrityBridgeAdversarialTests.test_parallel_gate_receipts_merge_without_lost_updates -v
+      - name: Smoke Windows bind, evidence, and finalize
+        shell: pwsh
+        run: |
+          $root = Join-Path $env:RUNNER_TEMP ("loopseed-win-" + [guid]::NewGuid().ToString())
+          New-Item -ItemType Directory -Path $root | Out-Null
+          git -C $root init -q
+          git -C $root config user.email "ci@example.invalid"
+          git -C $root config user.name "LoopSeed CI"
+          Set-Content -Path (Join-Path $root "artifact.txt") -Value "frozen windows candidate"
+          Set-Content -Path (Join-Path $root "verify.py") -Value 'print("windows verified")'
+          git -C $root add artifact.txt verify.py
+          git -C $root commit -qm "candidate"
+          $head = (git -C $root rev-parse HEAD).Trim()
+
+          python skills/loopseed/scripts/one_shotted.py init --root $root --goal "Ship a Windows-verified migration report"
+          python skills/loopseed/scripts/one_shotted.py add-gate --root $root --id WIN --title "Windows smoke" --criterion "Windows CLI completes" --owner lead --verifier verifier --machine
+          python skills/loopseed/scripts/one_shotted.py transition --root $root --phase PLAN --next "Declare work"
+          python skills/loopseed/scripts/one_shotted.py add-task --root $root --id BUILD --purpose "Build frozen candidate" --owner lead --write-scope artifact.txt
+          python skills/loopseed/scripts/one_shotted.py task-status --root $root --task BUILD --status RUNNING --actor lead --summary "Build started"
+          python skills/loopseed/scripts/one_shotted.py task-status --root $root --task BUILD --status SUCCEEDED --actor lead --summary "Build completed"
+          python skills/loopseed/scripts/one_shotted.py transition --root $root --phase IMPLEMENT --next "Build candidate"
+          python skills/loopseed/scripts/one_shotted.py transition --root $root --phase VERIFY --next "Freeze candidate"
+          python skills/loopseed/scripts/one_shotted.py bind --root $root --project windows-smoke --candidate $head --artifact artifact.txt
+          python skills/loopseed/scripts/one_shotted.py run-evidence --root $root --gate WIN --actor verifier --command "python verify.py" --project windows-smoke --candidate $head --artifact artifact.txt
+          python skills/loopseed/scripts/one_shotted.py finalize --root $root
+          python skills/loopseed/scripts/one_shotted.py validate --root $root --require-final

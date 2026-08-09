@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from one_shotted_audit import _validation_data
+from one_shotted_tasks import incomplete_required_task_ids, unsettled_task_ids
 from one_shotted_types import VALID_GATE_STATUSES
 
 
@@ -20,6 +21,7 @@ def status(root: Path) -> dict[str, Any]:
         counts[value] = counts.get(value, 0) + 1
     calibration = data["goal"].get("calibration", {})
     brief = data.get("creative_brief", {})
+    binding = data.get("verification_binding")
     return {
         "ok": report["ok"],
         "run_id": data["goal"].get("run_id"),
@@ -36,6 +38,12 @@ def status(root: Path) -> dict[str, Any]:
         "round": data["state"].get("round"),
         "next_action": data["state"].get("next_action"),
         "gate_counts": counts,
+        "verification_binding_id": binding.get("binding_id") if isinstance(binding, dict) else None,
+        "verification_generation": binding.get("generation") if isinstance(binding, dict) else None,
+        "incomplete_required_task_ids": incomplete_required_task_ids(
+            data.get("task_graph", {})
+        ),
+        "unsettled_task_ids": unsettled_task_ids(data.get("task_graph", {})),
         "runnable_task_ids": data.get("scheduler", {}).get("runnable_task_ids", []),
         "running_task_ids": data.get("scheduler", {}).get("running_task_ids", []),
         "scheduler_wait": data["state"].get("scheduler_wait"),
