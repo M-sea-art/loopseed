@@ -5,11 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from one_shotted_io import load_run, write_json_atomic
+from one_shotted_io import load_run, locked_mutation, write_json_atomic
 from one_shotted_model import gate_map
 from one_shotted_types import OneShottedError, clean_line, utc_now
 
 
+@locked_mutation
 def add_gate(
     root: Path,
     gate_id: str,
@@ -18,12 +19,18 @@ def add_gate(
     owner: str,
     verifier: str,
     required: bool = True,
+    requires_machine_evidence: bool = False,
 ) -> dict[str, Any]:
     target, _, acceptance, state = load_run(root)
     if str(state.get("status", "")).upper() != "ACTIVE":
         raise OneShottedError("Gates may only be changed while the run is ACTIVE")
-    if str(state.get("phase", "")).upper() == "CALIBRATE":
+    phase = str(state.get("phase", "")).upper()
+    if phase == "CALIBRATE":
         raise OneShottedError("Lock the creative brief before declaring production acceptance gates")
+    if phase not in {"BIND", "PLAN"}:
+        raise OneShottedError(
+            "Declare acceptance gates in BIND or PLAN, before implementation and verification"
+        )
 
     gate_id = clean_line(gate_id, name="gate id")
     title = clean_line(title, name="gate title")
@@ -46,8 +53,15 @@ def add_gate(
             "verifier": verifier,
             "status": "PENDING",
             "evidence_ids": [],
+            "requires_machine_evidence": bool(requires_machine_evidence),
             "updated_at": utc_now(),
         }
     )
     write_json_atomic(target / "acceptance.json", acceptance)
-    return {"ok": True, "gate": gate_id, "required": bool(required), "status": "PENDING"}
+    return {
+        "ok": True,
+        "gate": gate_id,
+        "required": bool(required),
+        "requires_machine_evidence": bool(requires_machine_evidence),
+        "status": "PENDING",
+    }

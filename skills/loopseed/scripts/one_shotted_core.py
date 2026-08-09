@@ -1,5 +1,6 @@
 """Public control-plane API for LoopSeed One-Shotted mode."""
 
+from one_shotted_bind import bind_project
 from one_shotted_bootstrap import initialize
 from one_shotted_calibration import (
     lock_creative_brief,
@@ -10,8 +11,15 @@ from one_shotted_defects import record_defect
 from one_shotted_evidence import record_gate_result
 from one_shotted_finalize import finalize
 from one_shotted_gates import add_gate
+from one_shotted_runner import run_evidence
 from one_shotted_status import status
-from one_shotted_tasks import add_task, declare_wait, schedule_tasks, set_task_status
+from one_shotted_tasks import (
+    add_task,
+    declare_wait,
+    schedule_tasks,
+    set_task_required,
+    set_task_status,
+)
 from one_shotted_transition import transition
 from one_shotted_types import OneShottedError
 from one_shotted_validate import validate
@@ -20,6 +28,7 @@ __all__ = [
     "OneShottedError",
     "add_gate",
     "add_task",
+    "bind_project",
     "declare_wait",
     "finalize",
     "initialize",
@@ -28,7 +37,9 @@ __all__ = [
     "record_defect",
     "record_dialogue_turn",
     "record_gate_result",
+    "run_evidence",
     "schedule_tasks",
+    "set_task_required",
     "set_task_status",
     "status",
     "transition",

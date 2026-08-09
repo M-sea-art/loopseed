@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from one_shotted_io import load_run, read_json, write_json_atomic
+from one_shotted_io import load_run, locked_mutation, read_json, write_json_atomic
 from one_shotted_types import OneShottedError, clean_line, utc_now
 
 
@@ -69,6 +69,8 @@ def task_graph_errors(graph: dict[str, Any], expected_run_id: str | None = None)
             errors.append(f"Task {task_id} requires a purpose")
         if not str(task.get("owner", "")).strip():
             errors.append(f"Task {task_id} requires an owner")
+        if not isinstance(task.get("required"), bool):
+            errors.append(f"Task {task_id} required must be boolean")
         status = str(task.get("status", "")).upper()
         if status not in TASK_STATUSES:
             errors.append(f"Task {task_id} has invalid status {status!r}")
@@ -159,6 +161,34 @@ def task_graph_errors(graph: dict[str, Any], expected_run_id: str | None = None)
     for task_id in sorted(known):
         visit(task_id, [])
     return list(dict.fromkeys(errors))
+
+
+def required_task_ids(graph: dict[str, Any]) -> list[str]:
+    return sorted(
+        task_id
+        for task_id, task in _task_map_unchecked(graph).items()
+        if task.get("required") is True
+    )
+
+
+def incomplete_required_task_ids(graph: dict[str, Any]) -> list[str]:
+    return sorted(
+        task_id
+        for task_id, task in _task_map_unchecked(graph).items()
+        if task.get("required") is True
+        and str(task.get("status", "")).upper() != "SUCCEEDED"
+    )
+
+
+def unsettled_task_ids(graph: dict[str, Any]) -> list[str]:
+    """Return tasks that still need an explicit terminal disposition."""
+
+    return sorted(
+        task_id
+        for task_id, task in _task_map_unchecked(graph).items()
+        if str(task.get("status", "")).upper()
+        in {"PENDING", "RUNNING", "FAILED", "BLOCKED"}
+    )
 
 
 def _validated_graph(root: Path) -> tuple[Path, dict[str, Any], dict[str, Any], dict[str, Any]]:
@@ -340,6 +370,7 @@ def schedule_tasks(root: Path, capacity: int | None = None) -> dict[str, Any]:
     return {"ok": True, **scheduler_snapshot(graph, capacity)}
 
 
+@locked_mutation
 def add_task(
     root: Path,
     task_id: str,
@@ -426,6 +457,7 @@ def add_task(
     return {"ok": True, "task_id": normalized_id, **snapshot}
 
 
+@locked_mutation
 def set_task_status(
     root: Path,
     task_id: str,
@@ -494,6 +526,49 @@ def set_task_status(
     return {"ok": True, "task_id": normalized_id, "task_status": desired, **snapshot}
 
 
+@locked_mutation
+def set_task_required(
+    root: Path,
+    task_id: str,
+    required: bool,
+    actor: str,
+    summary: str,
+) -> dict[str, Any]:
+    """Explicitly migrate or correct whether a task is terminally required."""
+
+    target, _, state, graph = _validated_graph(root)
+    if str(state.get("status", "")).upper() != "ACTIVE":
+        raise OneShottedError("Only an ACTIVE run can update task requirements")
+    tasks = _task_map_unchecked(graph)
+    normalized_id = clean_line(task_id, name="task id")
+    if normalized_id not in tasks:
+        raise OneShottedError(f"Unknown task: {normalized_id}")
+    if not isinstance(required, bool):
+        raise OneShottedError("task required must be boolean")
+    now = utc_now()
+    task = tasks[normalized_id]
+    task.update(
+        {
+            "required": required,
+            "requirement_actor": clean_line(actor, name="task requirement actor"),
+            "requirement_summary": clean_line(summary, name="task requirement summary"),
+            "updated_at": now,
+        }
+    )
+    state["scheduler_wait"] = None
+    state["next_action"] = scheduler_snapshot(graph)["next_action"]
+    state["updated_at"] = now
+    write_json_atomic(target / TASK_GRAPH_FILE, graph)
+    write_json_atomic(target / "state.json", state)
+    return {
+        "ok": True,
+        "task_id": normalized_id,
+        "required": required,
+        "task_status": str(task.get("status", "")).upper(),
+    }
+
+
+@locked_mutation
 def declare_wait(
     root: Path,
     task_ids: list[str],
