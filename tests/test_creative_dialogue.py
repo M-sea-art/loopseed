@@ -222,9 +222,22 @@ class CreativeDialogueTests(unittest.TestCase):
             self.assertEqual(result["phase"], "BIND")
             self.assertEqual(result["production_mode"], "studio")
             current = status(root)
+            self.assertTrue(current["ok"])
             self.assertEqual(current["calibration_status"], "LOCKED")
             self.assertEqual(current["dialogue_rounds"], 2)
             self.assertTrue(Path(result["compiled_shot"]).is_file())
+            stored = json.loads(
+                (root / ".loopseed/one-shotted/creative-brief.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            goal = json.loads(
+                (root / ".loopseed/one-shotted/goal-contract.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(stored["schema_version"], "1.0")
+            self.assertEqual(stored["loopseed_version"], goal["loopseed_version"])
 
     def test_moonshot_requires_explicit_amplification_and_scope_guard(self) -> None:
         temporary, root = self.make_root()
@@ -235,6 +248,27 @@ class CreativeDialogueTests(unittest.TestCase):
             brief["moonshot"] = {"ambition_expansion": "", "scope_guard": ""}
             with self.assertRaisesRegex(OneShottedError, "ambition_expansion"):
                 lock_creative_brief(root, brief)
+
+    def test_legacy_locked_brief_without_version_metadata_remains_resumable(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "制作一个武侠门派经营游戏")
+            event_ids = self.dialogue(root)
+            lock_creative_brief(root, self.brief(event_ids))
+            target = root / ".loopseed/one-shotted"
+            for name in ("goal-contract.json", "state.json", "task-graph.json"):
+                path = target / name
+                item = json.loads(path.read_text(encoding="utf-8"))
+                item["loopseed_version"] = "0.7.0"
+                path.write_text(json.dumps(item), encoding="utf-8")
+            brief_path = target / "creative-brief.json"
+            brief = json.loads(brief_path.read_text(encoding="utf-8"))
+            brief.pop("schema_version")
+            brief.pop("loopseed_version")
+            brief_path.write_text(json.dumps(brief), encoding="utf-8")
+            report = validate(root)
+            self.assertTrue(report["ok"])
+            self.assertTrue(any("Legacy locked creative brief" in item for item in report["warnings"]))
 
     def test_production_gates_cannot_bypass_dialogue_lock(self) -> None:
         temporary, root = self.make_root()

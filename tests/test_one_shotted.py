@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -14,6 +15,7 @@ if str(SCRIPTS) not in sys.path:
 from one_shotted_core import (  # noqa: E402
     OneShottedError,
     add_gate,
+    bind_project,
     finalize,
     initialize,
     record_defect,
@@ -28,8 +30,30 @@ class OneShottedTests(unittest.TestCase):
     def make_root(self) -> tuple[tempfile.TemporaryDirectory[str], Path]:
         temporary = tempfile.TemporaryDirectory()
         root = Path(temporary.name)
-        (root / ".git").mkdir()
         return temporary, root
+
+    def freeze_verification(self, root: Path) -> Path:
+        artifact = root / "artifact.txt"
+        artifact.write_text("candidate-v1\n", encoding="utf-8")
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.invalid"], cwd=root, check=True
+        )
+        subprocess.run(["git", "config", "user.name", "LoopSeed Test"], cwd=root, check=True)
+        subprocess.run(["git", "add", "artifact.txt"], cwd=root, check=True)
+        subprocess.run(["git", "commit", "-qm", "candidate"], cwd=root, check=True)
+        head = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=root,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout.strip()
+        transition(root, phase="PLAN", next_action="Plan the candidate")
+        transition(root, phase="IMPLEMENT", next_action="Build the candidate")
+        transition(root, phase="VERIFY", next_action="Freeze and verify the candidate")
+        bind_project(root, "demo-project", head, "artifact.txt")
+        return artifact
 
     def add_flow_gate(self, root: Path) -> None:
         add_gate(
@@ -96,7 +120,15 @@ class OneShottedTests(unittest.TestCase):
         with temporary:
             initialize(root, "Build a demo")
             self.add_flow_gate(root)
-            record_gate_result(root, "FLOW", "PASS", "verifier", "Flow completed")
+            artifact = self.freeze_verification(root)
+            record_gate_result(
+                root,
+                "FLOW",
+                "PASS",
+                "verifier",
+                "Flow completed",
+                artifacts=[str(artifact)],
+            )
             result = finalize(root)
             self.assertEqual(result["status"], "VERIFIED")
             self.assertTrue(validate(root, require_final=True)["ok"])
@@ -108,7 +140,15 @@ class OneShottedTests(unittest.TestCase):
         with temporary:
             initialize(root, "Build a demo")
             self.add_flow_gate(root)
-            record_gate_result(root, "FLOW", "PASS", "verifier", "Flow completed")
+            artifact = self.freeze_verification(root)
+            record_gate_result(
+                root,
+                "FLOW",
+                "PASS",
+                "verifier",
+                "Flow completed",
+                artifacts=[str(artifact)],
+            )
             record_defect(root, "VIS-1", "P1", "OPEN", "Unreadable state", "verifier")
             with self.assertRaisesRegex(OneShottedError, "Open P0/P1"):
                 finalize(root)

@@ -21,7 +21,8 @@ def main() -> None:
             "next verifiable action. A worker cannot approve its own gate. A FAIL must enter REPAIR; two "
             "no-progress rounds must trigger root-cause replanning. Run the scheduler before waiting and dispatch "
             "every safe runnable task; soft advice is not a global gate. Before stopping, either add new evidence, "
-            "finalize only after every required gate has verifier-authored PASS evidence and no open P0/P1 defect, "
+            "finalize only after the binding is current, required tasks succeeded, optional tasks settled, every "
+            "required gate has verifier-authored PASS evidence, no P0/P1 defect is open, and the receipt cross-validates, "
             "or record an exact true blocker and unblock condition."
         )
     else:

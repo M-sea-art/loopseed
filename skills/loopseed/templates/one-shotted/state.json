@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "loopseed_version": "0.7.0",
+  "loopseed_version": "0.7.1",
   "mode": "one-shotted",
   "run_id": "",
   "status": "ACTIVE",
@@ -12,5 +12,7 @@
   "next_action": "",
   "true_blocker": null,
   "scheduler_wait": null,
+  "verification_binding": null,
+  "verification_history": [],
   "updated_at": ""
 }

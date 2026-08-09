@@ -12,7 +12,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "criterion", "required", "owner", "verifier", "status", "evidence_ids"],
+        "required": ["id", "criterion", "required", "owner", "verifier", "status", "evidence_ids", "requires_machine_evidence"],
         "properties": {
           "id": {"type": "string", "minLength": 1},
           "title": {"type": "string"},
@@ -21,7 +21,8 @@
           "owner": {"type": "string", "minLength": 1},
           "verifier": {"type": "string", "minLength": 1},
           "status": {"enum": ["PENDING", "PASS", "FAIL", "BLOCKED"]},
-          "evidence_ids": {"type": "array", "items": {"type": "string"}}
+          "evidence_ids": {"type": "array", "items": {"type": "string"}},
+          "requires_machine_evidence": {"type": "boolean"}
         },
         "additionalProperties": true
       }

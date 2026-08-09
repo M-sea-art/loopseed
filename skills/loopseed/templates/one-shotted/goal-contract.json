@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "loopseed_version": "0.7.0",
+  "loopseed_version": "0.7.1",
   "mode": "one-shotted",
   "run_id": "",
   "root_goal": "",
@@ -26,7 +26,10 @@
     "required_gates_must_pass": true,
     "open_p0_p1_forbidden": true,
     "finalizer_only_sets_verified": true,
-    "true_blocker_requires_unblock_condition": true
+    "true_blocker_requires_unblock_condition": true,
+    "verification_subject_must_be_bound": true,
+    "required_tasks_must_succeed": true,
+    "final_report_must_cross_validate": true
   },
   "created_at": ""
 }

@@ -37,7 +37,37 @@
         "declared_at": {"type": "string", "minLength": 1}
       },
       "required": ["task_ids", "reason", "fallback", "declared_at"]
-    }
+    },
+    "verification_binding": {
+      "type": ["object", "null"],
+      "required": [
+        "schema_version", "binding_id", "generation", "evidence_ledger_count",
+        "project_id", "candidate_commit", "artifact", "git_repository_detected",
+        "actual_candidate_commit", "tracked_worktree_dirty", "bound_at"
+      ],
+      "properties": {
+        "schema_version": {"const": "1.2"},
+        "binding_id": {"type": "string", "minLength": 1},
+        "generation": {"type": "integer", "minimum": 1},
+        "evidence_ledger_count": {"type": "integer", "minimum": 0},
+        "project_id": {"type": "string", "minLength": 1},
+        "candidate_commit": {"type": "string", "minLength": 1},
+        "artifact": {
+          "type": "object",
+          "required": ["path", "kind", "sha256"],
+          "properties": {
+            "path": {"type": "string", "minLength": 1},
+            "kind": {"enum": ["file", "directory"]},
+            "sha256": {"type": "string", "minLength": 64}
+          }
+        },
+        "git_repository_detected": {"const": true},
+        "actual_candidate_commit": {"type": "string", "minLength": 1},
+        "tracked_worktree_dirty": {"const": false},
+        "bound_at": {"type": "string", "minLength": 1}
+      }
+    },
+    "verification_history": {"type": "array", "items": {"type": "object"}}
   },
   "additionalProperties": true
 }
