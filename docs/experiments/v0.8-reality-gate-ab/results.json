@@ -1,0 +1,82 @@
+{
+  "schema_version": "0.1",
+  "experiment_id": "v0.8-reality-gate-ab",
+  "controls": {
+    "baseline_commit": "772e2961a17ddc199b25b8b2ec4f4e926c9f9615",
+    "seed_id": "single-screen-lantern-v1",
+    "seed_sha256": "d5e2864286f2a387e33e45d766970f71ad0a8aa351ec10bd97cf6240ff8f165e",
+    "model": "GPT-5.6 Pro",
+    "execution_surface": "same fresh ChatGPT work context",
+    "max_wall_clock_seconds": 900,
+    "max_token_budget": null,
+    "max_tool_calls": 40,
+    "cost_unit": "tool_calls",
+    "production_mode": "focused",
+    "asset_access": "repository_only_no_external_assets",
+    "target_platform": "browser",
+    "playable_scope": "one_screen_one_loop_success_failure_restart",
+    "acceptance_contract_sha256": "ca19fa6a3a8769b3117aed25a93c8b5b1a5199d4e1d9789755cc2bb994bad4b4",
+    "fresh_context_per_arm": true
+  },
+  "thresholds": {
+    "min_clarity_gain_ratio": 0.2,
+    "max_time_regression_ratio": 0.25,
+    "max_cost_regression_ratio": 0.25
+  },
+  "pairs": [
+    {
+      "id": "P1",
+      "valid": false,
+      "invalid_reason": "NOT_RUN",
+      "blinded_human_preference": "UNAVAILABLE",
+      "A": {
+        "controls_sha256": null,
+        "candidate_commit": null,
+        "artifact_sha256": null,
+        "wall_clock_seconds": null,
+        "cost_units": null,
+        "repair_rounds": null,
+        "first_meaningful_action_seconds": null,
+        "first_action_success": false,
+        "confusion_points": [],
+        "feedback_defects": [],
+        "attention_defects": [],
+        "status": "FAIL",
+        "integrity_verified": false,
+        "scope_expanded": false
+      },
+      "B": {
+        "controls_sha256": null,
+        "candidate_commit": null,
+        "artifact_sha256": null,
+        "wall_clock_seconds": null,
+        "cost_units": null,
+        "repair_rounds": null,
+        "first_meaningful_action_seconds": null,
+        "first_action_success": false,
+        "confusion_points": [],
+        "feedback_defects": [],
+        "attention_defects": [],
+        "status": "FAIL",
+        "integrity_verified": false,
+        "scope_expanded": false
+      }
+    },
+    {
+      "id": "P2",
+      "valid": false,
+      "invalid_reason": "NOT_RUN",
+      "blinded_human_preference": "UNAVAILABLE",
+      "A": {},
+      "B": {}
+    },
+    {
+      "id": "P3",
+      "valid": false,
+      "invalid_reason": "NOT_RUN",
+      "blinded_human_preference": "UNAVAILABLE",
+      "A": {},
+      "B": {}
+    }
+  ]
+}
