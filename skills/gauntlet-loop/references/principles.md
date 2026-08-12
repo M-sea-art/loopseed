@@ -1,19 +1,10 @@
 # Gauntlet Loop Principles and Limits
 
-This note explains the reasoning behind the skill so an agent can adapt the method instead of mechanically imitating a prompt.
+This note explains only the Gauntlet Loop method defined by the surrounding discussion and skill. Do not import assumptions, terminology, or architecture from unrelated projects or remembered workflows.
 
-## 1. Gauntlet is a judge-and-repair strategy, not a complete production OS
+## 1. Gauntlet is a judge-and-repair strategy
 
-The method is strongest after there is something real to inspect.
-
-It complements systems that handle:
-
-- goal calibration;
-- project binding;
-- scheduling;
-- dependency management;
-- permissions;
-- delivery and release state.
+The method becomes useful once there is something real to inspect, compare, measure, or test.
 
 Its special strength is refusing the false inference:
 
@@ -23,28 +14,30 @@ therefore
 it is good enough
 ```
 
+Gauntlet does not prescribe a whole production lifecycle. It governs how quality claims are challenged and ratcheted.
+
 ## 2. Engineering PASS is necessary but not sufficient for product PASS
 
 A build can compile, tests can pass, exports can succeed, and the user-visible result can still be obviously unfinished, confusing, static, generic, or broken in a path the tests did not exercise.
 
-Therefore keep separate gates for:
+Therefore keep separate evidence for:
 
 - engineering integrity;
 - real behavior;
 - perceptual/product quality;
 - external user preference when required.
 
-One gate does not inherit the authority of another.
+One green channel does not inherit authority over another.
 
 ## 3. The evaluator must touch reality
 
-The core anti-self-deception move is not "use another model." It is:
+The core anti-self-deception move is not merely "use another model." It is:
 
 > make the evaluator inspect the real output through the strongest available observation channel.
 
 A fresh critic that only reads the builder's explanation is still trapped inside the builder's story.
 
-The observation tax can be a browser harness, engine run, replay, test suite, benchmark, render sheet, packaged build, import test, API probe, or another domain-appropriate instrument.
+The observation tax can be a browser harness, engine run, replay, test suite, benchmark, render sheet, packaged build, import test, API probe, or another task-appropriate instrument.
 
 ## 4. Freshness reduces anchoring, not epistemic limits
 
@@ -57,13 +50,13 @@ Fresh context is useful because it reduces contamination from:
 
 But freshness does not magically make a weak evaluator strong.
 
-Use deterministic evidence for deterministic claims, domain experts for domain-specific claims, and real users for human preference claims.
+Use deterministic evidence for deterministic claims and real users for claims that inherently require real human preference.
 
 ## 5. Blind comparison is a tool, not a religion
 
 Blind A/B is powerful when:
 
-- the outputs can be presented under equivalent conditions;
+- outputs can be presented under equivalent conditions;
 - the claim is comparative;
 - identity leakage can be controlled;
 - the evaluator can meaningfully perceive the difference.
@@ -71,7 +64,7 @@ Blind A/B is powerful when:
 It is weak or irrelevant when:
 
 - correctness is best proven by tests;
-- security requires source and threat analysis;
+- source inspection is required to prove the property;
 - candidate conditions cannot be normalized;
 - the task has no meaningful reference comparison.
 
@@ -91,13 +84,13 @@ challenger + equivalent evidence
 
 If the challenger loses, roll it back.
 
-If the evidence conflicts, keep the incumbent and say INCONCLUSIVE.
+If the evidence conflicts, keep the incumbent and say `INCONCLUSIVE`.
 
 This is the quality ratchet.
 
 ## 7. One biggest gap preserves causal clarity
 
-A critic can usually name dozens of defects. Repairing many at once makes it difficult to know what produced improvement and creates unnecessary regression surface.
+A critic can usually name dozens of defects. Repairing many unrelated defects at once makes it difficult to know what caused improvement and creates unnecessary regression surface.
 
 Prefer:
 
@@ -106,7 +99,7 @@ Prefer:
 - the highest-risk correctness failure;
 - the bottleneck whose removal unlocks the next quality level.
 
-Then repair one bounded unit and re-observe.
+Then repair one bounded causal unit and re-observe.
 
 This is not a ban on coherent multi-file changes. It is a ban on mixing unrelated hypotheses into one quality round.
 
@@ -114,7 +107,7 @@ This is not a ban on coherent multi-file changes. It is a ban on mixing unrelate
 
 If two materially similar repair rounds do not improve the same gap, the correct response is not "try harder in the same way."
 
-Treat the failure as evidence about the causal model.
+Treat the failure as evidence that the causal model may be wrong.
 
 Possible ceilings include:
 
@@ -175,19 +168,19 @@ What remains if we remove this supposed core idea?
 
 If the answer is "basically the same product," the novelty is decorative.
 
-This check is especially useful before freezing an inventive concept and later as a drift alarm.
+This check is useful before freezing an inventive concept and later as a drift alarm.
 
-## 12. The bar is a ceiling and a hazard
+## 12. The bar is both ceiling and hazard
 
 A weak bar caps quality.
 
-A near-clone bar can also distort identity.
+A near-clone bar can distort identity.
 
 Therefore:
 
 - acquire real references rather than imagined adjectives;
 - choose references for the specific craft being judged;
-- use multiple orthogonal references when no single artifact is appropriate;
+- use several orthogonal references when no single artifact is appropriate;
 - keep provenance;
 - never silently soften the bar during a difficult run.
 
@@ -207,9 +200,9 @@ Useful signals include:
 - tool or compute spend;
 - remaining gap at stop.
 
-The right question is not "did Gauntlet use more resources?" but:
+The right question is not simply "did Gauntlet use more resources?" but:
 
-> did the additional evaluation reduce high-cost wrong-direction work or meaningfully raise the final bar enough to justify itself?
+> did the additional evaluation prevent expensive wrong-direction work or raise the final quality enough to justify itself?
 
 ## 14. AI-only product truth has a hard boundary
 
@@ -217,9 +210,9 @@ An AI critic can detect defects, compare artifacts, run flows, and expose self-d
 
 It cannot independently establish real-world desire.
 
-For claims such as retention, repeated enjoyment, willingness to pay, cultural resonance, or target-audience delight, preserve a separate external truth gate.
+Claims such as retention, repeated enjoyment, willingness to pay, target-audience delight, or cultural resonance require external human or market evidence.
 
-Do not turn simulated users into fabricated market evidence.
+Do not turn simulated users into fabricated product evidence.
 
 ## 15. The shortest useful mental model
 
@@ -229,7 +222,7 @@ OBSERVATION tells us what we actually made.
 CRITIC tells us the largest remaining difference.
 REPAIR tests one causal response.
 RATCHET keeps only proven wins.
-NOVELTY INVARIANT prevents creative convergence from sanding off the point.
+NOVELTY INVARIANT prevents convergence from sanding off the point.
 STOP RULE prevents quality ambition from becoming infinite ritual.
 ```
 
