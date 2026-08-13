@@ -10,6 +10,75 @@ from one_shotted_tasks import TASK_GRAPH_FILE, scheduler_snapshot, task_graph_er
 from one_shotted_types import ALLOWED_TRANSITIONS, VALID_PHASES, OneShottedError, clean_line, utc_now
 
 
+ROUTINE_HUMAN_GATE_TERMS = (
+    "human review",
+    "human approval",
+    "human gate",
+    "manual review",
+    "manual approval",
+    "manual gate",
+    "user review",
+    "user approval",
+    "user confirmation",
+    "owner review",
+    "owner approval",
+    "await user",
+    "wait for user",
+    "ask the user",
+    "用户确认",
+    "用户验收",
+    "等待用户",
+    "等用户",
+    "人类确认",
+    "人类验收",
+    "人工确认",
+    "人工验收",
+    "人工审批",
+    "视觉确认",
+    "视觉验收",
+)
+
+TRUE_EXTERNAL_BLOCKER_TERMS = (
+    "credential",
+    "login",
+    "sign in",
+    "sign-in",
+    "payment",
+    "purchase",
+    "billing",
+    "legal",
+    "account permission",
+    "2fa",
+    "two-factor",
+    "secret",
+    "license acceptance",
+    "store submission",
+    "production deployment permission",
+    "publishing credential",
+    "凭据",
+    "登录",
+    "支付",
+    "付款",
+    "购买",
+    "账单",
+    "法律",
+    "账户权限",
+    "验证码",
+    "双重验证",
+    "密钥",
+    "许可接受",
+    "发布权限",
+    "商店提交",
+)
+
+
+def _is_routine_human_gate(reason: str, unblock: str) -> bool:
+    text = f"{reason}\n{unblock}".casefold()
+    asks_for_human_approval = any(term.casefold() in text for term in ROUTINE_HUMAN_GATE_TERMS)
+    has_true_external_condition = any(term.casefold() in text for term in TRUE_EXTERNAL_BLOCKER_TERMS)
+    return asks_for_human_approval and not has_true_external_condition
+
+
 @locked_mutation
 def transition(
     root: Path,
@@ -40,6 +109,14 @@ def transition(
     if bool(blocked_reason) != bool(unblock_condition):
         raise OneShottedError("BLOCKED requires both --blocker and --unblock")
     if blocked_reason and unblock_condition:
+        clean_reason = clean_line(blocked_reason, name="blocker reason")
+        clean_unblock = clean_line(unblock_condition, name="unblock condition")
+        if current_phase != "CALIBRATE" and _is_routine_human_gate(clean_reason, clean_unblock):
+            raise OneShottedError(
+                "Routine human approval is not a valid production blocker after calibration. "
+                "Use independent observation, playtest, critique, and evidence to decide and continue. "
+                "BLOCKED is reserved for an exact external condition the run cannot satisfy itself."
+            )
         graph_path = target / TASK_GRAPH_FILE
         if graph_path.is_file():
             graph = read_json(graph_path)
@@ -61,8 +138,8 @@ def transition(
             {
                 "status": "BLOCKED",
                 "true_blocker": {
-                    "reason": clean_line(blocked_reason, name="blocker reason"),
-                    "unblock_condition": clean_line(unblock_condition, name="unblock condition"),
+                    "reason": clean_reason,
+                    "unblock_condition": clean_unblock,
                 },
                 "next_action": "Wait for the exact unblock condition; do not claim completion.",
                 "updated_at": utc_now(),
