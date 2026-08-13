@@ -157,6 +157,20 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py lock-brief \
 
 This writes a stable `creative-brief.json` and human-readable `compiled-shot.md`, then moves the run to `BIND`. A normal phase transition cannot bypass this lock, and production acceptance gates cannot be declared while dialogue is still open.
 
+## Autonomy after lock
+
+The creative brief lock is the **last routine human gate**. After the shot is aligned and authorized, do not return to the user for ordinary production approval.
+
+Do not ask the user to approve screenshots, visual quality, architecture, reversible implementation choices, asset selection, critic findings, repair direction, test results, or whether to continue. Resolve those from the locked brief, references, the running product, independent critics, playtests, measurements, and evidence.
+
+A visual or experiential gate is an **observational evidence gate**, not automatically a human gate. A fresh verifier may inspect real screenshots, recordings, builds, or playthroughs and record PASS/FAIL without human approval; the implementation owner still may not approve its own gate.
+
+If an intermediate result is weak, ugly, confusing, incomplete, or visibly below the North Star, treat that as a repair signal even when a narrower check passed. Continue build → play → look → critique → repair → reverify until the required evidence passes, no P0/P1 defect remains, and whole-product criticism finds no material repairable gap.
+
+Human re-entry after lock is exceptional. It is legitimate only for an exact condition genuinely outside the run's authority or capability, such as missing credentials/login/2FA, payment or purchase, legal or account authorization, an irreversible external publication requiring owner authority, or a checkpoint the user explicitly required in the locked brief. Exhaust all safe internal work first.
+
+`BLOCKED` must never mean “please review this”, “approve the visual”, “tell me whether to continue”, or “wait for user confirmation”. The runtime rejects routine human-approval blockers after calibration. See `references/autonomy-after-lock.md`.
+
 ## One-Shotted production
 
 After the creative brief is locked:
@@ -173,7 +187,7 @@ For an ACTIVE v0.7 run, migrate in the background without a new user question: p
 8. keep coupled game identity, core loop, shared runtime state, architecture, composition, and final integration under one owner;
 9. merge into one product, run whole-product criticism, repair failures, and reverify;
 10. commit candidate and verifier source, then in `VERIFY` freeze the clean real Git HEAD and stable deliverable as `verification_binding`;
-11. execute machine gates with `run-evidence`; hash screenshots, recordings, or reports for human gates;
+11. execute machine gates with `run-evidence`; hash screenshots, recordings, or reports for observational gates;
 12. finalize only when required tasks succeeded, optional tasks are explicitly settled, and the terminal receipt cross-validates.
 
 ## No-idle scheduling
@@ -220,13 +234,14 @@ General projects use the same evidence engine with domain-appropriate product, f
 - Parallel writers require isolation; coupled concerns stay sequential.
 - A runnable task forbids waiting; soft advice is never a global approval gate.
 - Waiting requires an explicit dependency or join, named running tasks, and a fallback.
+- After calibration, routine human approval is not a legal production dependency or blocker.
 - A worker cannot approve its own gate.
 - A failed gate moves the run to `REPAIR`; repair must be reverified.
 - A repaired candidate receives a new verification-binding generation; old gate passes reset.
 - Required tasks must end `SUCCEEDED`; disposable `FIRST_SUCCESS` or `QUORUM` candidate arms are optional and end `CANCELLED` when discarded.
 - Bind rejects tracked candidate drift and non-ignored untracked content outside the bound/current evidence artifacts; `.loopseed` is control data, not candidate source.
 - A command string is not evidence unless `run-evidence` executed it without timeout against the bound HEAD, clean candidate content, and artifact.
-- Human or visual PASS evidence names at least one real project-local artifact whose SHA-256 remains stable.
+- Observational PASS evidence names at least one real project-local artifact whose SHA-256 remains stable; an independent verifier may judge it without routine human approval.
 - Keep only changes that preserve already-passed gates; otherwise repair or roll back.
 - Two no-progress rounds force root-cause replanning and a materially different route.
 - Only the finalizer may write `VERIFIED`.
