@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,47 @@ SOURCE_AUTHORITIES = {
     "REFERENCE",
 }
 
+_IGNORED_CONTEXT_DIRS = {
+    ".git",
+    ".loopseed",
+    ".venv",
+    "node_modules",
+    "vendor",
+    "dist",
+    "build",
+    "coverage",
+    "__pycache__",
+}
+_CONTEXT_DIR_NAMES = {
+    "docs",
+    "design",
+    "planning",
+    "plans",
+    "product",
+    "spec",
+    "specs",
+    "decisions",
+    "adr",
+}
+_CONTEXT_NAME_TOKENS = (
+    "readme",
+    "agents",
+    "plan",
+    "planning",
+    "roadmap",
+    "gdd",
+    "brief",
+    "north-star",
+    "north_star",
+    "design",
+    "product-spec",
+    "product_spec",
+    "milestone",
+    "decision",
+    "adr",
+)
+_CONTEXT_SUFFIXES = {".md", ".txt", ".json", ".yaml", ".yml"}
+
 
 def _existing_project_content(root: Path) -> bool:
     project = root.expanduser().resolve()
@@ -33,6 +75,45 @@ def _existing_project_content(root: Path) -> bool:
             continue
         return True
     return False
+
+
+def _planning_source_candidates(root: Path, *, limit: int = 64) -> list[str]:
+    """Find likely authority/context files by path only; contents must still be inspected by the Lead."""
+    project = root.expanduser().resolve()
+    found: list[str] = []
+    if not project.is_dir():
+        return found
+
+    for current, dirnames, filenames in os.walk(project):
+        dirnames[:] = [name for name in dirnames if name not in _IGNORED_CONTEXT_DIRS]
+        current_path = Path(current)
+        try:
+            relative_dir = current_path.relative_to(project)
+        except ValueError:
+            continue
+        context_dir = any(part.casefold() in _CONTEXT_DIR_NAMES for part in relative_dir.parts)
+
+        for filename in filenames:
+            path = current_path / filename
+            if path.suffix.casefold() not in _CONTEXT_SUFFIXES:
+                continue
+            lowered = filename.casefold()
+            likely_name = any(token in lowered for token in _CONTEXT_NAME_TOKENS)
+            if not context_dir and not likely_name:
+                continue
+            try:
+                relative = path.relative_to(project).as_posix()
+            except ValueError:
+                continue
+            found.append(relative)
+            if len(found) >= limit:
+                return sorted(found)
+    return sorted(found)
+
+
+def _context_id(payload: dict[str, Any]) -> str:
+    canonical = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return "CONTEXT-" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
 
 
 def _draft_project_context(run_id: str, *, required: bool) -> dict[str, Any]:
@@ -54,6 +135,34 @@ def _draft_project_context(run_id: str, *, required: bool) -> dict[str, Any]:
     }
 
 
+def _none_found_receipt(run_id: str, candidates: list[str]) -> dict[str, Any]:
+    locked_at = utc_now()
+    receipt: dict[str, Any] = {
+        "schema_version": "1.0",
+        "loopseed_version": VERSION,
+        "run_id": run_id,
+        "status": "LOCKED",
+        "planning_status": "NONE_FOUND",
+        "searched_locations": [
+            "repository root planning/context filename scan",
+            "README/AGENTS and docs/design/planning/product/spec/decision paths",
+        ],
+        "sources": [],
+        "inherited_decisions": [],
+        "open_decisions": [],
+        "unresolved_conflicts": [],
+        "summary": (
+            "Existing implementation is present, but the bootstrap path scan found no likely project planning or decision source. "
+            "Creative dialogue may proceed from the current user seed; implementation remains evidence rather than recovered planning authority."
+        ),
+        "candidate_paths": candidates,
+        "locked_at": locked_at,
+        "locked_by": "bootstrap-path-scan",
+    }
+    receipt["context_id"] = _context_id(receipt)
+    return receipt
+
+
 def initialize(
     root: Path,
     goal: str,
@@ -64,8 +173,9 @@ def initialize(
     dialogue: str = "auto",
     max_dialogue_rounds: int = 5,
 ) -> dict[str, Any]:
-    """Initialize normally, then require planning recovery for an existing calibrated project."""
+    """Initialize normally, then recover planning authority before calibrated dialogue."""
     existing_before = _existing_project_content(root)
+    planning_candidates = _planning_source_candidates(root) if existing_before else []
     result = _initialize(
         root,
         goal,
@@ -78,26 +188,46 @@ def initialize(
     target, goal_contract, _, state = load_run(root)
     calibration = goal_contract.get("calibration")
     dialogue_enabled = isinstance(calibration, dict) and bool(calibration.get("enabled", False))
-    context_required = bool(existing_before and dialogue_enabled)
-    context_status = "PENDING" if context_required else "SKIPPED"
+    run_id = str(goal_contract.get("run_id", ""))
+
+    context_required = bool(existing_before and dialogue_enabled and planning_candidates)
+    auto_none_found = bool(existing_before and dialogue_enabled and not planning_candidates)
+    if context_required:
+        context_status = "PENDING"
+        context = _draft_project_context(run_id, required=True)
+        context["candidate_paths"] = planning_candidates
+        next_action = (
+            "Recover existing project planning before creative dialogue. Inspect the discovered candidate paths, current accepted user decisions, references, and implementation state; fill project-context.json and lock it before asking new product questions."
+        )
+    elif auto_none_found:
+        context_status = "LOCKED"
+        context = _none_found_receipt(run_id, planning_candidates)
+        next_action = (
+            "No likely planning source was discovered by the bootstrap scan. Begin creative co-director dialogue from the current user seed, while treating existing implementation as evidence rather than planning authority."
+        )
+    else:
+        context_status = "SKIPPED"
+        context = _draft_project_context(run_id, required=False)
+        next_action = str(state.get("next_action", ""))
+
     if isinstance(calibration, dict):
         calibration["context_recovery"] = {
-            "required": context_required,
+            "required": bool(context_required or auto_none_found),
             "status": context_status,
             "policy": "planning-before-dialogue",
-            "context_id": None,
-            "planning_status": None,
-            "locked_at": None,
+            "context_id": context.get("context_id"),
+            "planning_status": context.get("planning_status") or None,
+            "candidate_paths": planning_candidates,
+            "locked_at": context.get("locked_at"),
         }
-    write_json_atomic(target / "project-context.json", _draft_project_context(str(goal_contract.get("run_id", "")), required=context_required))
-    if context_required:
-        state["next_action"] = (
-            "Recover existing project planning before creative dialogue. Inspect current project files, named plans, accepted decisions, references, and implementation state; fill project-context.json and lock it before asking new product questions."
-        )
+    write_json_atomic(target / "project-context.json", context)
+    if dialogue_enabled and existing_before:
+        state["next_action"] = next_action
         state["updated_at"] = utc_now()
     write_json_atomic(target / "goal-contract.json", goal_contract)
     write_json_atomic(target / "state.json", state)
     result["context_recovery_status"] = context_status
+    result["context_candidate_paths"] = planning_candidates
     result["next_action"] = state.get("next_action")
     return result
 
@@ -158,8 +288,8 @@ def assert_project_context_ready(root: Path) -> dict[str, Any] | None:
 
     recovery = calibration.get("context_recovery")
     if not isinstance(recovery, dict):
-        # Upgrade open legacy runs safely: existing projects must recover planning first.
-        if not _existing_project_content(root):
+        candidates = _planning_source_candidates(root)
+        if not candidates:
             return None
         raise OneShottedError(
             "Project context recovery is required before creative dialogue. Inspect existing plans, accepted decisions, current project state, and references; fill .loopseed/one-shotted/project-context.json, then run one_shotted_context.py lock."
@@ -246,9 +376,7 @@ def lock_project_context(root: Path, context: dict[str, Any], *, actor: str = "l
         "locked_at": locked_at,
         "locked_by": clean_line(actor, name="project context locking actor"),
     }
-    canonical = json.dumps(stored, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
-    context_id = "CONTEXT-" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
-    stored["context_id"] = context_id
+    stored["context_id"] = _context_id(stored)
     write_json_atomic(target / "project-context.json", stored)
 
     recovery = _recovery_contract(goal)
@@ -257,7 +385,7 @@ def lock_project_context(root: Path, context: dict[str, Any], *, actor: str = "l
             "required": True,
             "status": "LOCKED",
             "policy": "planning-before-dialogue",
-            "context_id": context_id,
+            "context_id": stored["context_id"],
             "planning_status": planning_status,
             "locked_at": locked_at,
         }
@@ -273,7 +401,7 @@ def lock_project_context(root: Path, context: dict[str, Any], *, actor: str = "l
 
     return {
         "ok": True,
-        "context_id": context_id,
+        "context_id": stored["context_id"],
         "planning_status": planning_status,
         "context_status": "LOCKED",
         "project_context": str(target / "project-context.json"),
