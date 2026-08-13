@@ -12,7 +12,9 @@ LoopSeed is a **game-first AI production engine**. It can also run general softw
 Its operating idea is:
 
 ```text
-creative dialogue aims the shot
+recover existing project intent when present
+        ↓
+creative dialogue aims only the unresolved part of the shot
         ↓
 One-Shot authorization ignites production
         ↓
@@ -79,9 +81,42 @@ Defaults:
 - a **general** goal enters `BIND` on the focused path unless dialogue or Moonshot is explicitly requested;
 - a clear game goal may use `--dialogue off`, but only when product identity, experience, artifact, stage, and acceptance are already unambiguous.
 
+## Project context recovery
+
+For a non-empty existing project, **recover existing planning before creative co-direction**. Creative co-direction continues an existing project; it must not silently become creative re-direction.
+
+At activation, the runtime scans project paths for likely planning and decision sources such as `README`, `AGENTS.md`, `docs/`, design/planning/product/spec directories, roadmaps, GDDs, briefs, milestones, and decision records. This scan discovers candidates only. It does not prove their meaning or authority.
+
+If planning candidates are found, `context_recovery` remains `PENDING` and creative dialogue is fail-closed until the Lead has actually inspected the relevant sources and locked `project-context.json`. Recover at least:
+
+- which sources were inspected and what authority role each source has;
+- accepted or otherwise inherited decisions that must continue;
+- material decisions that are genuinely still open;
+- unresolved conflicts or stale planning that must be reconciled;
+- a compact synthesis of the current project identity and planning state.
+
+Use the shared authority order above. Newer explicit user decisions outrank older planning. A named project plan outranks implementation convenience. Running code and assets are evidence of current state, not permission to rewrite intended product identity.
+
+Lock recovered context with:
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted_context.py lock \
+  --root . \
+  --file .loopseed/one-shotted/project-context.json
+```
+
+When the bootstrap scan finds existing implementation but **no likely planning source**, it records a `NONE_FOUND` context receipt and may proceed without manufacturing a manual gate. This is a fast path for genuinely plan-less projects, not permission to ignore a discovered plan.
+
+After recovery:
+
+- preserve settled decisions without asking them again;
+- ask only about material open decisions that can change the product result;
+- if the existing plan already makes the shot precise enough, compile it into the Creative Brief and seek the final lock instead of inventing A/B/C choices;
+- never downgrade an existing plan merely because a simpler implementation is easier.
+
 ## Creative co-director dialogue
 
-During `CALIBRATE`, do not behave like a requirements questionnaire. Treat the user's idea as a seed to be continued.
+During `CALIBRATE`, do not behave like a requirements questionnaire. Treat the user's idea and recovered project plan as a seed to be continued.
 
 The model may:
 
@@ -98,7 +133,7 @@ Every model turn must advance at least one material decision surface. A question
 Do not:
 
 - repeat a question already answered;
-- ask for facts available in the repository;
+- ask for facts available in the repository or recovered project context;
 - ask low-level reversible implementation questions;
 - silently replace the user's game with an easier product;
 - lower ambition merely to simplify implementation;
@@ -146,6 +181,8 @@ Before leaving `CALIBRATE`, compile one user-authorized creative brief containin
 - required evidence;
 - for games: player promise, player role, core loop, world response, unique hook, art direction, game feel, hero moment, vertical slice, asset strategy, and performance budget;
 - the user answer or decision that authorizes the lock.
+
+When project context was recovered, the brief must continue from that recovered authority. Settled planning should be compiled, not reopened. The runtime binds the recovered `project_context_id` into the locked brief provenance.
 
 Lock it with:
 
@@ -234,6 +271,7 @@ General projects use the same evidence engine with domain-appropriate product, f
 - Parallel writers require isolation; coupled concerns stay sequential.
 - A runnable task forbids waiting; soft advice is never a global approval gate.
 - Waiting requires an explicit dependency or join, named running tasks, and a fallback.
+- Existing authoritative planning is recovered before creative questions; settled decisions are not reopened merely to create dialogue.
 - After calibration, routine human approval is not a legal production dependency or blocker.
 - A worker cannot approve its own gate.
 - A failed gate moves the run to `REPAIR`; repair must be reverified.
