@@ -13,15 +13,21 @@ from one_shotted_types import ALLOWED_TRANSITIONS, VALID_PHASES, OneShottedError
 ROUTINE_HUMAN_GATE_TERMS = (
     "human review",
     "human approval",
+    "human visual approval",
     "human gate",
     "manual review",
     "manual approval",
     "manual gate",
     "user review",
     "user approval",
+    "user approves",
     "user confirmation",
     "owner review",
     "owner approval",
+    "owner approves",
+    "visual approval",
+    "approve the visual",
+    "approve screenshot",
     "await user",
     "wait for user",
     "ask the user",
@@ -36,6 +42,7 @@ ROUTINE_HUMAN_GATE_TERMS = (
     "人工审批",
     "视觉确认",
     "视觉验收",
+    "确认截图",
 )
 
 TRUE_EXTERNAL_BLOCKER_TERMS = (
