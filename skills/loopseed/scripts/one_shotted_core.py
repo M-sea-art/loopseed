@@ -6,13 +6,13 @@ from pathlib import Path
 from typing import Any
 
 from one_shotted_bind import bind_project
-from one_shotted_bootstrap import initialize
 from one_shotted_calibration import (
     lock_creative_brief as _lock_creative_brief,
     record_dialogue_turn as _record_dialogue_turn,
 )
 from one_shotted_context import (
     assert_project_context_ready,
+    initialize,
     lock_project_context,
     lock_project_context_file,
 )
