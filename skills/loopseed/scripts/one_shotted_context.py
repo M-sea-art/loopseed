@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from one_shotted_bootstrap import initialize as _initialize
 from one_shotted_io import load_run, locked_mutation, read_json, write_json_atomic
 from one_shotted_types import VERSION, OneShottedError, clean_line, utc_now
 
@@ -32,6 +33,73 @@ def _existing_project_content(root: Path) -> bool:
             continue
         return True
     return False
+
+
+def _draft_project_context(run_id: str, *, required: bool) -> dict[str, Any]:
+    return {
+        "schema_version": "1.0",
+        "loopseed_version": VERSION,
+        "run_id": run_id,
+        "status": "DRAFT" if required else "SKIPPED",
+        "planning_status": "",
+        "searched_locations": [],
+        "sources": [],
+        "inherited_decisions": [],
+        "open_decisions": [],
+        "unresolved_conflicts": [],
+        "summary": "",
+        "locked_at": None,
+        "locked_by": None,
+        "context_id": None,
+    }
+
+
+def initialize(
+    root: Path,
+    goal: str,
+    force: bool = False,
+    *,
+    domain: str = "auto",
+    production_mode: str = "auto",
+    dialogue: str = "auto",
+    max_dialogue_rounds: int = 5,
+) -> dict[str, Any]:
+    """Initialize normally, then require planning recovery for an existing calibrated project."""
+    existing_before = _existing_project_content(root)
+    result = _initialize(
+        root,
+        goal,
+        force=force,
+        domain=domain,
+        production_mode=production_mode,
+        dialogue=dialogue,
+        max_dialogue_rounds=max_dialogue_rounds,
+    )
+    target, goal_contract, _, state = load_run(root)
+    calibration = goal_contract.get("calibration")
+    dialogue_enabled = isinstance(calibration, dict) and bool(calibration.get("enabled", False))
+    context_required = bool(existing_before and dialogue_enabled)
+    context_status = "PENDING" if context_required else "SKIPPED"
+    if isinstance(calibration, dict):
+        calibration["context_recovery"] = {
+            "required": context_required,
+            "status": context_status,
+            "policy": "planning-before-dialogue",
+            "context_id": None,
+            "planning_status": None,
+            "locked_at": None,
+        }
+    write_json_atomic(target / "project-context.json", _draft_project_context(str(goal_contract.get("run_id", "")), required=context_required))
+    if context_required:
+        state["next_action"] = (
+            "Recover existing project planning before creative dialogue. Inspect current project files, named plans, accepted decisions, references, and implementation state; fill project-context.json and lock it before asking new product questions."
+        )
+        state["updated_at"] = utc_now()
+    write_json_atomic(target / "goal-contract.json", goal_contract)
+    write_json_atomic(target / "state.json", state)
+    result["context_recovery_status"] = context_status
+    result["next_action"] = state.get("next_action")
+    return result
 
 
 def _string_list(value: Any, *, name: str, allow_empty: bool = True) -> list[str]:
