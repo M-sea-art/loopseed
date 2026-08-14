@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://loopseed.dev/schemas/agent-native-game-stack-v1/world-plan.schema.json",
+  "title": "Agent-Native Game Stack v1 WorldPlan",
+  "type": "object",
+  "required": ["stack_version", "world_id", "units", "coordinate_system", "camera_contracts", "semantic_nodes", "routes", "build_slots", "gameplay_proxies", "invariants", "engine_adapters"],
+  "additionalProperties": false,
+  "properties": {
+    "stack_version": {"const": "1.0"},
+    "world_id": {"type": "string", "minLength": 1},
+    "units": {"enum": ["meters"]},
+    "coordinate_system": {
+      "type": "object",
+      "required": ["up_axis", "handedness"],
+      "additionalProperties": false,
+      "properties": {
+        "up_axis": {"enum": ["Y", "Z"]},
+        "handedness": {"enum": ["left", "right"]}
+      }
+    },
+    "camera_contracts": {"type": "array", "items": {"$ref": "#/$defs/camera"}},
+    "semantic_nodes": {"type": "array", "items": {"$ref": "#/$defs/node"}},
+    "routes": {"type": "array", "items": {"$ref": "#/$defs/route"}},
+    "build_slots": {"type": "array", "items": {"$ref": "#/$defs/slot"}},
+    "gameplay_proxies": {"type": "array", "items": {"$ref": "#/$defs/proxy"}},
+    "invariants": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "engine_adapters": {"type": "object", "additionalProperties": {"type": "object"}}
+  },
+  "$defs": {
+    "vec3": {
+      "type": "array",
+      "prefixItems": [{"type": "number"}, {"type": "number"}, {"type": "number"}],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "transform": {
+      "type": "object",
+      "required": ["position"],
+      "additionalProperties": false,
+      "properties": {
+        "position": {"$ref": "#/$defs/vec3"},
+        "rotation_deg": {"$ref": "#/$defs/vec3"},
+        "scale": {"$ref": "#/$defs/vec3"}
+      }
+    },
+    "camera": {
+      "type": "object",
+      "required": ["id", "purpose", "projection", "transform"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "purpose": {"type": "string", "minLength": 1},
+        "projection": {"enum": ["orthographic", "perspective", "near-orthographic"]},
+        "transform": {"$ref": "#/$defs/transform"},
+        "target": {"$ref": "#/$defs/vec3"},
+        "fov_deg": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 180},
+        "ortho_size": {"type": "number", "exclusiveMinimum": 0},
+        "locked": {"type": "boolean"}
+      }
+    },
+    "node": {
+      "type": "object",
+      "required": ["id", "kind", "transform"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["terrain", "district", "courtyard", "room", "gate", "stair", "path", "prop_anchor", "camera_anchor", "encounter", "other"]},
+        "transform": {"$ref": "#/$defs/transform"},
+        "parent": {"type": "string"},
+        "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "metadata": {"type": "object"}
+      }
+    },
+    "route": {
+      "type": "object",
+      "required": ["id", "purpose", "node_ids", "required_order"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "purpose": {"enum": ["player", "enemy", "service", "construction", "camera", "other"]},
+        "node_ids": {"type": "array", "items": {"type": "string"}, "minItems": 2},
+        "required_order": {"type": "boolean"},
+        "must_not_bypass": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "slot": {
+      "type": "object",
+      "required": ["id", "transform", "allowed_kinds"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "transform": {"$ref": "#/$defs/transform"},
+        "bounds": {"$ref": "#/$defs/vec3"},
+        "allowed_kinds": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+        "clearance": {"type": "number", "minimum": 0}
+      }
+    },
+    "proxy": {
+      "type": "object",
+      "required": ["id", "kind", "source_id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["collision", "navigation", "interaction", "visibility", "construction", "combat", "other"]},
+        "source_id": {"type": "string", "minLength": 1},
+        "metadata": {"type": "object"}
+      }
+    }
+  }
+}
