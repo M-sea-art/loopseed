@@ -87,13 +87,13 @@ A failed or difficult production round should be classified before it disappears
 one_off_defect     -> repair only
 invariant          -> durable rule
 skill              -> repeatable agent workflow
-g eometry_macro     -> reusable geometry operation
-template_gap        -> compiler/factory capability missing
-tool_gap            -> missing executable operation
-test_gap            -> QA blind spot
-knowledge_gap       -> durable domain knowledge
-architecture_gap    -> systemic design limitation
-structural_reset    -> current route is no longer rational
+geometry_macro     -> reusable geometry operation
+template_gap       -> compiler/factory capability missing
+tool_gap           -> missing executable operation
+test_gap           -> QA blind spot
+knowledge_gap      -> durable domain knowledge
+architecture_gap   -> systemic design limitation
+structural_reset   -> current route is no longer rational
 ```
 
 Capability Harvest does not automatically promote every lesson into infrastructure. It records the evidence and proposed next action so a later engineering pass can decide whether promotion is justified.
