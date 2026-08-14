@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://loopseed.dev/schemas/agent-native-game-stack-v1/capability-registry.schema.json",
+  "title": "Agent-Native Game Stack v1 Capability Registry",
+  "type": "object",
+  "required": ["stack_version", "capabilities"],
+  "additionalProperties": false,
+  "properties": {
+    "stack_version": {"const": "1.0"},
+    "capabilities": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/capability"}
+    }
+  },
+  "$defs": {
+    "capability": {
+      "type": "object",
+      "required": ["id", "domain", "provider", "description", "engine_support", "inputs", "outputs", "tools_required", "evidence_required", "ownership_scope", "cost_class", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
+        "domain": {"enum": ["orchestration", "quality", "engine", "world", "asset", "qa", "performance", "knowledge", "memory", "other"]},
+        "provider": {"type": "string", "minLength": 1},
+        "description": {"type": "string", "minLength": 1},
+        "engine_support": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "inputs": {"type": "array", "items": {"type": "string"}},
+        "outputs": {"type": "array", "items": {"type": "string"}},
+        "tools_required": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "evidence_required": {"type": "array", "items": {"type": "string"}},
+        "ownership_scope": {"enum": ["isolated", "shared-read", "integration-owner", "global-coupled"]},
+        "cost_class": {"enum": ["low", "medium", "high", "external"]},
+        "fallback": {"type": "string"},
+        "status": {"enum": ["experimental", "verified", "deprecated"]},
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "repository": {"type": "string"},
+            "reference": {"type": "string"},
+            "evidence": {"type": "array", "items": {"type": "string"}}
+          }
+        }
+      }
+    }
+  }
+}
