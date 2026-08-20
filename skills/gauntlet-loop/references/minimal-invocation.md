@@ -2,6 +2,12 @@
 
 The user-facing prompt should stay short. The skill carries the protocol.
 
+## Run it in a real agentic harness
+
+The generated launcher is intended for an environment such as Claude Code, Codex, or another agentic harness that can touch the artifact: read and edit files, run tools and code, render or inspect output, and create independent subagents or contexts when available.
+
+A plain chat may generate or critique the launcher, but must not pretend it executed the full loop when it cannot inspect and change the real artifact.
+
 ## Input shape
 
 A minimal invocation is enough:
@@ -19,6 +25,8 @@ Choose the strongest bar an evaluator can actually inspect, execute, compare, or
 
 Explain the chosen bar in one sentence when the user asked for a prompt or planning output.
 
+A useful bar may intentionally be harder than the current run can realistically reach. Its job is to provide direction and prevent premature `good enough` stopping. Do not lower it merely to create a PASS.
+
 ## Prompt compiler
 
 When the user wants a short prompt for Claude Code, Codex, or another agent, compile the goal and bar into a launcher like this:
@@ -28,9 +36,9 @@ I want you to achieve: <GOAL>
 
 Quality bar: <BAR>. Compare the real output directly against it.
 
-Choose the approach yourself. Divide the goal into the smallest pieces that can be improved and judged independently. For each important independent piece, use a builder and a separate fresh-context critic when the environment supports it. Each critic must inspect the real output, compare it directly with the bar, identify the single biggest remaining gap, and send that gap back for another round. Use blind A/B comparison when it is meaningful. Keep only proven wins, roll back regressions, and keep looping until the output meets or beats the bar, another round no longer has positive value, a structural reset is required, or I stop the run.
+Choose the approach yourself. Divide the goal into the smallest pieces that can be improved and judged independently. For each important independent piece, use a builder and a separate fresh-context critic when the environment supports it. Each critic must inspect the real output, compare it directly with the bar, identify the single biggest remaining gap, and send that gap back for another round. Use blind A/B comparison when it is meaningful. Keep only proven wins, roll back regressions, and keep looping without an arbitrary round cap until the output meets or beats the bar, improvements become too small to matter, the available compute is no longer worth spending, a structural reset is required, or I stop the run.
 
-Maintain a simple live progress page showing the work evolving over time, but never expose it or Builder reasoning to blind critics. Use subagents and ultracode when available and useful.
+Maintain a simple live progress page showing the work evolving over time with the most useful screenshots, videos, drafts, test results, or other media, but never expose it or Builder reasoning to blind critics. After major parallel waves, use a fresh whole-artifact smoothing pass when independently improved pieces need coherence. Use subagents and ultracode when available and useful.
 ```
 
 ## Keep it minimal
@@ -55,6 +63,9 @@ Valid exits remain:
 
 ```text
 PASS / WIN
+owner says it is ready
+improvements become too small to matter
+compute is no longer worth spending
 ROLLBACK
 INCONCLUSIVE
 STRUCTURAL_RESET
