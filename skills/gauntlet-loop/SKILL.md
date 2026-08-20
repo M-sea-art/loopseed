@@ -1,6 +1,6 @@
 ---
 name: gauntlet-loop
-description: Apply the Gauntlet Loop method discussed in this skill: establish a real bar, make the actual output observable, separate builder from fresh critic, find the single biggest remaining gap, repair it, compare challenger against incumbent, freeze winners, reject regressions, and repeat only while evidence justifies another round. For inventive work, automatically create and protect a load-bearing concept before convergence.
+description: Apply a self-contained Gauntlet Loop quality ratchet: resolve a real inspectable bar, expose the real artifact, separate builders from fresh critics, attack the single biggest remaining gap, compare challenger against incumbent, freeze proven wins, roll back regressions, and repeat only while evidence justifies another round. Supports a Matt-style minimal launcher, hard/soft critic isolation, first-candidate absolute review, live progress reporting, and originality protection for inventive work.
 ---
 
 # Gauntlet Loop
@@ -8,6 +8,10 @@ description: Apply the Gauntlet Loop method discussed in this skill: establish a
 This skill is **self-contained**. Apply only the Gauntlet Loop principles defined here. Do not import unrelated project protocols, historical workflows, or remembered architecture from other systems.
 
 Gauntlet Loop is not a framework, engine choice, fixed agent count, or universal production operating system. It is an **evidence-driven quality ratchet**.
+
+Its purpose is simple:
+
+> **Make errors progressively harder to disguise as completion.**
 
 Core loop:
 
@@ -33,19 +37,60 @@ FREEZE WINNER / ROLLBACK LOSER
 REPEAT OR STOP
 ```
 
-The method exists to prevent an agent from confusing:
+The human should be able to state the goal briefly. The agents do the hard work of finding the bar, exposing reality, judging independently, and refusing to call newer work better without evidence.
+
+## 1. Minimal invocation first
+
+Gauntlet should feel lightweight to invoke even when the underlying method is rigorous.
+
+A sufficient user request is:
 
 ```text
-I did work
+Run a Gauntlet Loop for: <goal>
+References: <optional references>
 ```
 
-with:
+Or simply:
 
 ```text
-The real artifact is actually better.
+/gauntlet <goal>
 ```
 
-## 1. Route the goal before using the loop
+When the user gives only a goal, the Lead must internally resolve:
+
+```text
+What is the strongest concrete bar available?
+What can the evaluator actually inspect, run, compare, or measure?
+What is the current incumbent, if any?
+Does originality need protection before convergence?
+What is the smallest useful decomposition?
+Which pieces are actually independent enough to fan out?
+What is the cheapest evidence that can falsify a false completion claim?
+```
+
+Do not make the user manually operate the protocol unless a real product decision, permission boundary, external blocker, or explicitly requested review requires human input.
+
+### Minimal prompt compiler
+
+When the user asks for a prompt for Claude Code, Codex, or another agent, compile the goal and bar into a short launcher rather than dumping this whole skill into the prompt.
+
+The launcher should preserve this shape:
+
+```text
+I want you to achieve: <GOAL>
+
+Quality bar: <BAR>. Compare the real output directly against it.
+
+Choose the approach yourself. Break the goal into the smallest pieces that can be improved and judged independently. For each important independent piece, use a builder and a separate fresh-context critic when the environment supports it. Each critic must inspect the real output, compare it with the bar, identify the single biggest remaining gap, and send that gap back for another round. Use blind A/B comparison when it is genuinely meaningful. Keep only proven wins, roll back regressions, and keep looping until the output meets or beats the bar, another round no longer has positive value, a structural reset is required, or I stop the run.
+
+Maintain a simple live progress page for me, but never expose that page or builder reasoning to blind critics. Use subagents and ultracode when the environment provides them and they add value.
+```
+
+Keep the compiled launcher short. The **prompt is the ignition key; this skill is the engine**.
+
+See `references/minimal-invocation.md`.
+
+## 2. Route the goal before looping
 
 Classify the task so Gauntlet does not become ritual.
 
@@ -84,7 +129,7 @@ Correctness, compatibility, performance, safety, or specification compliance dom
 
 The task contains multiple claim types.
 
-Keep the evidence channels separate. Example:
+Keep evidence channels separate:
 
 ```text
 visual quality -> real render + reference comparison
@@ -96,7 +141,7 @@ originality    -> concept invariant + ablation
 
 A PASS in one channel never cancels a FAIL in another required channel.
 
-## 2. Choose the smallest useful Gauntlet
+## 3. Choose the smallest useful Gauntlet
 
 Do not spend maximum compute by default.
 
@@ -105,7 +150,7 @@ Do not spend maximum compute by default.
 Use when one bounded defect dominates.
 
 ```text
-incumbent -> challenger -> fresh critic -> repair or stop
+incumbent -> challenger -> real observation -> fresh critic -> repair or stop
 ```
 
 ### STANDARD
@@ -136,11 +181,11 @@ Parallelism is optional. Agent count is not the mechanism.
 
 Choose the lowest intensity that can realistically falsify a false completion claim.
 
-## 3. Automatically acquire a real BAR
+## 4. Automatically acquire a real BAR
 
-A bar is not an adjective such as "AAA", "professional", "beautiful", or "high quality".
+A bar is not an adjective such as `AAA`, `professional`, `beautiful`, or `high quality`.
 
-A valid bar is something an evaluator can actually inspect, run, measure, or test.
+A valid bar is something an evaluator can actually inspect, run, compare, or measure.
 
 Prefer:
 
@@ -150,7 +195,7 @@ Prefer:
 4. executable benchmarks, measurements, tests, standards, or specifications;
 5. a clearly defined evaluation protocol when no concrete artifact exists.
 
-If no bar is supplied, find or construct the strongest **real** comparison available for the quality claim.
+If no bar is supplied, find or construct the strongest **real** comparison available for the quality claim. The chosen bar should play the same functional role that a real side-by-side reference plays in a visual imitation task: it gives the critic something outside the builder's story to judge against.
 
 For inventive work:
 
@@ -166,9 +211,9 @@ The bar may stay fixed or become harder when stronger evidence is found.
 
 Do not silently lower the bar because the current implementation struggles.
 
-When the agent chooses its own bar, run a separate **Bar Auditor** whose task is to argue that the chosen bar is too soft or too self-serving. Replace it only with an equal or stronger bar.
+When the agent chooses its own bar and the choice is material, use a separate **Bar Auditor** to challenge whether the bar is too soft, uninspectable, or self-serving. Replace it only with an equal or stronger bar.
 
-## 4. Automatically create `CONCEPT.md` for INVENT tasks
+## 5. Protect originality for INVENT tasks
 
 When originality is part of the goal, convergence must not begin until the distinct idea is protected.
 
@@ -197,17 +242,15 @@ For every proposed non-negotiable commitment, ask:
 
 > If this commitment is removed, does the artifact remain essentially the same product?
 
-If yes, it is decoration, not structure.
+If yes, it is decoration, not structure. Reject or replace it before lock.
 
-Reject or replace it before lock.
-
-When affordable, make the ablation concrete through a counterfactual prototype, ruleset, flow, mock, or executable variant. Do not accept a rhetorical claim that "removing it would obviously ruin the project."
+When affordable, make the ablation concrete through a counterfactual prototype, ruleset, flow, mock, or executable variant.
 
 ### Lock
 
 Write `CONCEPT.md` with:
 
-- one-line product / experience core;
+- one-line product or experience core;
 - the causal user loop;
 - load-bearing commitments;
 - must-not-lose properties.
@@ -222,13 +265,24 @@ During convergence:
 
 A locked concept is immutable during ordinary Gauntlet rounds. It may be discarded wholesale only when the real goal changes, decisive external evidence invalidates it, or the owner explicitly kills it.
 
-For long inventive runs, periodically rerun one ablation as a drift alarm. If the artifact now survives without a formerly load-bearing commitment, concept drift outranks ordinary polish.
+For long inventive runs, periodically rerun one ablation as a drift alarm.
 
-## 5. Pay the observation tax
+## 6. Pay the observation tax
 
 A critic must inspect the **real output**, not the builder's description of it.
 
-Use whatever observation method fits the artifact:
+Use a domain-neutral evidence interface:
+
+```text
+ARTIFACT             -> the thing actually being judged
+OBSERVATION CONDITIONS -> viewport, environment, dataset, inputs, run configuration, audience condition, etc.
+EVIDENCE CHANNEL     -> render, interaction, test, benchmark, source inspection, document review, measurement, etc.
+EVIDENCE LOCATOR     -> frame/timecode, state, test/case/line, section/paragraph, query/cell/metric, artifact path, etc.
+DETERMINISTIC CHECKS -> claims that can be mechanically falsified
+PERCEPTUAL/BEHAVIORAL CHECKS -> claims that require inspection or use
+```
+
+Choose the observation method required by the artifact:
 
 - launch and interact;
 - render screenshots, video, animation, audio, or 3D views;
@@ -241,14 +295,14 @@ Use whatever observation method fits the artifact:
 Do not substitute:
 
 - builder prose for runtime behavior;
-- "build passes" for product quality;
+- `build passes` for product quality;
 - a screenshot for interaction correctness;
 - critic opinion for a deterministic test;
 - simulated user enthusiasm for real retention or market demand.
 
 If the artifact cannot be observed, create the smallest practical harness before claiming completion.
 
-## 6. Decompose by judgeability
+## 7. Decompose by judgeability
 
 Split the goal into the smallest parts that can be improved and judged independently **without pretending tightly coupled work is independent**.
 
@@ -267,7 +321,13 @@ If not, keep the coupled work together.
 
 Fan out only genuinely independent routes. Do not create subagents ceremonially.
 
-## 7. Builder contract
+### Subagents and ultracode
+
+When the execution environment exposes subagents, use them where independent work and fresh criticism benefit from isolation. When it exposes an `ultracode` mode or equivalent high-capability coding mode, use it when the task justifies the extra capability and the user requested it.
+
+Do not invent nonexistent tools, and do not treat agent count or ultracode as the mechanism of quality. The mechanism remains **real evidence + independent criticism + a winner-preserving ratchet**.
+
+## 8. Builder contract
 
 A Builder is responsible for producing a challenger, not approving it.
 
@@ -282,7 +342,60 @@ The Builder should:
 
 For FULL runs, multiple builders may take materially different routes. Minor parameter variations do not justify multiple agents.
 
-## 8. Fresh Critic contract
+## 9. Critic instantiation and isolation
+
+A `Fresh Critic` is not merely the same agent changing roles. The Lead must first discover what isolation the environment can actually provide.
+
+### `HARD`
+
+Use a genuinely separate subagent, process, session, or context that receives only the minimum evaluation packet:
+
+```text
+GOAL or bounded quality claim
+BAR / RUBRIC
+anonymized artifact or evidence
+already-passed invariants
+protected concept commitments, when relevant
+```
+
+It must not inherit Builder reasoning, implementation discussion, intended winner identity, or previous critic verdicts.
+
+`HARD` is the preferred mode for perceptual or comparative promotion decisions.
+
+### `SOFT`
+
+Use a separate agent instance when some system-level context may be shared but Builder-local reasoning and candidate identity can still be withheld.
+
+Record:
+
+```text
+isolation: SOFT
+```
+
+A SOFT verdict may promote a candidate when evidence is strong and the relevant leakage controls are satisfied, but the report must not claim stronger isolation than actually existed.
+
+### `NONE`
+
+If the environment cannot instantiate a genuinely separate evaluator, same-context re-evaluation is permitted only as a diagnostic aid.
+
+Record:
+
+```text
+isolation: NONE
+```
+
+With `NONE`:
+
+- do not call the result `Fresh Critic PASS`;
+- do not treat a same-context perceptual preference as sufficient evidence for L3-style promotion;
+- use deterministic evidence for deterministic claims;
+- use the same-context critic to locate likely gaps, then seek stronger evidence if the decision materially depends on independent judgment.
+
+Never pretend to have cleared context when the environment provides no such capability.
+
+See `references/critic-contract.md`.
+
+## 10. Fresh Critic contract
 
 The critic is an independent judge of the artifact, not a collaborator polishing the builder's explanation.
 
@@ -292,7 +405,8 @@ Unless source inspection is required, hide from the critic:
 - implementation plan;
 - commit messages revealing intended improvements;
 - candidate identity;
-- previous critic conclusions that could anchor the verdict.
+- previous critic conclusions that could anchor the verdict;
+- the human-facing live progress page.
 
 The critic must judge the real output against the declared bar.
 
@@ -314,15 +428,33 @@ A useful critic output is:
 ```text
 VERDICT: PASS | FAIL | X_WINS | Y_WINS | INCONCLUSIVE
 CONFIDENCE: low | medium | high
+ISOLATION: HARD | SOFT | NONE
 EVIDENCE: <specific observation / state / frame / measurement / failed check>
 SINGLE BIGGEST GAP: <one highest-impact remaining problem>
 BOUNDED REPAIR: <one repair unit>
 DO NOT TOUCH: <already-passed or protected surfaces>
 ```
 
-See `references/critic-contract.md`.
+## 11. First candidate: no fake A/B
 
-## 9. The quality ratchet
+A Gauntlet may start with no incumbent. Do not fabricate a baseline merely to satisfy an A/B shape.
+
+If `incumbent == NONE`:
+
+```text
+candidate
+  ↓
+ABSOLUTE_BAR_REVIEW
+  ↓
+PASS -> candidate becomes PROVISIONAL_INCUMBENT
+FAIL -> repair the SINGLE_BIGGEST_GAP and review again
+```
+
+A provisional incumbent is simply the first real artifact that clears the minimum absolute bar. It is not evidence that the process has beaten an earlier version.
+
+Once a real incumbent exists, challenger rounds may use comparative blind A/B where meaningful.
+
+## 12. The quality ratchet
 
 For each active quality surface:
 
@@ -330,7 +462,7 @@ For each active quality surface:
 2. **Name the weakest meaningful gap.** Prefer the largest user-visible, behaviorally important, correctness-critical, or risk-critical difference.
 3. **Build a bounded challenger.** Test one causal improvement route.
 4. **Observe the challenger under equivalent conditions.**
-5. **Send it to a fresh critic / verifier.**
+5. **Send it to the strongest available fresh critic or verifier.**
 6. **Compare against the incumbent and bar.**
 7. **Demand one primary gap.** Do not turn the round into a giant backlog.
 8. **Decide:**
@@ -343,17 +475,17 @@ For each active quality surface:
 
 Newer is never automatically better.
 
-## 10. Attack one biggest gap at a time
+## 13. Attack one biggest gap at a time
 
 A critic may see many defects. The next Gauntlet round should normally attack only the highest-impact one.
 
 This preserves causal clarity and reduces regression surface.
 
-"One gap" does not mean "one file". A coherent repair may span many files when one causal defect requires it.
+`One gap` does not mean `one file`. A coherent repair may span many files when one causal defect requires it.
 
 Do not mix unrelated hypotheses into the same quality round.
 
-## 11. Freeze winners and reject regression
+## 14. Freeze winners and reject regression
 
 A winner must be reproducible enough that later work cannot silently overwrite it.
 
@@ -367,7 +499,7 @@ For durable runs preserve, as practical:
 
 If a challenger improves the target gap but breaks something already passed, it is not promoted until the regression is repaired and reverified.
 
-## 12. No-progress means replan
+## 15. No-progress means replan
 
 Two consecutive materially similar rounds that fail to improve the same gap trigger root-cause replanning.
 
@@ -382,9 +514,39 @@ When local iteration can no longer plausibly reach the bar, use a **STRUCTURAL_R
 
 A structural reset may replace the implementation route while preserving the goal, concept invariant, and previously proven requirements.
 
-## 13. Stop conditions are part of Gauntlet
+## 16. Live progress page
 
-Do not equate "the critic can still find flaws" with "the loop must run forever."
+For non-trivial or multi-round runs, maintain a simple human-facing progress surface so the owner can watch the work evolve.
+
+It should show only useful operational state, for example:
+
+```text
+Goal
+Chosen bar
+Current incumbent
+Current quality surface
+Current single biggest gap
+Round history
+Freeze / rollback / inconclusive events
+Evidence links
+Current status
+```
+
+The Lead may implement this as the simplest environment-appropriate live page or continuously updated page artifact. Do not prescribe a web framework merely to satisfy this requirement.
+
+### Anti-leak rule
+
+The progress page is for the **human and Lead only**.
+
+Do not provide it to blind critics. Do not let candidate labels, intended fixes, previous verdicts, or round history leak from the progress page into a fresh critic packet.
+
+The progress page is a control surface, never completion evidence by itself.
+
+See `references/live-progress.md`.
+
+## 17. Stop conditions are part of Gauntlet
+
+Do not equate `the critic can still find flaws` with `the loop must run forever`.
 
 For non-trivial runs, use a real budget such as:
 
@@ -405,17 +567,20 @@ Valid outcomes:
 - **BLOCKED**: an exact external condition prevents useful progress.
 - **ABORTED**: owner stops the run.
 
-Budget exhaustion is never PASS.
+`Keep looping until our output wins or I stop` should be interpreted with this discipline:
 
-Stop when:
+```text
+WIN / PASS
+or ROLLBACK
+or INCONCLUSIVE
+or STRUCTURAL_RESET
+or external BLOCKED
+or owner stops
+```
 
-- the declared bar is met;
-- another round has low expected value;
-- the budget is reached;
-- the route must structurally reset;
-- the owner stops the run.
+Budget exhaustion is never PASS. Never weaken the bar merely to manufacture a win.
 
-## 14. Product-truth boundary
+## 18. Product-truth boundary
 
 Gauntlet can strongly support claims such as:
 
@@ -436,7 +601,7 @@ AI-only Gauntlet does not by itself prove:
 
 When these claims matter, label them as requiring external human or market evidence.
 
-## 15. Durable state without bureaucracy
+## 19. Durable state without bureaucracy
 
 Do not create ceremony for a one-round MICRO Gauntlet.
 
@@ -444,32 +609,42 @@ For multi-round or cross-session work, maintain a lightweight `.gauntlet/` state
 
 ```text
 .gauntlet/
-  RUN.md       # goal, route, intensity, budget, current verdict
-  CONCEPT.md   # INVENT only
-  BAR.md       # references / tests / metrics / provenance
-  RUBRIC.md    # observable properties; may tighten, not silently soften
-  PROGRESS.md  # incumbent, current gap, rounds, evidence links
-  evidence/    # captures, reports, measurements when useful
+  RUN.md          # goal, route, intensity, budget, current verdict
+  CONCEPT.md      # INVENT only
+  BAR.md          # references / tests / metrics / provenance
+  RUBRIC.md       # observable properties; may tighten, not silently soften
+  PROGRESS.md     # incumbent, current gap, rounds, evidence links
+  progress-page/  # optional human-facing live progress surface
+  evidence/       # captures, reports, measurements when useful
 ```
 
 State exists to preserve causality and evidence, not to create paperwork.
 
-## 16. Minimal autonomous invocation
+## 20. Final report
 
-When the user gives only a goal, the agent should internally resolve:
+At the end, state only what the evidence supports:
+
+- final outcome;
+- bar used and whether it was met;
+- strongest isolation level actually achieved;
+- incumbent / final winner;
+- significant rollback or inconclusive events;
+- remaining biggest gap, if any;
+- evidence locations;
+- external product-truth claims that remain unproven.
+
+A successful Gauntlet run proves only what this run and its evidence establish. It does not prove that Gauntlet is universally superior to other workflows.
+
+## Short mental model
 
 ```text
-What kind of task is this: MATCH / INVENT / IMPROVE / CORRECT / MIXED?
-What is the strongest concrete bar available?
-What observation can falsify a bad result?
-Does originality require CONCEPT.md and ablation?
-What is the smallest useful Gauntlet intensity?
-What is the current incumbent?
-What is the single biggest gap?
+BAR tells us what good looks like.
+OBSERVATION tells us what we actually made.
+BUILDER produces a challenger.
+FRESH CRITIC exposes the largest remaining difference.
+REPAIR tests one causal response.
+RATCHET keeps only proven wins.
+NOVELTY INVARIANT prevents convergence from sanding off the point.
+PROGRESS PAGE lets the human watch without contaminating the critic.
+STOP RULE prevents ambition from becoming infinite ritual.
 ```
-
-Then execute without making the user manually operate the method unless a real decision, permission boundary, external blocker, or requested review requires human input.
-
-The spirit of the skill is:
-
-> **Let the human state the goal as briefly as possible. Make the agents do the hard work of finding the bar, exposing the real artifact, judging it independently, preserving load-bearing originality, and refusing to call newer work better without evidence.**
