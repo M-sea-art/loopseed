@@ -4,11 +4,48 @@ Use this reference when the Lead needs an independent evaluator for a Gauntlet r
 
 ## Mission
 
-Judge the **real artifact**, not the builder's intentions.
+Judge the **real artifact**, not the Builder's intentions.
 
-Your job is to determine whether the challenger is actually better against the declared bar and acceptance surface, while preserving already-passed requirements.
+Your job is to determine whether the artifact actually meets the declared bar and, once an incumbent exists, whether the challenger is actually better while preserving already-passed requirements.
 
 Do not reward effort, novelty of implementation, code volume, confidence, or persuasive explanations.
+
+## Isolation must be real
+
+Before evaluating, declare the strongest isolation the environment actually provides.
+
+### HARD
+
+A separate subagent, process, session, or context receives only the minimum evaluation packet:
+
+- goal or bounded quality claim;
+- bar or acceptance rule;
+- anonymized artifact/evidence;
+- already-passed invariants;
+- protected concept commitments when relevant.
+
+It does **not** inherit Builder reasoning, implementation discussion, intended winner identity, previous verdicts, or the human-facing progress page.
+
+### SOFT
+
+A separate agent instance is used, but some system-level context may be shared. Builder-local reasoning, intended winner identity, and previous critic conclusions must still be withheld.
+
+Record `ISOLATION: SOFT` and do not imply hard freshness.
+
+### NONE
+
+The environment cannot create a separate evaluator. Same-context review is allowed only as a diagnostic aid.
+
+Record `ISOLATION: NONE`.
+
+With NONE:
+
+- do not call the result `Fresh Critic PASS`;
+- do not use same-context perceptual preference alone as sufficient evidence to freeze a challenger;
+- deterministic claims may still rely on deterministic tests or measurements;
+- use the review to find likely gaps and seek stronger evidence where independent judgment matters.
+
+Never pretend that context was cleared when no mechanism exists to clear it.
 
 ## Inputs
 
@@ -19,9 +56,9 @@ Receive only what is necessary to judge the surface:
 - the incumbent and challenger in anonymized form when comparison is meaningful;
 - equivalent evidence captures or runnable access;
 - already-passed invariants that must not regress;
-- the protected novelty commitments when an INVENT task has a concept lock.
+- protected novelty commitments when an INVENT task has a concept lock.
 
-Avoid builder reasoning, plans, commit messages, or earlier verdicts unless the evaluated property explicitly requires them.
+Avoid Builder reasoning, plans, commit messages, live progress state, or earlier verdicts unless the evaluated property explicitly requires them.
 
 ## Evidence mode
 
@@ -53,9 +90,20 @@ Aesthetic preference cannot override a deterministic failure.
 
 Keep channels separate. A visual PASS cannot erase a behavioral FAIL, and a green test suite cannot prove the product feels finished.
 
+## First candidate: absolute review
+
+If no incumbent exists, do **not** fabricate a blind A/B.
+
+Run an `ABSOLUTE_BAR_REVIEW` against the declared bar.
+
+- PASS: candidate becomes `PROVISIONAL_INCUMBENT`.
+- FAIL: return the single biggest gap and one bounded repair unit.
+
+A provisional incumbent is simply the first artifact that clears the absolute bar. It has not beaten an earlier version.
+
 ## Blind comparison protocol
 
-When blind comparison is meaningful:
+Once a real incumbent exists and comparison is meaningful:
 
 1. anonymize candidates as neutral labels such as X and Y;
 2. use equivalent capture conditions;
@@ -63,10 +111,10 @@ When blind comparison is meaningful:
 4. decide the winner before writing the explanation;
 5. state confidence;
 6. identify the single biggest remaining tell or defect;
-7. if position bias is plausible, repeat with reversed order in fresh context;
+7. if position bias is plausible, repeat with reversed order in a separate fresh context when available;
 8. if the mirrored verdict conflicts materially, return `INCONCLUSIVE` rather than averaging the disagreement away.
 
-Do not infer candidate identity from filenames, timestamps, metadata, commit history, or rendering quality differences unrelated to the intended comparison.
+Do not infer candidate identity from filenames, timestamps, metadata, commit history, progress-page text, or rendering-quality differences unrelated to the intended comparison.
 
 ## Novelty protection
 
@@ -85,9 +133,10 @@ Return only the information needed for the next decision:
 ```text
 VERDICT: PASS | FAIL | X_WINS | Y_WINS | INCONCLUSIVE
 CONFIDENCE: low | medium | high
+ISOLATION: HARD | SOFT | NONE
 
 EVIDENCE:
-- <specific observed fact, frame, state, measurement, failing check, or artifact>
+- <specific observed fact, state, frame/timecode, test/case/line, section/paragraph, query/cell/metric, measurement, or artifact>
 
 SINGLE BIGGEST GAP:
 - <one highest-impact remaining problem>
