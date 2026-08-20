@@ -1,6 +1,6 @@
 ---
 name: gauntlet-loop
-description: Apply a self-contained Gauntlet Loop quality ratchet: resolve a real inspectable bar, expose the real artifact, separate builders from fresh critics, attack the single biggest remaining gap, compare challenger against incumbent, freeze proven wins, roll back regressions, and repeat only while evidence justifies another round. Supports a Matt-style minimal launcher, hard/soft critic isolation, first-candidate absolute review, live progress reporting, and originality protection for inventive work.
+description: Apply a self-contained Gauntlet Loop quality ratchet: run inside a real agentic harness, resolve a concrete inspectable bar, expose the real artifact, separate builders from fresh critics, attack the single biggest remaining gap, compare challenger against incumbent, freeze proven wins, roll back regressions, smooth whole-artifact coherence when parallel work drifts, and repeat without an arbitrary round cap while evidence justifies another round. Supports a Matt-style minimal launcher, hard/soft critic isolation, first-candidate absolute review, live progress reporting, and originality protection for inventive work.
 ---
 
 # Gauntlet Loop
@@ -38,6 +38,30 @@ REPEAT OR STOP
 ```
 
 The human should be able to state the goal briefly. The agents do the hard work of finding the bar, exposing reality, judging independently, and refusing to call newer work better without evidence.
+
+## 0. Agentic Harness Gate
+
+A real Gauntlet Loop requires an execution environment that can **touch the artifact**.
+
+Prefer an agentic harness such as Claude Code, Codex, or another environment that can, as relevant:
+
+- open and modify files;
+- run code, tests, builds, benchmarks, or scripts;
+- launch and interact with the product;
+- render or inspect screenshots, video, audio, pages, documents, or other outputs;
+- use tools needed to observe the result;
+- create separate subagents or contexts for independent critics when available.
+
+A normal chat that cannot inspect or change the real artifact may still:
+
+- design a Gauntlet;
+- choose or critique a bar;
+- generate the short launcher prompt;
+- review evidence supplied by the user.
+
+But it must **not pretend it executed a full Gauntlet Loop** when it could not touch the artifact or instantiate the required evaluation conditions.
+
+The method depends on an evaluator inspecting reality, not a model imagining what the result probably looks like.
 
 ## 1. Minimal invocation first
 
@@ -81,9 +105,9 @@ I want you to achieve: <GOAL>
 
 Quality bar: <BAR>. Compare the real output directly against it.
 
-Choose the approach yourself. Break the goal into the smallest pieces that can be improved and judged independently. For each important independent piece, use a builder and a separate fresh-context critic when the environment supports it. Each critic must inspect the real output, compare it with the bar, identify the single biggest remaining gap, and send that gap back for another round. Use blind A/B comparison when it is genuinely meaningful. Keep only proven wins, roll back regressions, and keep looping until the output meets or beats the bar, another round no longer has positive value, a structural reset is required, or I stop the run.
+Choose the approach yourself. Break the goal into the smallest pieces that can be improved and judged independently. For each important independent piece, use a builder and a separate fresh-context critic when the environment supports it. Each critic must inspect the real output, compare it with the bar, identify the single biggest remaining gap, and send that gap back for another round. Use blind A/B comparison when it is genuinely meaningful. Keep only proven wins, roll back regressions, and keep looping without an arbitrary round cap until the output meets or beats the bar, further improvements become too small to matter, the available compute budget is exhausted, a structural reset is required, or I stop the run.
 
-Maintain a simple live progress page for me, but never expose that page or builder reasoning to blind critics. Use subagents and ultracode when the environment provides them and they add value.
+Maintain a simple live progress page for me that shows the artifact evolving over time, but never expose that page or builder reasoning to blind critics. After major parallel waves, use an optional fresh whole-artifact smoothing pass when the pieces need coherence. Use subagents and ultracode when the environment provides them and they add value.
 ```
 
 Keep the compiled launcher short. The **prompt is the ignition key; this skill is the engine**.
@@ -175,6 +199,7 @@ May include:
 - randomized and mirrored blind comparison;
 - durable evidence packs;
 - novelty ablation;
+- whole-artifact smoothing after major waves;
 - structural reset after no progress.
 
 Parallelism is optional. Agent count is not the mechanism.
@@ -204,6 +229,20 @@ For inventive work:
 - when useful, use several orthogonal references rather than one total reference.
 
 Record provenance for external references in durable runs.
+
+### Aspirational bar doctrine
+
+A strong bar does **not** need to be realistically reachable in the current run.
+
+A deliberately difficult real-world reference can still provide direction and prevent the agent from stopping at `pretty good for AI`.
+
+Therefore:
+
+- the run may legitimately stop while still below the bar;
+- the final verdict may be `IMPROVED` rather than `PASS`;
+- the owner may stop when satisfied;
+- improvements may stop when gains become too small to matter or compute is no longer worth spending;
+- the bar must never be silently weakened to manufacture a win.
 
 ### Bar ratchet
 
@@ -274,11 +313,11 @@ A critic must inspect the **real output**, not the builder's description of it.
 Use a domain-neutral evidence interface:
 
 ```text
-ARTIFACT             -> the thing actually being judged
+ARTIFACT               -> the thing actually being judged
 OBSERVATION CONDITIONS -> viewport, environment, dataset, inputs, run configuration, audience condition, etc.
-EVIDENCE CHANNEL     -> render, interaction, test, benchmark, source inspection, document review, measurement, etc.
-EVIDENCE LOCATOR     -> frame/timecode, state, test/case/line, section/paragraph, query/cell/metric, artifact path, etc.
-DETERMINISTIC CHECKS -> claims that can be mechanically falsified
+EVIDENCE CHANNEL       -> render, interaction, test, benchmark, source inspection, document review, measurement, etc.
+EVIDENCE LOCATOR       -> frame/timecode, state, test/case/line, section/paragraph, query/cell/metric, artifact path, etc.
+DETERMINISTIC CHECKS   -> claims that can be mechanically falsified
 PERCEPTUAL/BEHAVIORAL CHECKS -> claims that require inspection or use
 ```
 
@@ -318,6 +357,8 @@ Ask:
 > If this piece fails, can it be repaired without destabilizing the pieces that already passed?
 
 If not, keep the coupled work together.
+
+The Lead decides which pieces should be separated, which should stay together, and which can run in parallel. Do not predefine the workstreams merely because a generic template lists them.
 
 Fan out only genuinely independent routes. Do not create subagents ceremonially.
 
@@ -471,7 +512,7 @@ For each active quality surface:
    - evidence conflicts -> keep incumbent and mark `INCONCLUSIVE`;
    - required deterministic gate fails -> FAIL regardless of aesthetic preference.
 9. **Run regression checks** on already-passed surfaces affected by the change.
-10. **Repeat only if another round has positive expected value.**
+10. **Repeat without an arbitrary fixed round count** while another round has positive expected value.
 
 Newer is never automatically better.
 
@@ -514,11 +555,35 @@ When local iteration can no longer plausibly reach the bar, use a **STRUCTURAL_R
 
 A structural reset may replace the implementation route while preserving the goal, concept invariant, and previously proven requirements.
 
-## 16. Live progress page
+## 16. Optional whole-artifact smoothing pass
 
-For non-trivial or multi-round runs, maintain a simple human-facing progress surface so the owner can watch the work evolve.
+When many builders improve separate pieces, local wins can accumulate into a globally inconsistent artifact.
 
-It should show only useful operational state, for example:
+At the end of a **major parallel wave**, the Lead may spawn one fresh **Smoother / Integrator** to inspect the complete real artifact before the next wave.
+
+Its job is narrow:
+
+- inspect the whole artifact, not isolated pieces;
+- detect seams, conflicts, duplicated decisions, style drift, transition problems, or integration inconsistencies;
+- make the parts feel like one coherent thing;
+- preserve already-proven local wins and protected concept commitments;
+- avoid redesigning the product or reopening every local decision.
+
+The smoothing pass is **optional**, not the core loop. Use it when parallel local optimization creates integration debt.
+
+After smoothing:
+
+- rerun deterministic regression checks affected by the changes;
+- re-observe the whole artifact;
+- send materially changed quality surfaces through the appropriate critic again.
+
+See `references/smoothing-pass.md`.
+
+## 17. Live progress page
+
+For non-trivial or multi-round runs, maintain a simple human-facing progress surface so the owner can watch the work evolve **without interrupting the agents**.
+
+It should show useful operational state and, where appropriate, real evolving media:
 
 ```text
 Goal
@@ -529,10 +594,11 @@ Current single biggest gap
 Round history
 Freeze / rollback / inconclusive events
 Evidence links
+Screenshots / video clips / drafts / test results / rendered outputs / other useful previews
 Current status
 ```
 
-The Lead may implement this as the simplest environment-appropriate live page or continuously updated page artifact. Do not prescribe a web framework merely to satisfy this requirement.
+The Lead may implement this as a simple live HTML page, `workbench.md`, or the simplest environment-appropriate continuously updated artifact. Do not prescribe a web framework merely to satisfy this requirement.
 
 ### Anti-leak rule
 
@@ -544,14 +610,15 @@ The progress page is a control surface, never completion evidence by itself.
 
 See `references/live-progress.md`.
 
-## 17. Stop conditions are part of Gauntlet
+## 18. Stop conditions are part of Gauntlet
 
 Do not equate `the critic can still find flaws` with `the loop must run forever`.
 
-For non-trivial runs, use a real budget such as:
+Do **not** prescribe a fixed number of rounds in advance. A sufficiently ambitious bar may remain above the artifact throughout the run.
+
+For non-trivial runs, track a real budget such as:
 
 - wall-clock time;
-- rounds;
 - tool calls;
 - compute;
 - money;
@@ -571,6 +638,9 @@ Valid outcomes:
 
 ```text
 WIN / PASS
+or owner says it is ready
+or improvements become too small to matter
+or compute is no longer worth spending
 or ROLLBACK
 or INCONCLUSIVE
 or STRUCTURAL_RESET
@@ -580,7 +650,7 @@ or owner stops
 
 Budget exhaustion is never PASS. Never weaken the bar merely to manufacture a win.
 
-## 18. Product-truth boundary
+## 19. Product-truth boundary
 
 Gauntlet can strongly support claims such as:
 
@@ -601,7 +671,7 @@ AI-only Gauntlet does not by itself prove:
 
 When these claims matter, label them as requiring external human or market evidence.
 
-## 19. Durable state without bureaucracy
+## 20. Durable state without bureaucracy
 
 Do not create ceremony for a one-round MICRO Gauntlet.
 
@@ -620,7 +690,7 @@ For multi-round or cross-session work, maintain a lightweight `.gauntlet/` state
 
 State exists to preserve causality and evidence, not to create paperwork.
 
-## 20. Final report
+## 21. Final report
 
 At the end, state only what the evidence supports:
 
@@ -629,6 +699,7 @@ At the end, state only what the evidence supports:
 - strongest isolation level actually achieved;
 - incumbent / final winner;
 - significant rollback or inconclusive events;
+- whether a smoothing pass was used and what whole-artifact issue it addressed;
 - remaining biggest gap, if any;
 - evidence locations;
 - external product-truth claims that remain unproven.
@@ -638,12 +709,14 @@ A successful Gauntlet run proves only what this run and its evidence establish. 
 ## Short mental model
 
 ```text
-BAR tells us what good looks like.
+AGENTIC HARNESS lets the method touch reality.
+BAR tells us what great looks like.
 OBSERVATION tells us what we actually made.
 BUILDER produces a challenger.
 FRESH CRITIC exposes the largest remaining difference.
 REPAIR tests one causal response.
 RATCHET keeps only proven wins.
+SMOOTHING reconnects locally optimized pieces when parallel work creates seams.
 NOVELTY INVARIANT prevents convergence from sanding off the point.
 PROGRESS PAGE lets the human watch without contaminating the critic.
 STOP RULE prevents ambition from becoming infinite ritual.
