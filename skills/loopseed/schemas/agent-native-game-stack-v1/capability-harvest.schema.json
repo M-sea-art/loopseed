@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://loopseed.dev/schemas/agent-native-game-stack-v1/capability-harvest.schema.json",
+  "title": "Agent-Native Game Stack v1 Capability Harvest Event",
+  "type": "object",
+  "required": ["stack_version", "timestamp", "actor", "source", "kind", "summary", "evidence", "next_action"],
+  "additionalProperties": false,
+  "properties": {
+    "stack_version": {"const": "1.0"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "actor": {"type": "string", "minLength": 1},
+    "source": {"type": "string", "minLength": 1},
+    "kind": {"enum": ["one_off_defect", "invariant", "skill", "geometry_macro", "template_gap", "tool_gap", "test_gap", "knowledge_gap", "architecture_gap", "structural_reset"]},
+    "summary": {"type": "string", "minLength": 1},
+    "evidence": {"type": "array", "items": {"type": "string"}},
+    "proposed_capability_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
+    "next_action": {"type": "string", "minLength": 1},
+    "promoted": {"type": "boolean", "default": false}
+  }
+}
