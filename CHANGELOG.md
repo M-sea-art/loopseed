@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.8.0
+
+- Restored Gauntlet as the non-overridable Seed Kernel: Goal → inspectable Bar → agent-owned decomposition → real output → fresh Critic → single biggest gap → bounded repair → ratchet.
+- Split product-quality authority from runtime governance: **Gate is the floor; Bar is the ceiling.** Hard engineering/stage gates can no longer substitute for product-quality proof.
+- Added first-class gate roles: `hard` and `bar`, plus CLI `add-gate --bar`.
+- Made v0.8 `VERIFIED` require at least one required hard-floor gate and at least one required quality-bar gate, with all required gates backed by current bound evidence.
+- Extended terminal reports with `hard_gates` and `quality_bar_gates` while preserving v0.7 receipt compatibility.
+- Added status visibility for gate-role counts and current quality-bar state.
+- Reframed creative dialogue as a material-ambiguity tool rather than the default center of the workflow; clear projects can go directly from Goal + Bar into production.
+- Kept project context recovery, artifact/commit integrity, task ownership, no-idle scheduling, evidence ledgers, repair, and resume as the Runtime Shell supporting the kernel.
+- Tightened Critic policy around real-output inspection, blind/equivalent comparison, one largest material gap, rollback of losing challengers, mirrored-order `INCONCLUSIVE`, and no silent bar softening.
+- Preserved novelty protection: the Bar governs craft quality but cannot erase a load-bearing user concept merely to resemble the reference.
+- Preserved bounded stop discipline: budget exhaustion, missing evidence, and no-progress are honest non-PASS outcomes; two materially similar no-progress rounds force root-cause replanning or structural reset.
+- Updated the Chinese production usage guide and plugin metadata to v0.8.0.
+- Added regression coverage proving that hard-floor PASS alone cannot finalize v0.8 and quality-bar PASS alone cannot finalize v0.8.
+
 ## 0.7.1
 
 - Restored the C1.1 machine-evidence core without replacing v0.7 creative calibration or scheduling.
@@ -34,6 +50,7 @@
 - Added two-round no-progress detection that forces root-cause replanning and a materially different route.
 - Extended lifecycle hooks to resume One-Shotted state while preserving legacy `.loopseed.md` behavior.
 - Added JSON schemas, reusable templates, CLI tests, hook compatibility tests, and CI validation.
+- Added Chinese documentation.
 
 ## 0.2.0
 
