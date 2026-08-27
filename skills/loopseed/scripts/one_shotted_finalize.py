@@ -101,8 +101,8 @@ def finalize(root: Path) -> dict[str, Any]:
     target: Path = data["target"]
     finished_at = utc_now()
     brief = data.get("creative_brief", {})
-    final_report = {
-        "schema_version": "1.3",
+    final_report: dict[str, Any] = {
+        "schema_version": "1.3" if v0_8 else "1.2",
         "loopseed_version": state.get("loopseed_version", VERSION),
         "mode": "one-shotted",
         "run_id": data["goal"].get("run_id"),
@@ -113,8 +113,6 @@ def finalize(root: Path) -> dict[str, Any]:
         "creative_brief_id": brief.get("brief_id") if isinstance(brief, dict) else None,
         "verdict": "VERIFIED",
         "required_gates": [str(gate.get("id")) for gate in required],
-        "hard_gates": [str(gate.get("id")) for gate in hard_gates],
-        "quality_bar_gates": [str(gate.get("id")) for gate in bar_gates],
         "gate_evidence": {
             str(gate.get("id")): gate.get("evidence_ids", []) for gate in required
         },
@@ -123,12 +121,20 @@ def finalize(root: Path) -> dict[str, Any]:
         "open_blocking_defects": [],
         "finished_at": finished_at,
     }
+    if v0_8:
+        final_report["hard_gates"] = [str(gate.get("id")) for gate in hard_gates]
+        final_report["quality_bar_gates"] = [str(gate.get("id")) for gate in bar_gates]
+
     final_state = deepcopy(state)
     final_state.update(
         {
             "status": "VERIFIED",
             "phase": "FINALIZE",
-            "next_action": "None. Hard floors and the inspectable quality bar are independently verified.",
+            "next_action": (
+                "None. Hard floors and the inspectable quality bar are independently verified."
+                if v0_8
+                else "None. Legacy required gates are independently verified."
+            ),
             "verified_at": finished_at,
             "updated_at": finished_at,
         }
@@ -174,7 +180,7 @@ def finalize(root: Path) -> dict[str, Any]:
         "project_domain": data.get("project_domain"),
         "production_mode": data.get("production_mode"),
         "creative_brief_id": final_report["creative_brief_id"],
-        "hard_gates": final_report["hard_gates"],
-        "quality_bar_gates": final_report["quality_bar_gates"],
+        "hard_gates": final_report.get("hard_gates", []),
+        "quality_bar_gates": final_report.get("quality_bar_gates", []),
         "final_report": str(target / "final-report.json"),
     }
