@@ -53,9 +53,9 @@ def initialize(
     phase = "CALIBRATE" if dialogue_enabled else "BIND"
     calibration_status = "OPEN" if dialogue_enabled else "SKIPPED"
     next_action = (
-        "Begin creative co-director dialogue. Preserve the user's seed, improve or extend it, offer 2-4 meaningful options with a recommendation, and lock the brief when all material choices are resolved."
+        "Resolve only material ambiguity, then lock the creative brief. Do not interview for reversible implementation choices. After lock, declare hard-floor gates plus one inspectable quality-bar gate before implementation."
         if dialogue_enabled
-        else "Inspect project authority and define observable acceptance gates before implementation."
+        else "Recover authoritative project intent when present, then declare the minimum hard-floor gates plus one inspectable quality-bar gate before implementation. The bar, not protocol completion, owns the product-quality verdict."
     )
 
     goal_contract = load_template_json("goal-contract.json")
@@ -75,7 +75,7 @@ def initialize(
     goal_contract["calibration"] = {
         "enabled": dialogue_enabled,
         "status": calibration_status,
-        "policy": "game-first-creative-co-director",
+        "policy": "material-ambiguity-only",
         "max_rounds": maximum_rounds,
         "dialogue_rounds": 0,
         "brief_id": None,
