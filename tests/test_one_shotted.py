@@ -63,6 +63,36 @@ class OneShottedTests(unittest.TestCase):
             "The documented primary flow completes",
             "lead",
             "verifier",
+            role="hard",
+        )
+
+    def add_quality_bar_gate(self, root: Path) -> None:
+        add_gate(
+            root,
+            "BAR",
+            "Inspectable quality bar",
+            "Against equivalent evidence, the candidate meets or beats the declared inspectable bar while preserving the product identity",
+            "lead",
+            "fresh-critic",
+            role="bar",
+        )
+
+    def pass_required_gates(self, root: Path, artifact: Path) -> None:
+        record_gate_result(
+            root,
+            "FLOW",
+            "PASS",
+            "verifier",
+            "Flow completed",
+            artifacts=[str(artifact)],
+        )
+        record_gate_result(
+            root,
+            "BAR",
+            "PASS",
+            "fresh-critic",
+            "Blind/equivalent comparison met the declared quality bar",
+            artifacts=[str(artifact)],
         )
 
     def test_initialize_creates_bounded_control_plane(self) -> None:
@@ -112,7 +142,42 @@ class OneShottedTests(unittest.TestCase):
         with temporary:
             initialize(root, "Build a demo")
             self.add_flow_gate(root)
+            self.add_quality_bar_gate(root)
             with self.assertRaisesRegex(OneShottedError, "not PASS"):
+                finalize(root)
+
+    def test_hard_floor_alone_cannot_finalize_v0_8(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a demo")
+            self.add_flow_gate(root)
+            artifact = self.freeze_verification(root)
+            record_gate_result(
+                root,
+                "FLOW",
+                "PASS",
+                "verifier",
+                "Flow completed",
+                artifacts=[str(artifact)],
+            )
+            with self.assertRaisesRegex(OneShottedError, "quality-bar"):
+                finalize(root)
+
+    def test_quality_bar_alone_cannot_finalize_v0_8(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a demo")
+            self.add_quality_bar_gate(root)
+            artifact = self.freeze_verification(root)
+            record_gate_result(
+                root,
+                "BAR",
+                "PASS",
+                "fresh-critic",
+                "Bar met",
+                artifacts=[str(artifact)],
+            )
+            with self.assertRaisesRegex(OneShottedError, "hard-floor"):
                 finalize(root)
 
     def test_successful_finalize_writes_verified_report(self) -> None:
@@ -120,35 +185,36 @@ class OneShottedTests(unittest.TestCase):
         with temporary:
             initialize(root, "Build a demo")
             self.add_flow_gate(root)
+            self.add_quality_bar_gate(root)
             artifact = self.freeze_verification(root)
-            record_gate_result(
-                root,
-                "FLOW",
-                "PASS",
-                "verifier",
-                "Flow completed",
-                artifacts=[str(artifact)],
-            )
+            self.pass_required_gates(root, artifact)
             result = finalize(root)
             self.assertEqual(result["status"], "VERIFIED")
             self.assertTrue(validate(root, require_final=True)["ok"])
             report = json.loads(Path(result["final_report"]).read_text(encoding="utf-8"))
+            self.assertEqual(report["schema_version"], "1.3")
             self.assertEqual(report["verdict"], "VERIFIED")
+            self.assertEqual(report["hard_gates"], ["FLOW"])
+            self.assertEqual(report["quality_bar_gates"], ["BAR"])
+
+    def test_status_exposes_quality_bar_state(self) -> None:
+        temporary, root = self.make_root()
+        with temporary:
+            initialize(root, "Build a demo")
+            self.add_flow_gate(root)
+            self.add_quality_bar_gate(root)
+            current = status(root)
+            self.assertEqual(current["gate_role_counts"], {"hard": 1, "bar": 1})
+            self.assertEqual(current["quality_bar_statuses"], {"BAR": "PENDING"})
 
     def test_open_p1_defect_blocks_then_resolution_allows_finalize(self) -> None:
         temporary, root = self.make_root()
         with temporary:
             initialize(root, "Build a demo")
             self.add_flow_gate(root)
+            self.add_quality_bar_gate(root)
             artifact = self.freeze_verification(root)
-            record_gate_result(
-                root,
-                "FLOW",
-                "PASS",
-                "verifier",
-                "Flow completed",
-                artifacts=[str(artifact)],
-            )
+            self.pass_required_gates(root, artifact)
             record_defect(root, "VIS-1", "P1", "OPEN", "Unreadable state", "verifier")
             with self.assertRaisesRegex(OneShottedError, "Open P0/P1"):
                 finalize(root)

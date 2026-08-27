@@ -17,6 +17,7 @@
           "id": {"type": "string", "minLength": 1},
           "title": {"type": "string"},
           "criterion": {"type": "string", "minLength": 1},
+          "role": {"enum": ["hard", "bar"]},
           "required": {"type": "boolean"},
           "owner": {"type": "string", "minLength": 1},
           "verifier": {"type": "string", "minLength": 1},

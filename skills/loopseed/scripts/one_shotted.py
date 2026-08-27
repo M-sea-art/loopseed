@@ -120,7 +120,7 @@ def build_parser() -> argparse.ArgumentParser:
     lock.add_argument("--file", required=True, help="Path to the compiled creative brief JSON")
     lock.add_argument("--actor", default="lead", help="Actor performing the lock")
 
-    gate = subparsers.add_parser("add-gate", help="Add an observable acceptance gate")
+    gate = subparsers.add_parser("add-gate", help="Add an observable hard floor or quality-bar gate")
     add_root(gate)
     gate.add_argument("--id", required=True)
     gate.add_argument("--title", required=True)
@@ -128,6 +128,11 @@ def build_parser() -> argparse.ArgumentParser:
     gate.add_argument("--owner", required=True, help="Implementation owner")
     gate.add_argument("--verifier", required=True, help="Independent verifier")
     gate.add_argument("--optional", action="store_true")
+    gate.add_argument(
+        "--bar",
+        action="store_true",
+        help="Mark this required gate as the inspectable quality bar. v0.8 VERIFIED requires at least one required bar gate to PASS.",
+    )
     gate.add_argument(
         "--machine",
         action="store_true",
@@ -244,7 +249,10 @@ def build_parser() -> argparse.ArgumentParser:
     add_root(check)
     check.add_argument("--require-final", action="store_true")
 
-    finish = subparsers.add_parser("finalize", help="Write VERIFIED only after every hard gate passes")
+    finish = subparsers.add_parser(
+        "finalize",
+        help="Write VERIFIED only after hard floors and the inspectable quality bar pass",
+    )
     add_root(finish)
 
     show = subparsers.add_parser("status", help="Print a compact run summary")
@@ -292,6 +300,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.verifier,
                 required=not args.optional,
                 requires_machine_evidence=args.machine,
+                role="bar" if args.bar else "hard",
             )
         elif args.command == "record":
             result = record_gate_result(
