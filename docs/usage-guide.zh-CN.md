@@ -1,134 +1,304 @@
 ---
-loopseed_version: "0.7.1"
-last_updated: "2026-08-09"
+loopseed_version: "0.8.0"
+last_updated: "2026-08-27"
 update_policy: "required-on-every-version-upgrade"
 ---
 
 # LOOPSEED 生产使用技巧
 
-> 最小指令，最大有效自治；默认走最低成本路径，只有真实产品收益或真实风险证明值得时才加重流程。
+> **Gate 是地板，Bar 是天花板。**
+>
+> 用最少语言把目标与真实质量标杆钉住，让 Agent 自己决定生产路线；上下文、证据、并发与完整性治理退到后台，只在它们能减少真实不确定性时介入。
 
-这是 LOOPSEED 当前生产入口的简明真相页。版本、运行模式、关键命令或证据边界改变时，本页必须同步更新；CI 会检查这里声明的版本与 `.codex-plugin/plugin.json` 一致。
+这是 LOOPSEED v0.8 的生产真相页。版本、运行模式、关键命令或证据边界改变时，本页必须同步更新；CI 会检查这里声明的版本与 `.codex-plugin/plugin.json` 一致。
 
-## 1. 先选最轻的模式
+## 1. v0.8 的最短心智模型
 
-### 标准 LoopSeed：明确的小任务
+```text
+GOAL：要做什么
+  ↓
+BAR：什么叫真的好
+  ↓
+Agent 自己拆解与选择路线
+  ↓
+真实产物 / 真实运行
+  ↓
+Fresh Critic 独立检查
+  ↓
+Blind A/B（适合时）
+  ↓
+只找一个最大差距
+  ↓
+修复 → 再观察 → 再比较
+  ↓
+赢家冻结，输家回滚
+```
+
+Runtime Shell 在后台负责：项目上下文恢复、Artifact/Commit Binding、任务所有权、No-idle 调度、哈希证据、独立验证、修复重绑和可恢复状态。
+
+**Shell 不拥有产品质量裁决权。Bar 才拥有。**
+
+## 2. 先选最轻的入口
+
+### 标准 LoopSeed：小而明确的任务
 
 ```text
 $loopseed <目标>
 ```
 
-适合修一个 bug、补一个小功能、修改一个页面或脚本、增加相关测试、制作一个很小的游戏机制。
+适合一个 bug、一个小功能、一个局部页面、一个脚本或一个小机制。
 
-默认闭环：
+默认：
 
 ```text
-探索 → 行动 → 观察 → 验证 → 调整
+探索 → 行动 → 真实观察 → 批评 → 调整
 ```
 
-默认一个主线程、一个写入者、一个集成路径。不要为了显得“智能”而默认创建子智能体、Worktree、Critic 或长循环。
+能单线程闭环就不 Fan-out；机器测试足够就不建评审委员会。
 
-### One‑Shotted：完整切片或一次授权生产
+### One-Shotted：一次授权完成完整生产
 
 ```text
 $loopseed one-shotted <一句自然语言目标>
 ```
 
-适合从零完成一个小游戏、可交付垂直切片、已有仓库中的完整功能，或需要一次授权后自主规划、实现、验证、修复和终局判断的任务。
+适合小游戏、垂直切片、完整功能、视觉重构或需要持续自主修复的生产任务。
 
-“One‑Shotted”表示一次正式生产授权，不表示一次模型回复。游戏种子默认可先进入创意校准；简报锁定后不应反复要求用户发送“继续”。
+“One-Shotted”指一次生产授权，不指一次模型回复。
 
-## 2. 游戏项目怎么用
+## 3. 新项目：默认先 Goal + Bar，不先采访
 
-不需要先写完整 GDD。给出真正想要的体验种子即可，例如：
-
-```text
-$loopseed one-shotted 做一个武侠门派经营垂直切片。弟子有自己的欲望和关系，玩家通过资源、规则和关键决定间接影响门派。先把会改变产品结果的关键选择校准清楚，再一次授权完成可试玩、可失败、可重开并有真实视觉与运行证据的切片。
-```
-
-创意对话只问会改变产品结果的问题；方向清楚就锁定，不为凑轮次继续盘问。必须保留用户已经接受的决定，不能偷偷把游戏降级为静态场景、普通 Dashboard、几何 Blockout 或“能跑就算完成”的原型。
-
-## 3. 什么时候才开 Fan‑out / Critic
-
-只在满足下面条件时升级运行拓扑：
-
-- 任务真实独立，能够分别验收；
-- 写入范围可以隔离；
-- 并行确实比协调成本更划算；
-- 最终仍有一个 Lead 收敛为一个产品。
-
-适合并行：独立资产族、只读调查、独立测试、音频、边界清晰的 UI、性能分析。
-
-不要并行不同的“产品理解”：产品身份、核心循环、共享状态、技术架构、全局灯光/构图、整体集成和最终放行应保持单一权威。
-
-Critic 不是默认仪式。只有当结果存在重要但机器测试无法判定的质量面时才启用，例如整体视觉、第一次玩家理解、交互反馈或成品感。
-
-## 4. v0.7.1 的真实性边界
-
-v0.7.1 增加的是 **候选与交付产物完整性桥（Candidate & Artifact Integrity Bridge）**。
-
-它会把：
-
-```text
-真实 Git HEAD
-+ 稳定交付产物 SHA‑256
-+ 真实执行的 verifier command
-+ exit code / timeout / 有界输出
-+ tracked worktree / untracked content 检查
-```
-
-绑定到当前验证代，并在修复改变候选后使旧 PASS 失效。人工或视觉 PASS 必须引用真实存在并被哈希的项目内证据文件。
-
-它**不是完整的 hermetic / supply-chain attestation**。`.gitignore` 中的可变源码、环境状态、外部路径或未显式绑定的 verifier 输入并不会自动获得同等级证明。因此 verifier 不应依赖这些可变输入；若项目必须依赖它们，应把它们提交、复制进项目并固定，或明确把该限制记录为验证边界。
-
-## 5. 一个最小的 One‑Shotted 验证闭环
-
-```text
-CALIBRATE（游戏可选/默认）
-  ↓
-BIND → PLAN → IMPLEMENT → VERIFY
-                       失败 ↓    ↓ 通过
-                          REPAIR → VERIFY → FINALIZE
-```
-
-生产完成前至少满足：
-
-- 大规模实现前声明可观察 Gate；
-- 实现者不能审核自己的 Gate；
-- required task 全部 `SUCCEEDED`；
-- optional task 也必须显式收口；
-- 机器 Gate 由 `run-evidence` 真执行；
-- 人工/视觉 Gate 有真实哈希产物；
-- 修复后重新绑定、重新验证；
-- 没有开放 P0/P1；
-- final report 与当前 run、Gate、证据、任务和 binding 一致。
-
-常用命令：
+如果目标已经清楚，推荐直接关闭创意访谈：
 
 ```bash
-python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py init --root . --goal "<goal>"
-python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate --root . --id FLOW --title "Flow" --criterion "<observable criterion>" --owner lead --verifier verifier --machine
-python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition --root . --phase PLAN --next "Plan bounded work"
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py init \
+  --root . \
+  --goal "<goal>" \
+  --dialogue off
+```
+
+然后声明**最少的硬门槛**与**一个真正可检验的质量 Bar**。
+
+硬门槛示例：
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
+  --root . \
+  --id BUILD \
+  --title "Runnable build" \
+  --criterion "目标构建可以启动并完整走通要求流程" \
+  --owner lead \
+  --verifier verifier \
+  --machine
+```
+
+质量 Bar 示例：
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
+  --root . \
+  --id BAR \
+  --title "Inspectable quality bar" \
+  --criterion "在等价截图/录像/运行条件下，候选达到或击败指定参考或 incumbent，同时不损失产品核心身份" \
+  --owner lead \
+  --verifier fresh-critic \
+  --bar
+```
+
+v0.8 不允许只有 BUILD/FLOW 等工程 Gate 全绿就写 `VERIFIED`。
+
+## 4. 什么是好的 Bar
+
+优先选择 Agent **真的能够检查和比较**的东西：
+
+- 游戏/UI 视觉：真实参考截图，同视角、同分辨率、同状态比较；
+- 游戏体验：固定输入录像、首分钟理解目标、完整成功/失败/重开流；
+- 3D 资产：参考渲染 + 目标引擎真实导入/运行；
+- 软件：标准、兼容性测试、性能 benchmark、已知稳定 incumbent；
+- 写作/报告：用户提供的刊物/文风参考 + 事实与结构 Gate。
+
+没有单一参考时，使用多个正交证据通道，不把它们揉成一个模糊总分。
+
+```text
+工程 PASS ≠ 产品 PASS
+视觉 PASS ≠ 行为 PASS
+漂亮截图 ≠ 可玩
+能运行 ≠ 成品
+```
+
+## 5. Critic 怎么工作
+
+Fresh Critic 要看**真实产物**，不是 Builder 的解释。
+
+适合时匿名为 X/Y：
+
+1. 等价条件采集；
+2. 隐藏新旧身份与 Builder 自辩；
+3. 先判赢家，再解释；
+4. 输出一个最大的剩余差距；
+5. 需要时反转顺序再判；
+6. 两次明显冲突就记 `INCONCLUSIVE`，不能平均成假精确分数。
+
+推荐输出：
+
+```text
+VERDICT: PASS | FAIL | X_WINS | Y_WINS | INCONCLUSIVE
+CONFIDENCE: low | medium | high
+
+EVIDENCE:
+- <真实观察>
+
+SINGLE BIGGEST GAP:
+- <最高价值的一个差距>
+
+BOUNDED REPAIR:
+- <一个因果清晰的修复单元>
+
+DO NOT TOUCH:
+- <已经通过或不能丢失的部分>
+```
+
+## 6. Ratchet：新版不自动赢
+
+每轮只做一个清晰判断：
+
+```text
+challenger 赢 → 晋级并冻结
+challenger 输 → 回滚
+证据冲突 → 保留 incumbent，INCONCLUSIVE
+硬门槛失败 → FAIL
+连续两轮同类修复无进展 → 根因重规划 / STRUCTURAL RESET
+```
+
+不要因为“这是新版”“代码更多”“花了更多时间”就给它加分。
+
+## 7. 已有项目：先恢复已定意图，再继续射击
+
+已有项目不能为了重新获得创作自由而忘掉旧决策。
+
+至少检查：
+
+- README / AGENTS.md；
+- docs / design / planning / product / spec；
+- roadmap / GDD / brief / milestone / decision record；
+- 用户最近已明确接受的决定；
+- 当前运行产物作为状态证据。
+
+恢复：
+
+```text
+哪些决定已经定了
+哪些仍然真的开放
+哪些资料冲突或过时
+当前项目身份是什么
+```
+
+恢复的目的，是**少问用户问题**，不是多造一个流程。
+
+## 8. Creative Dialogue 什么时候才开
+
+只有一个条件：
+
+> 存在无法从当前指令或项目权威资料解决、而且会实质改变产品结果的歧义。
+
+这时才使用 `--dialogue on`。
+
+不要问：可逆的技术细节、仓库里已有答案、仅仅因为还没凑满对话轮数的问题。
+
+方向一旦清楚就锁定，马上回到 Goal + Bar 生产。
+
+## 9. Fan-out 什么时候才值得
+
+并行不是 Gauntlet 的灵魂。
+
+只有在下面条件成立时才 Fan-out：
+
+- 工作真实独立；
+- 写入所有权可隔离；
+- 能分别验收；
+- 选择价值高于协调成本。
+
+产品身份、核心循环、共享状态、架构、全局构图/灯光和最终集成保持一个 Lead。
+
+一个强 Builder + 一个 Fresh Critic，完全可以是有效的 Gauntlet。
+
+## 10. v0.8 的 One-Shotted 终局
+
+```text
+CALIBRATE? → BIND → PLAN → IMPLEMENT → VERIFY
+                                      ↓ FAIL
+                                    REPAIR
+                                      ↓
+                                    VERIFY
+                                      ↓ hard + bar PASS
+                                   FINALIZE
+```
+
+`CALIBRATE` 是可选的。
+
+`VERIFIED` 至少需要：
+
+- 至少一个 required `hard` gate；
+- 至少一个 required `bar` gate；
+- 所有 required gate 当前绑定证据均 PASS；
+- 实现者没有审核自己的 Gate；
+- required task 全部 `SUCCEEDED`；
+- optional task 显式收口；
+- 机器 Gate 真实由 `run-evidence` 执行；
+- 视觉/体验 Gate 引用真实哈希产物；
+- 修复后重新绑定、重新验证；
+- 无开放 P0/P1；
+- final report 与当前 run / Gate / evidence / task / binding 一致。
+
+### 一个完整最小闭环
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py init --root . --goal "<goal>" --dialogue off
+
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate --root . --id FLOW --title "Flow" --criterion "<observable hard-floor criterion>" --owner lead --verifier verifier --machine
+
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate --root . --id BAR --title "Quality bar" --criterion "<inspectable reference/incumbent comparison rule>" --owner lead --verifier fresh-critic --bar
+
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition --root . --phase PLAN --next "Choose the smallest route that can beat the bar"
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition --root . --phase IMPLEMENT --next "Build and commit candidate"
-python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition --root . --phase VERIFY --next "Freeze candidate"
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition --root . --phase VERIFY --next "Freeze candidate and inspect real output"
+
 head="$(git rev-parse HEAD)"
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py bind --root . --project "my-project" --candidate "$head" --artifact build/output.zip
+
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py run-evidence --root . --gate FLOW --actor verifier --command "python tools/verify.py" --project "my-project" --candidate "$head" --artifact build/output.zip
+
+# BAR 通常由 fresh critic 根据真实截图/录像/运行证据，用 record 写入独立 PASS/FAIL。
+
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py finalize --root .
 ```
 
-## 6. 成本纪律
+## 11. 诚实停止，不是假装无限循环
 
-LOOPSEED 的默认顺序是：
+Bar 不意味着无限烧预算。
+
+合法结果包括：
+
+- `VERIFIED`：硬地板和 Bar 都有直接证据证明通过；
+- `INCONCLUSIVE`：证据不能可靠判定；
+- `ROLLBACK`：challenger 输，保留 incumbent；
+- `STRUCTURAL_RESET`：局部修补已不合理，换路线；
+- `BLOCKED`：存在精确、不可替代的外部阻塞；
+- `ABORTED`：用户明确停止。
+
+预算耗尽、Critic 仍然发现明显 Bar 差距、证据缺失，都不能伪装成 PASS。
+
+## 12. 成本纪律
 
 ```text
-单线程足够 → 不并行
-机器证据足够 → 不加人工 Critic
-一个 Critic 足够 → 不建评审委员会
-一个真实 A/B 足够回答问题 → 不先升级 Runtime
+单线程够 → 不并行
+机器证据够 → 不加额外 Critic
+一个 Critic 够 → 不建委员会
+一次可靠 A/B 能回答 → 不先升级 Runtime
+治理层没有减少真实不确定性 → 不让它进入主注意力
 ```
 
-两个核心治理规则：
+继续保留两条治理原则：
 
 > **No new mechanism without demonstrated product effect.**
 >
@@ -138,14 +308,14 @@ LOOPSEED 的默认顺序是：
 >
 > 新控制消除的不确定性，必须大于它增加的复杂度。
 
-## 7. 当前生产真相
+## 13. 当前版本真相
 
-- `main`：v0.7.0，当前已发布稳定基线。
-- `agent/v0.7.1-integrity-bridge`：v0.7.1 候选，补候选/产物真实性与终局交叉验证；合并前必须通过 Linux 与 Windows 的最小真实闭环。
-- 旧 `experiment/*` 与旧 Draft PR：只作为历史实验、证据或后续产品效果 A/B 的来源，不应被当成当前生产入口。
+- `main`：v0.7.1 integrity bridge 稳定基线。
+- `agent/v0.7.2-context-harvest`：恢复已有项目规划与创意共导演进线。
+- `agent/v0.8.0-gauntlet-kernel`：把 Gauntlet 恢复为 Seed Kernel，并将 Context / Evidence / Integrity / Scheduler 明确降为 Runtime Shell；`VERIFIED` 新增强制 Bar Gate。
 
-## 8. 下一步不是堆机制
+v0.8 的目标不是再增加更多机制，而是**重新排列权力关系**：
 
-v0.7.1 之后，优先做等预算产品效果实验：一次只测试一个候选机制，例如动态专家、创意对话或 Reality Gate。只有结果质量、完成率、成本或时间出现可复现收益，候选机制才有资格进入核心。
-
-跨项目长期记忆与更多默认专家暂不进入 Runtime，避免经验污染和协调复杂度先于产品收益增长。
+> Runtime 负责不失忆、不跑偏、不造假、不互踩。
+>
+> Gauntlet 负责让成品不断逼近并击败真实质量标杆。
