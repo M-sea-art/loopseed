@@ -1,7 +1,7 @@
 {
   "name": "loopseed",
-  "version": "0.7.1",
-  "description": "Game-first creative dialogue, One-Shot production, no-idle Fan-out, and evidence-governed completion.",
+  "version": "0.8.0",
+  "description": "Gauntlet-first Seed Kernel with a durable evidence, recovery, integrity, and scheduling shell.",
   "author": {
     "name": "M-sea-art",
     "url": "https://github.com/M-sea-art"
@@ -12,7 +12,8 @@
   "keywords": [
     "codex",
     "game-development",
-    "creative-dialogue",
+    "gauntlet-loop",
+    "quality-bar",
     "agent",
     "autonomy",
     "one-shotted",
@@ -26,8 +27,8 @@
   "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "LoopSeed",
-    "shortDescription": "Aim game ideas through dialogue, then launch verified One-Shot production.",
-    "longDescription": "LoopSeed is a game-first AI production engine. It co-directs an unfinished idea through bounded dialogue, locks a user-authorized creative brief, then executes one uninterrupted production run with no-idle controlled Fan-out, independent verification, repair, and fail-closed finalization. General projects use a lighter domain adapter.",
+    "shortDescription": "Set a goal and real bar, then loop on the biggest gap until verified or honestly stopped.",
+    "longDescription": "LoopSeed v0.8 places a small Gauntlet quality kernel at the center of a durable production runtime. The agent chooses the decomposition, inspects the real output, uses an independent critic and blind A/B when useful, attacks the single biggest remaining gap, and ratchets winners. Context recovery, evidence binding, safe fan-out, no-idle scheduling, repair, and fail-closed receipts run as the supporting shell. Gate is the floor; Bar is the ceiling.",
     "developerName": "M-sea-art",
     "category": "Productivity",
     "capabilities": [
@@ -36,9 +37,9 @@
     ],
     "websiteURL": "https://github.com/M-sea-art/loopseed",
     "defaultPrompt": [
-      "$loopseed one-shotted Help me sharpen and amplify this game idea through meaningful options, then launch the complete production run once the creative brief is locked.",
+      "$loopseed one-shotted <goal>. Choose the strongest inspectable quality bar you can actually compare against, keep the production approach agent-owned, and continue repairing the single biggest real-output gap until the hard floors and bar are verified or an honest stop condition is reached.",
       "$loopseed one-shotted <one natural-language game or product seed>",
-      "$loopseed Complete this scoped goal through the smallest evidence-driven loop; continue until verified or truly blocked."
+      "$loopseed Complete this scoped goal through the smallest real-output loop; use the runtime shell only when it reduces real uncertainty."
     ]
   }
 }

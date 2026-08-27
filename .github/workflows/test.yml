@@ -40,6 +40,7 @@ jobs:
           head="$(git -C "$root" rev-parse HEAD)"
           python skills/loopseed/scripts/one_shotted.py init --root "$root" --goal "Ship a verified migration report"
           python skills/loopseed/scripts/one_shotted.py add-gate --root "$root" --id SMOKE --title Smoke --criterion "CLI completes" --owner lead --verifier verifier --machine
+          python skills/loopseed/scripts/one_shotted.py add-gate --root "$root" --id BAR --title "Quality bar" --criterion "The candidate meets the declared smoke-quality reference" --owner lead --verifier fresh-critic --bar --machine
           python skills/loopseed/scripts/one_shotted.py transition --root "$root" --phase PLAN --next "Declare work"
           python skills/loopseed/scripts/one_shotted.py add-task --root "$root" --id BUILD --purpose "Build frozen candidate" --owner lead --write-scope artifact.txt
           python skills/loopseed/scripts/one_shotted.py task-status --root "$root" --task BUILD --status RUNNING --actor lead --summary "Build started"
@@ -48,6 +49,7 @@ jobs:
           python skills/loopseed/scripts/one_shotted.py transition --root "$root" --phase VERIFY --next "Freeze candidate"
           python skills/loopseed/scripts/one_shotted.py bind --root "$root" --project general-smoke --candidate "$head" --artifact artifact.txt
           python skills/loopseed/scripts/one_shotted.py run-evidence --root "$root" --gate SMOKE --actor verifier --command "python verify.py" --project general-smoke --candidate "$head" --artifact artifact.txt
+          python skills/loopseed/scripts/one_shotted.py run-evidence --root "$root" --gate BAR --actor fresh-critic --command "python verify.py" --project general-smoke --candidate "$head" --artifact artifact.txt
           python skills/loopseed/scripts/one_shotted.py finalize --root "$root"
           python skills/loopseed/scripts/one_shotted.py validate --root "$root" --require-final
       - name: Smoke game dialogue and creative lock
@@ -134,11 +136,13 @@ jobs:
 
           python skills/loopseed/scripts/one_shotted.py lock-brief --root "$root" --file "$root/.loopseed/brief.json"
           python skills/loopseed/scripts/one_shotted.py add-gate --root "$root" --id FLOW --title Flow --criterion "The slice completes" --owner lead --verifier verifier --machine
+          python skills/loopseed/scripts/one_shotted.py add-gate --root "$root" --id BAR --title "Quality bar" --criterion "The real slice meets the declared game-quality comparison" --owner lead --verifier fresh-critic --bar --machine
           python skills/loopseed/scripts/one_shotted.py transition --root "$root" --phase PLAN --next "Plan the slice"
           python skills/loopseed/scripts/one_shotted.py transition --root "$root" --phase IMPLEMENT --next "Build the slice"
           python skills/loopseed/scripts/one_shotted.py transition --root "$root" --phase VERIFY --next "Freeze the slice"
           python skills/loopseed/scripts/one_shotted.py bind --root "$root" --project game-smoke --candidate "$head" --artifact artifact.txt
           python skills/loopseed/scripts/one_shotted.py run-evidence --root "$root" --gate FLOW --actor verifier --command "python verify.py" --project game-smoke --candidate "$head" --artifact artifact.txt
+          python skills/loopseed/scripts/one_shotted.py run-evidence --root "$root" --gate BAR --actor fresh-critic --command "python verify.py" --project game-smoke --candidate "$head" --artifact artifact.txt
           python skills/loopseed/scripts/one_shotted.py finalize --root "$root"
           python skills/loopseed/scripts/one_shotted.py validate --root "$root" --require-final
 
@@ -169,6 +173,7 @@ jobs:
 
           python skills/loopseed/scripts/one_shotted.py init --root $root --goal "Ship a Windows-verified migration report"
           python skills/loopseed/scripts/one_shotted.py add-gate --root $root --id WIN --title "Windows smoke" --criterion "Windows CLI completes" --owner lead --verifier verifier --machine
+          python skills/loopseed/scripts/one_shotted.py add-gate --root $root --id BAR --title "Quality bar" --criterion "The Windows candidate meets the declared quality bar" --owner lead --verifier fresh-critic --bar --machine
           python skills/loopseed/scripts/one_shotted.py transition --root $root --phase PLAN --next "Declare work"
           python skills/loopseed/scripts/one_shotted.py add-task --root $root --id BUILD --purpose "Build frozen candidate" --owner lead --write-scope artifact.txt
           python skills/loopseed/scripts/one_shotted.py task-status --root $root --task BUILD --status RUNNING --actor lead --summary "Build started"
@@ -177,5 +182,6 @@ jobs:
           python skills/loopseed/scripts/one_shotted.py transition --root $root --phase VERIFY --next "Freeze candidate"
           python skills/loopseed/scripts/one_shotted.py bind --root $root --project windows-smoke --candidate $head --artifact artifact.txt
           python skills/loopseed/scripts/one_shotted.py run-evidence --root $root --gate WIN --actor verifier --command "python verify.py" --project windows-smoke --candidate $head --artifact artifact.txt
+          python skills/loopseed/scripts/one_shotted.py run-evidence --root $root --gate BAR --actor fresh-critic --command "python verify.py" --project windows-smoke --candidate $head --artifact artifact.txt
           python skills/loopseed/scripts/one_shotted.py finalize --root $root
           python skills/loopseed/scripts/one_shotted.py validate --root $root --require-final

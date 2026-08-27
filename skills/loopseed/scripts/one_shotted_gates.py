@@ -7,7 +7,7 @@ from typing import Any
 
 from one_shotted_io import load_run, locked_mutation, write_json_atomic
 from one_shotted_model import gate_map
-from one_shotted_types import OneShottedError, clean_line, utc_now
+from one_shotted_types import GATE_ROLES, OneShottedError, clean_line, utc_now
 
 
 @locked_mutation
@@ -20,6 +20,7 @@ def add_gate(
     verifier: str,
     required: bool = True,
     requires_machine_evidence: bool = False,
+    role: str = "hard",
 ) -> dict[str, Any]:
     target, _, acceptance, state = load_run(root)
     if str(state.get("status", "")).upper() != "ACTIVE":
@@ -37,6 +38,9 @@ def add_gate(
     criterion = clean_line(criterion, name="gate criterion")
     owner = clean_line(owner, name="gate owner")
     verifier = clean_line(verifier, name="gate verifier")
+    role_value = clean_line(role, name="gate role").lower()
+    if role_value not in GATE_ROLES:
+        raise OneShottedError(f"gate role must be one of {sorted(GATE_ROLES)}")
     if owner == verifier:
         raise OneShottedError("Implementation owner and gate verifier must be different")
 
@@ -48,6 +52,7 @@ def add_gate(
             "id": gate_id,
             "title": title,
             "criterion": criterion,
+            "role": role_value,
             "required": bool(required),
             "owner": owner,
             "verifier": verifier,
@@ -61,6 +66,7 @@ def add_gate(
     return {
         "ok": True,
         "gate": gate_id,
+        "role": role_value,
         "required": bool(required),
         "requires_machine_evidence": bool(requires_machine_evidence),
         "status": "PENDING",

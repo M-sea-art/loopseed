@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-VERSION = "0.7.1"
+VERSION = "0.8.0"
 RUN_RELATIVE = Path(".loopseed") / "one-shotted"
 VALID_STATUSES = {"ACTIVE", "VERIFIED", "BLOCKED", "ABORTED"}
 VALID_PHASES = {"CALIBRATE", "BIND", "PLAN", "IMPLEMENT", "VERIFY", "REPAIR", "FINALIZE"}
@@ -16,6 +16,7 @@ VALID_SEVERITIES = {"P0", "P1", "P2", "P3"}
 VALID_DEFECT_STATUSES = {"OPEN", "RESOLVED"}
 PROJECT_DOMAINS = {"game", "general"}
 PRODUCTION_MODES = {"focused", "studio", "moonshot"}
+GATE_ROLES = {"hard", "bar"}
 DIALOGUE_KINDS = {"seed", "synthesis", "question", "answer", "decision"}
 DIALOGUE_EFFECTS = {
     "preserve",

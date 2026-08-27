@@ -63,6 +63,22 @@ class IntegrityBridgeCliTests(unittest.TestCase):
                 "--machine",
             )
             self.run_cli(
+                "add-gate",
+                *root_args,
+                "--id",
+                "BAR",
+                "--title",
+                "Quality bar",
+                "--criterion",
+                "The bound candidate meets the declared CLI quality bar",
+                "--owner",
+                "builder",
+                "--verifier",
+                "fresh-critic",
+                "--bar",
+                "--machine",
+            )
+            self.run_cli(
                 "transition", *root_args, "--phase", "PLAN", "--next", "Plan the candidate"
             )
             self.run_cli(
@@ -104,6 +120,23 @@ class IntegrityBridgeCliTests(unittest.TestCase):
                 "artifact.txt",
             )
             self.assertTrue(evidence["integrity_stable"])
+            bar = self.run_cli(
+                "run-evidence",
+                *root_args,
+                "--gate",
+                "BAR",
+                "--actor",
+                "fresh-critic",
+                "--command",
+                f'"{sys.executable}" "{script}"',
+                "--project",
+                "cli-smoke",
+                "--candidate",
+                head,
+                "--artifact",
+                "artifact.txt",
+            )
+            self.assertTrue(bar["integrity_stable"])
             self.assertEqual(self.run_cli("finalize", *root_args)["status"], "VERIFIED")
             self.assertTrue(self.run_cli("validate", *root_args, "--require-final")["ok"])
 
@@ -116,6 +149,7 @@ class IntegrityBridgeCliTests(unittest.TestCase):
         )
         self.assertIn("bind", completed.stdout)
         self.assertIn("run-evidence", completed.stdout)
+        self.assertIn("add-gate", completed.stdout)
 
 
 if __name__ == "__main__":

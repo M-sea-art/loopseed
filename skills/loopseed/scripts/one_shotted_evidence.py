@@ -75,7 +75,9 @@ def record_gate_result(
             )
         if not artifact_receipts:
             raise OneShottedError(
-                "Human or visual PASS evidence requires at least one existing hashed artifact"
+                "Observational PASS evidence requires at least one existing hashed artifact. "
+                "A visual or experiential gate may be decided autonomously by its independent verifier; "
+                "it does not require routine human approval."
             )
         allowed_untracked = current_artifact_evidence_paths(target, acceptance, binding)
         repository = assert_binding_current(
@@ -123,7 +125,7 @@ def record_gate_result(
     state["next_action"] = (
         "Evaluate the remaining acceptance gates."
         if result == "PASS"
-        else f"Repair gate {gate_id} from evidence {evidence_id}, then ask the independent verifier to rerun it."
+        else f"Repair gate {gate_id} from evidence {evidence_id}, then have the independent verifier rerun it without returning to routine human approval."
     )
     state["updated_at"] = entry["created_at"]
     write_json_atomic(target / "state.json", state)
