@@ -17,6 +17,14 @@ from one_shotted_types import VERSION, OneShottedError, utc_now
 from one_shotted_validate import final_report_errors, validate
 
 
+def _version_at_least(value: Any, target: tuple[int, int, int]) -> bool:
+    try:
+        parts = [int(part) for part in str(value).split(".")]
+    except (TypeError, ValueError):
+        return False
+    return tuple((parts + [0, 0, 0])[:3]) >= target
+
+
 @exclusive_verification_mutation
 def finalize(root: Path) -> dict[str, Any]:
     report, data = _validation_data(root)
@@ -40,6 +48,20 @@ def finalize(root: Path) -> dict[str, Any]:
     required = [gate for gate in gates.values() if gate.get("required", True)]
     if not required:
         raise OneShottedError("At least one required acceptance gate is necessary")
+
+    v0_8 = _version_at_least(state.get("loopseed_version", VERSION), (0, 8, 0))
+    hard_gates = [gate for gate in required if str(gate.get("role", "hard")).lower() == "hard"]
+    bar_gates = [gate for gate in required if str(gate.get("role", "hard")).lower() == "bar"]
+    if v0_8:
+        if not hard_gates:
+            raise OneShottedError(
+                "v0.8 VERIFIED requires at least one required hard-floor gate; Gate is the floor."
+            )
+        if not bar_gates:
+            raise OneShottedError(
+                "v0.8 VERIFIED requires at least one required quality-bar gate; Bar is the ceiling. Declare it with add-gate --bar."
+            )
+
     not_passed = [
         str(gate.get("id"))
         for gate in required
@@ -80,7 +102,7 @@ def finalize(root: Path) -> dict[str, Any]:
     finished_at = utc_now()
     brief = data.get("creative_brief", {})
     final_report = {
-        "schema_version": "1.2",
+        "schema_version": "1.3",
         "loopseed_version": state.get("loopseed_version", VERSION),
         "mode": "one-shotted",
         "run_id": data["goal"].get("run_id"),
@@ -91,6 +113,8 @@ def finalize(root: Path) -> dict[str, Any]:
         "creative_brief_id": brief.get("brief_id") if isinstance(brief, dict) else None,
         "verdict": "VERIFIED",
         "required_gates": [str(gate.get("id")) for gate in required],
+        "hard_gates": [str(gate.get("id")) for gate in hard_gates],
+        "quality_bar_gates": [str(gate.get("id")) for gate in bar_gates],
         "gate_evidence": {
             str(gate.get("id")): gate.get("evidence_ids", []) for gate in required
         },
@@ -104,7 +128,7 @@ def finalize(root: Path) -> dict[str, Any]:
         {
             "status": "VERIFIED",
             "phase": "FINALIZE",
-            "next_action": "None. Required acceptance gates are independently verified.",
+            "next_action": "None. Hard floors and the inspectable quality bar are independently verified.",
             "verified_at": finished_at,
             "updated_at": finished_at,
         }
@@ -150,5 +174,7 @@ def finalize(root: Path) -> dict[str, Any]:
         "project_domain": data.get("project_domain"),
         "production_mode": data.get("production_mode"),
         "creative_brief_id": final_report["creative_brief_id"],
+        "hard_gates": final_report["hard_gates"],
+        "quality_bar_gates": final_report["quality_bar_gates"],
         "final_report": str(target / "final-report.json"),
     }
