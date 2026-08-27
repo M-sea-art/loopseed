@@ -12,6 +12,21 @@ from one_shotted_tasks import incomplete_required_task_ids, required_task_ids, u
 from one_shotted_types import OneShottedError, schema_dir
 
 
+def _version_at_least(value: Any, target: tuple[int, int, int]) -> bool:
+    try:
+        parts = [int(part) for part in str(value).split(".")]
+    except (TypeError, ValueError):
+        return False
+    return tuple((parts + [0, 0, 0])[:3]) >= target
+
+
+def _gate_roles(data: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    required = [gate for gate in data["gates"].values() if gate.get("required", True)]
+    hard = [gate for gate in required if str(gate.get("role", "hard")).lower() == "hard"]
+    bar = [gate for gate in required if str(gate.get("role", "hard")).lower() == "bar"]
+    return required, hard, bar
+
+
 def final_report_errors(
     data: dict[str, Any],
     final_report: dict[str, Any],
@@ -30,7 +45,7 @@ def final_report_errors(
         for item in validate_json_schema(final_report, schema)
     )
     final_state = state if state is not None else data["state"]
-    required = [gate for gate in data["gates"].values() if gate.get("required", True)]
+    required, hard_gates, bar_gates = _gate_roles(data)
     brief = data.get("creative_brief", {})
     expected = {
         "loopseed_version": final_state.get("loopseed_version"),
@@ -50,6 +65,12 @@ def final_report_errors(
         "required_tasks": required_task_ids(data.get("task_graph", {})),
         "open_blocking_defects": [],
     }
+    v0_8 = _version_at_least(final_state.get("loopseed_version"), (0, 8, 0))
+    if v0_8:
+        expected["hard_gates"] = [str(gate.get("id")) for gate in hard_gates]
+        expected["quality_bar_gates"] = [str(gate.get("id")) for gate in bar_gates]
+        if final_report.get("schema_version") != "1.3":
+            errors.append("v0.8 final report requires schema_version 1.3")
     for field, value in expected.items():
         if final_report.get(field) != value:
             errors.append(f"Final report {field} does not match the current run")
@@ -82,10 +103,15 @@ def validate(root: Path, require_final: bool = False) -> dict[str, Any]:
             if not (data["target"] / "compiled-shot.md").is_file():
                 errors.append("Finalization requires compiled-shot.md for a calibrated run")
 
-        gates = data["gates"]
-        required = [gate for gate in gates.values() if gate.get("required", True)]
+        required, hard_gates, bar_gates = _gate_roles(data)
         if not required:
             errors.append("Finalization requires at least one required acceptance gate")
+        v0_8 = _version_at_least(data["state"].get("loopseed_version"), (0, 8, 0))
+        if v0_8:
+            if not hard_gates:
+                errors.append("v0.8 finalization requires at least one required hard-floor gate")
+            if not bar_gates:
+                errors.append("v0.8 finalization requires at least one required quality-bar gate")
         not_passed = [
             str(gate.get("id"))
             for gate in required
