@@ -1,6 +1,6 @@
-# LOOPSEED One-Shot Gauntlet Integration Patch v0.4.1
+# LOOPSEED One-Shot Gauntlet Kernel v0.8.0
 
-version: "0.4.1"
+version: "0.8.0"
 
 critic:
   purpose: prevent_drift_substitution_premature_completion_and_unexamined_quality_gaps
@@ -10,7 +10,7 @@ critic:
     - project_alignment
     - artifact_alignment
     - implementation_strategy_alignment
-    - stage_alignment
+    - hard_floor_validation
     - direct_quality_comparison
     - product_quality
     - runtime_verification
@@ -20,6 +20,7 @@ critic:
     rules:
       - use_fresh_context_or_an_independent_verifier_session
       - hide_builder_history_self_justification_and_summary_until_the_initial_verdict
+      - hide_candidate_identity_when_blind_comparison_is_feasible
       - builder_cannot_approve_its_own_quality_gate
       - critic_may_read_locked_contracts_but_must_not_inherit_builder_confidence
 
@@ -27,13 +28,13 @@ critic:
     required_inputs:
       - actual_candidate_artifact_or_running_product
       - relevant_inspectable_bar_when_required
-      - artifact_acceptance
-      - stage_target
+      - hard_floor_acceptance
       - named_or_repeatable_verification_state_when_available
     rules:
       - inspect_the_actual_output_not_only_source_code_or_builder_report
       - compare_equivalent_states_tasks_or_conditions
       - use_blind_side_by_side_comparison_when_feasible
+      - randomize_or_mirror_order_when_position_bias_is_material
       - disclose_when_blinding_or_direct_reference_access_is_not_feasible
       - visual_claims_require_visual_inspection
       - interaction_claims_require_runtime_or_playtest_inspection
@@ -43,15 +44,15 @@ critic:
     - "Did the result preserve and strengthen the original seed intent rather than simplify it into an easier product?"
     - "Does the output belong to the bound project?"
     - "Is it the contracted artifact rather than an easier substitute?"
-    - "Does the selected implementation strategy actually serve the artifact and target stage?"
-    - "Does observed evidence satisfy the target stage?"
+    - "Does the selected implementation strategy actually serve the goal and bar?"
+    - "Do the hard floors prove the candidate is valid enough to judge?"
 
   quality_questions:
     - "Did we satisfy the real user goal and calibrated product outcome?"
     - "Is the core experience or job actually present?"
-    - "Compared directly with the inspectable bar, what is the largest material user-visible gap?"
+    - "Against the inspectable bar, does the candidate meet or beat the declared quality rule?"
+    - "Compared directly with the bar or incumbent, what is the largest material user-visible gap?"
     - "Is that gap local and independently repairable, or part of a coupled quality surface?"
-    - "Does the result meet every completion-gate acceptance item?"
 
   output:
     required:
@@ -64,12 +65,15 @@ critic:
       - prioritize_one_largest_material_gap_per_cycle
       - do_not_return_aesthetic_encouragement_as_a_verdict
       - do_not_claim_benchmark_superiority_without_direct_comparison_evidence
+      - missing_evidence_is_never_pass
+      - inconclusive_comparison_is_never_pass
 
   calibration_checks:
+    - dialogue_was_used_only_for_material_ambiguity
     - no_second_confirmation_was_required_after_user_answer
     - workers_did_not_reopen_project_planning
     - reversible_low_level_choices_remained_executor_owned
-    - reference_roles_did_not_override_active_project
+    - reference_roles_did_not_override_active_project_identity
 
   evidence_rules:
     - running_without_errors_is_not_visual_acceptance
@@ -77,31 +81,52 @@ critic:
     - stage_claims_require_stage_specific_evidence
     - stack_and_strategy_claims_require_build_or_runtime_evidence
     - quality_verdict_requires_candidate_and_reference_or_an_explicitly_declared_reference_limit
+    - hard_floor_pass_cannot_inherit_authority_over_product_quality
 
-  north_star_policy:
-    - inspectable_bar_drives_largest_gap_selection
-    - north_star_may_remain_above_the_current_stage_target
-    - north_star_comparison_never_overrides_the_completion_gate
+  bar_policy:
+    slogan: "Gate is the floor. Bar is the ceiling."
+    rules:
+      - inspectable_bar_drives_quality_verdict_and_largest_gap_selection
+      - hard_floors_define_minimum_validity_not_quality_completion
+      - stage_target_may_bound_scope_but_cannot_turn_a_losing_bar_comparison_into_verified
+      - the_bar_may_govern_craft_but_must_not_erase_a_locked_load_bearing_original_idea
+      - never_silently_soften_the_bar_because_the_run_is_difficult
 
   pass_condition:
     - seed_intent_preserved
-    - all_alignment_gates_pass
-    - all_contract_acceptance_pass
-    - completion_gate_has_stage_specific_evidence
+    - all_required_hard_floor_gates_pass
+    - at_least_one_required_quality_bar_gate_exists
+    - all_required_quality_bar_gates_pass
+    - quality_bar_pass_has_current_direct_evidence
     - no_blocking_evidence_gap
 
 repair:
   strategy: fix_largest_material_gap_first
 
+  ratchet:
+    promote_when:
+      - challenger_clearly_improves_the_target_gap
+      - affected_hard_floors_remain_pass
+      - protected_identity_invariants_remain_intact
+    rollback_when:
+      - challenger_loses_to_incumbent_or_bar
+      - regression_breaks_an_already_passed_required_surface
+    inconclusive_when:
+      - capture_conditions_are_not_equivalent
+      - mirrored_or_fresh_verdicts_materially_conflict
+      - evidence_is_too_weak_to_support_a_winner
+
   loop_control:
     fixed_round_count_must_not_imply_completion: true
     continue_when:
-      - completion_gate_not_passed
+      - a_required_hard_floor_gate_is_not_passed
+      - a_required_quality_bar_gate_is_not_passed
       - a_material_repair_path_exists
       - authorized_budget_remains
     replan_when:
       - two_consecutive_cycles_show_no_material_progress
       - critic_identifies_wrong_decomposition_or_hidden_coupling
+      - local_repairs_cannot_plausibly_close_the_bar_gap
     honest_stop_when:
       - authorized_budget_exhausted
       - no_material_improvement_after_root_cause_replan
@@ -109,7 +134,7 @@ repair:
       - user_requests_stop
     stop_without_pass:
       - preserve_best_known_non_regressed_build
-      - record_unmet_gates_and_stop_reason
+      - record_unmet_hard_or_bar_gates_and_stop_reason
       - never_write_complete_or_verified
 
   rules:
@@ -122,6 +147,7 @@ repair:
     - coupled_gap_returns_to_one_sequential_owner
     - previously_passed_required_gates_must_be_reverified_after_cross_cutting_repairs
     - never_report_complete_after_blocking_gate
+    - a_green_hard_floor_never_overrides_a_losing_quality_bar
 
 failure_codes:
   calibration_drift: BLOCK_SEED_INTENT_DRIFT
@@ -130,5 +156,6 @@ failure_codes:
   missing_direct_artifact: BLOCK_CRITIC_ARTIFACT_MISSING
   missing_quality_bar: BLOCK_CRITIC_QUALITY_BAR_MISSING
   critic_independence: BLOCK_CRITIC_INDEPENDENCE
+  bar_not_won: BLOCK_QUALITY_BAR_NOT_WON
   premature_completion: BLOCK_PREMATURE_COMPLETION
   repair_budget_exhausted: BLOCK_REPAIR_BUDGET

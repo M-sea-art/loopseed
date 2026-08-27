@@ -74,6 +74,16 @@ class IntegrityBridgeAdversarialTests(unittest.TestCase):
             "verifier",
             requires_machine_evidence=machine,
         )
+        add_gate(
+            root,
+            "BAR",
+            "Quality bar",
+            "The frozen candidate meets the independently judged quality bar",
+            "builder",
+            "bar-verifier",
+            requires_machine_evidence=machine,
+            role="bar",
+        )
         transition(root, phase="PLAN", next_action="Declare bounded work")
         if task_status is not None:
             add_task(root, "BUILD", "Build the candidate", "builder", write_scope=["src"])
@@ -124,6 +134,27 @@ class IntegrityBridgeAdversarialTests(unittest.TestCase):
             "demo-project",
             head,
             "artifact.txt",
+        )
+
+    def pass_bar_machine(self, root: Path, head: str, command: str) -> dict[str, object]:
+        return run_evidence(
+            root,
+            "BAR",
+            "bar-verifier",
+            command,
+            "demo-project",
+            head,
+            "artifact.txt",
+        )
+
+    def pass_bar_artifact(self, root: Path, artifact: str = "artifact.txt") -> dict[str, object]:
+        return record_gate_result(
+            root,
+            "BAR",
+            "PASS",
+            "bar-verifier",
+            "Independent quality-bar inspection passed",
+            artifacts=[artifact],
         )
 
     def test_machine_gate_rejects_summary_only_or_artifact_only_pass(self) -> None:
@@ -299,6 +330,7 @@ class IntegrityBridgeAdversarialTests(unittest.TestCase):
                 )
                 with temporary:
                     self.assertTrue(self.pass_machine(root, head, command)["ok"])
+                    self.assertTrue(self.pass_bar_machine(root, head, command)["ok"])
                     with self.assertRaisesRegex(
                         OneShottedError, "Required tasks are not SUCCEEDED"
                     ):
@@ -314,6 +346,7 @@ class IntegrityBridgeAdversarialTests(unittest.TestCase):
             result = self.pass_machine(root, head, command)
             self.assertTrue(result["ok"])
             self.assertTrue(result["integrity_stable"])
+            self.assertTrue(self.pass_bar_machine(root, head, command)["ok"])
             self.assertEqual(finalize(root)["status"], "VERIFIED")
             self.assertTrue(validate(root, require_final=True)["ok"])
 
@@ -336,6 +369,7 @@ class IntegrityBridgeAdversarialTests(unittest.TestCase):
             self.assertEqual(acceptance["gates"][0]["status"], "PENDING")
             self.assertEqual(acceptance["gates"][0]["evidence_ids"], [])
             self.assertTrue(self.pass_machine(root, second_head, command)["ok"])
+            self.assertTrue(self.pass_bar_machine(root, second_head, command)["ok"])
             self.assertEqual(finalize(root)["status"], "VERIFIED")
 
     def test_validate_rejects_final_report_tampering(self) -> None:
@@ -352,6 +386,7 @@ class IntegrityBridgeAdversarialTests(unittest.TestCase):
         temporary, root, head, command = self.prepare(machine=True)
         with temporary:
             self.pass_machine(root, head, command)
+            self.pass_bar_machine(root, head, command)
             finalize(root)
             path = root / ".loopseed/one-shotted/final-report.json"
             original = json.loads(path.read_text(encoding="utf-8"))
@@ -442,6 +477,7 @@ class IntegrityBridgeAdversarialTests(unittest.TestCase):
             record_gate_result(
                 root, "PRIMARY", "PASS", "verifier", "New capture", artifacts=["new.png"]
             )
+            self.pass_bar_artifact(root, "new.png")
             self.assertTrue(validate(root)["ok"])
             self.assertEqual(finalize(root)["status"], "VERIFIED")
 
@@ -585,6 +621,7 @@ class IntegrityBridgeAdversarialTests(unittest.TestCase):
         temporary, root, head, command = self.prepare(machine=True, task_status="CANCELLED")
         with temporary:
             self.assertTrue(self.pass_machine(root, head, command)["ok"])
+            self.assertTrue(self.pass_bar_machine(root, head, command)["ok"])
             set_task_required(
                 root,
                 "BUILD",
@@ -609,6 +646,7 @@ class IntegrityBridgeAdversarialTests(unittest.TestCase):
             transition(root, phase="IMPLEMENT", next_action="Resume")
             transition(root, phase="VERIFY", next_action="Verify")
             self.assertTrue(self.pass_machine(root, head, command)["ok"])
+            self.assertTrue(self.pass_bar_machine(root, head, command)["ok"])
             with self.assertRaisesRegex(OneShottedError, "terminal disposition"):
                 finalize(root)
             set_task_status(root, "OPTIONAL", "RUNNING", "builder", "Try candidate")
@@ -820,6 +858,16 @@ class IntegrityBridgeAdversarialTests(unittest.TestCase):
                 "verifier",
                 requires_machine_evidence=True,
             )
+            add_gate(
+                root,
+                "BAR",
+                "Quality bar",
+                "The tracked-control candidate meets the quality bar",
+                "builder",
+                "bar-verifier",
+                requires_machine_evidence=True,
+                role="bar",
+            )
             self.git(root, "add", ".loopseed")
             self.git(root, "commit", "-qm", "track LoopSeed control plane")
             head = self.git(root, "rev-parse", "HEAD")
@@ -828,6 +876,7 @@ class IntegrityBridgeAdversarialTests(unittest.TestCase):
             transition(root, phase="VERIFY", next_action="Bind")
             bind_project(root, "demo-project", head, "artifact.txt")
             self.assertTrue(self.pass_machine(root, head, command)["ok"])
+            self.assertTrue(self.pass_bar_machine(root, head, command)["ok"])
             self.assertEqual(finalize(root)["status"], "VERIFIED")
 
     def test_version_downgrade_cannot_disable_integrity_or_task_graph(self) -> None:
