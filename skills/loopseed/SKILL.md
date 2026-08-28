@@ -1,9 +1,9 @@
 ---
 name: loopseed
-description: Run a Gauntlet-first, evidence-governed production loop from an explicit `$loopseed` goal. Use `$loopseed one-shotted` when one authorization should launch autonomous planning, implementation, real-output criticism, repair, and fail-closed finalization.
+description: Run a Gauntlet-first, evidence-governed production loop from an explicit `$loopseed` goal. Use `$loopseed one-shotted` when one authorization should launch autonomous planning, implementation, first-hand real-output criticism, repair, and fail-closed finalization.
 ---
 
-# LoopSeed v0.8 - Gauntlet Kernel
+# LoopSeed v0.8.1 - Gauntlet Kernel
 
 Use only after an explicit `$loopseed` invocation. Never infer activation from similar wording or an old state file.
 
@@ -25,7 +25,7 @@ Runtime Shell prevents forgetting, drift, fake evidence, and unsafe concurrency.
 
 A build, test suite, artifact contract, or stage gate may prove that the candidate is valid enough to judge. It does not by itself prove that the product is good enough.
 
-For v0.8 One-Shotted runs, `VERIFIED` requires both:
+For v0.8+ One-Shotted runs, `VERIFIED` requires both:
 
 1. at least one required `hard` gate is PASS; and
 2. at least one required `bar` gate is PASS.
@@ -80,20 +80,35 @@ freeze winner / rollback loser
 10. Do not silently soften the bar because the run is difficult.
 11. Do not let reference convergence erase the user's load-bearing original idea. The bar governs craft; the concept governs identity.
 12. Budget exhaustion, missing evidence, or an inconclusive comparison is never PASS.
+13. **Judge games in motion when motion matters.** A still-image win cannot prove animation, camera motion, battle readability, interaction, timing, feedback, or game-feel superiority.
+14. **Critics inspect first-hand.** When the environment permits, the fresh critic launches, plays, operates, or views the real candidate and captures its own screenshots/clips/measurements. It must not inherit the builder's interpretation as its primary evidence.
+15. **Judge generated assets in product context.** An isolated sprite, render, model, animation, or effect may pass asset sanity checks, but it cannot receive final in-product quality PASS until judged inside the real scene, camera, lighting, scale, UI, animation, and runtime conditions that materially affect it.
+16. **Re-globalize after Fan-out.** After each major parallel improvement wave, run one fresh whole-product critic across the integrated result before opening the next wave. Its job is to find the single largest cross-surface inconsistency created or exposed by local improvements.
+17. **Synthesize a Bar when reality has no close complement.** If no meaningful real-world Bar exists, generate or otherwise construct the strongest inspectable representation of the intended result, freeze it as a `Synthetic Bar`, and compare against it. A synthetic visual Bar can define visual intent; it cannot substitute for behavioral, interaction, or performance evidence.
 
 ### Choosing the bar
 
 Use the strongest bar the agent can actually inspect.
 
+Prefer, in order:
+
+1. **Real Bar** - a real product, reference state, incumbent, benchmark, or measurable target that corresponds to the claim.
+2. **Synthetic Bar** - a generated or deliberately constructed target representation when the intended product has no meaningful real-world complement.
+3. **Hybrid Bar** - separate real and synthetic channels when different quality surfaces require different references.
+
 Examples:
 
 - visual game/UI: real reference screenshots at equivalent viewport and state;
+- motion/game feel: reference clips or runtime sequences under equivalent camera/input conditions;
 - gameplay: scripted run plus a reference flow, incumbent build, or measurable first-minute target;
-- 3D asset: reference render plus engine import/runtime checks;
+- original visual concept with no close real complement: generated target frames frozen before implementation and compared against equivalent runtime captures;
+- 3D asset: reference render plus engine import, integrated scene, animation, scale, and runtime checks;
 - software: executable spec, benchmark, compatibility suite, or known-good incumbent;
 - writing/report: supplied publication/style reference plus factual/structural requirements.
 
 When no single reference is appropriate, use a hybrid bar with separate evidence channels. A green correctness channel cannot erase a perceptual FAIL, and a beautiful screenshot cannot erase a broken behavioral path.
+
+Do not allow a Synthetic Bar to become a moving target. Freeze the selected reference set before judging the corresponding candidate generation. If the product concept legitimately changes under user authority, explicitly regenerate/rebind the Bar rather than silently moving it.
 
 ## Runtime Shell
 
@@ -156,7 +171,7 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
   --root . \
   --id BAR \
   --title "Inspectable product bar" \
-  --criterion "In equivalent evidence, the candidate meets or beats <named reference / incumbent / metric> while preserving the locked concept" \
+  --criterion "In equivalent evidence, the candidate meets or beats <named real/synthetic reference, incumbent, or metric> while preserving the locked concept" \
   --owner lead \
   --verifier fresh-critic \
   --bar
@@ -211,30 +226,50 @@ After goal/brief authority and gates are bound:
 1. freeze Project Binding, Artifact Contract, and target stage;
 2. ensure at least one required hard-floor gate and one required bar gate exist;
 3. assign implementation owner and a different verifier;
-4. choose the smallest complete route that can plausibly beat the bar;
-5. record non-trivial work in `task-graph.json`;
-6. classify relations as `HARD_DEPENDENCY`, `SOFT_ADVICE`, or `INDEPENDENT`;
-7. dispatch every safe runnable node before waiting;
-8. keep coupled identity, core loop, architecture, composition, and final integration under one owner;
-9. merge into one candidate and observe the real output;
-10. compare candidate against the bar and incumbent under equivalent conditions;
-11. let the fresh critic return one biggest gap;
-12. repair, reobserve, and recompare;
-13. bind the clean real Git HEAD and stable deliverable for verification;
-14. run machine gates with `run-evidence` and observational gates with hashed artifacts;
-15. finalize only when all required hard gates and required bar gates PASS with current bound evidence.
+4. choose or synthesize the strongest inspectable Bar and freeze the comparison conditions;
+5. choose the smallest complete route that can plausibly beat the Bar;
+6. record non-trivial work in `task-graph.json`;
+7. classify relations as `HARD_DEPENDENCY`, `SOFT_ADVICE`, or `INDEPENDENT`;
+8. dispatch every safe runnable node before waiting;
+9. keep coupled identity, core loop, architecture, composition, and final integration under one owner;
+10. judge generated/local assets inside the integrated product before final quality PASS;
+11. merge into one candidate and observe the real output;
+12. for game/interactive claims, launch/play/operate the candidate and capture motion evidence when motion matters;
+13. compare candidate against the Bar and incumbent under equivalent conditions;
+14. let the fresh critic return one biggest gap;
+15. repair, reobserve, and recompare;
+16. after a major Fan-out wave, run a fresh whole-product critic and repair the largest cross-surface coherence gap before another major wave;
+17. bind the clean real Git HEAD and stable deliverable for verification;
+18. run machine gates with `run-evidence` and observational gates with hashed artifacts;
+19. finalize only when all required hard gates and required bar gates PASS with current bound evidence.
 
 ## Critic contract
 
 A critic receives only what is necessary to judge the declared surface:
 
 - the goal or bounded claim;
-- the bar;
+- the frozen real/synthetic/hybrid Bar;
 - anonymized incumbent/challenger when comparison is meaningful;
 - equivalent captures or runnable access;
 - protected invariants and already-passed surfaces.
 
 Hide builder reasoning, confidence, commit chronology, and candidate identity until the initial verdict.
+
+For games and interactive products, the preferred critic path is first-hand:
+
+```text
+launch / play / operate real candidate
+  ↓
+capture critic-owned screenshots + clips + measurements
+  ↓
+place against equivalent Bar evidence
+  ↓
+blind or mirrored comparison when meaningful
+  ↓
+name one biggest gap
+```
+
+If the critic cannot access the runtime, it must disclose that limitation. It may judge only the surfaces directly supported by the available evidence and must not PASS motion, interaction, or game-feel claims from still images alone.
 
 Preferred verdict form:
 
@@ -243,7 +278,7 @@ VERDICT: PASS | FAIL | X_WINS | Y_WINS | INCONCLUSIVE
 CONFIDENCE: low | medium | high
 
 EVIDENCE:
-- <specific observed fact / frame / state / measurement>
+- <specific first-hand observed fact / frame / clip / state / measurement>
 
 SINGLE BIGGEST GAP:
 - <one highest-impact remaining problem>
@@ -289,17 +324,22 @@ The Lead retains scheduling responsibility after delegation.
 - Waiting is legal only when no safe runnable node remains and named work is already running.
 - If a task becomes runnable while a wait is declared, validation fails with `NO_IDLE_WHILE_RUNNABLE`.
 
-Fan out work, not product identity.
+Fan out work, not product identity. Split only surfaces that can be improved **and judged independently**. After a major parallel wave, reassemble the real product and run one fresh whole-product critic before opening another major wave.
 
 ## Evidence rules
 
 - Running without errors is not visual acceptance.
 - Source files are not completion evidence.
 - Visual claims require visual inspection.
+- Motion claims require motion evidence when motion materially affects quality.
+- A still-image win cannot prove animation, camera motion, interaction, timing, battle readability, or game-feel superiority.
 - Interaction claims require runtime/playtest inspection.
 - Performance claims require measurement.
+- Generated assets must be judged in the integrated product context before final in-product quality PASS when scene/camera/lighting/scale/UI/animation materially affect them.
+- An isolated render may prove asset sanity; it cannot by itself prove integrated product quality.
 - A command string is not evidence unless `run-evidence` executed it against the bound clean candidate.
 - Observational PASS evidence must name at least one real project-local artifact whose SHA-256 remains stable.
+- A fresh critic should capture its own evidence when capability permits instead of relying only on builder-selected evidence.
 - A worker cannot approve its own gate.
 - Missing evidence never becomes PASS.
 
@@ -338,7 +378,7 @@ At the end report only:
 - terminal verdict;
 - direct evidence and final report path;
 - changed scope;
-- quality-bar result;
+- quality-bar result and Bar source (`real`, `synthetic`, or `hybrid` when relevant);
 - remaining non-blocking risk;
 - exact unblock condition when blocked.
 
