@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.1
+
+- Made game-quality criticism motion-aware: still-image superiority cannot prove animation, camera motion, battle readability, interaction, timing, feedback, or game-feel superiority when those surfaces materially depend on motion.
+- Tightened the fresh Critic contract to prefer first-hand runtime observation: launch/play/operate/view the real candidate, capture critic-owned screenshots/clips/measurements, and disclose runtime-access limits instead of inheriting builder interpretation.
+- Added Asset-in-Product discipline: generated or imported sprites, models, animations, materials, and effects may pass isolated sanity checks, but final product-quality PASS must come from the integrated scene when camera, scale, lighting, UI, animation, or runtime state materially affects the result.
+- Added whole-product re-globalization after major Fan-out waves: integrate local winners, send one fresh critic across the complete product, find the single largest cross-surface inconsistency, and repair it before another major parallel wave.
+- Added explicit Bar kinds: `Real Bar`, `Synthetic Bar`, and `Hybrid Bar`. When no meaningful real-world complement exists, the Lead may generate or construct an inspectable target and freeze it as a Synthetic Bar.
+- Prevented Synthetic Bar goalpost drift: freeze before judging the corresponding candidate generation; rebind only under explicit product-authority change. A synthetic visual Bar cannot substitute for behavioral, interaction, or performance evidence.
+- Updated the Seed Kernel instructions, Critic policy, plugin prompt, and Chinese production truth page without adding new schema, approval layers, or agent bureaucracy.
+- Bumped One-Shotted runtime and plugin metadata to 0.8.1 and added regression coverage for the new kernel invariants.
+
 ## 0.8.0
 
 - Restored Gauntlet as the non-overridable Seed Kernel: Goal → inspectable Bar → agent-owned decomposition → real output → fresh Critic → single biggest gap → bounded repair → ratchet.
