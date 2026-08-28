@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-VERSION = "0.8.0"
+VERSION = "0.8.1"
 RUN_RELATIVE = Path(".loopseed") / "one-shotted"
 VALID_STATUSES = {"ACTIVE", "VERIFIED", "BLOCKED", "ABORTED"}
 VALID_PHASES = {"CALIBRATE", "BIND", "PLAN", "IMPLEMENT", "VERIFY", "REPAIR", "FINALIZE"}
