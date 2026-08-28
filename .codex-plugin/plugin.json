@@ -1,7 +1,7 @@
 {
   "name": "loopseed",
-  "version": "0.8.0",
-  "description": "Gauntlet-first Seed Kernel with a durable evidence, recovery, integrity, and scheduling shell.",
+  "version": "0.8.1",
+  "description": "Gauntlet-first Seed Kernel with first-hand runtime criticism and a durable evidence, recovery, integrity, and scheduling shell.",
   "author": {
     "name": "M-sea-art",
     "url": "https://github.com/M-sea-art"
@@ -14,6 +14,7 @@
     "game-development",
     "gauntlet-loop",
     "quality-bar",
+    "runtime-criticism",
     "agent",
     "autonomy",
     "one-shotted",
@@ -27,8 +28,8 @@
   "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "LoopSeed",
-    "shortDescription": "Set a goal and real bar, then loop on the biggest gap until verified or honestly stopped.",
-    "longDescription": "LoopSeed v0.8 places a small Gauntlet quality kernel at the center of a durable production runtime. The agent chooses the decomposition, inspects the real output, uses an independent critic and blind A/B when useful, attacks the single biggest remaining gap, and ratchets winners. Context recovery, evidence binding, safe fan-out, no-idle scheduling, repair, and fail-closed receipts run as the supporting shell. Gate is the floor; Bar is the ceiling.",
+    "shortDescription": "Set a goal and bar, judge the real running product, then close the biggest gap.",
+    "longDescription": "LoopSeed v0.8.1 keeps a small Gauntlet quality kernel at the center of a durable production runtime. The agent chooses the decomposition, judges games in motion when motion matters, uses a fresh critic that inspects the real candidate first-hand, judges generated assets inside the integrated product, and runs a fresh whole-product coherence pass after major fan-out waves. When no meaningful real-world complement exists, it can freeze a generated Synthetic Bar. Context recovery, evidence binding, safe fan-out, no-idle scheduling, repair, and fail-closed receipts remain the supporting shell. Gate is the floor; Bar is the ceiling.",
     "developerName": "M-sea-art",
     "category": "Productivity",
     "capabilities": [
@@ -37,9 +38,9 @@
     ],
     "websiteURL": "https://github.com/M-sea-art/loopseed",
     "defaultPrompt": [
-      "$loopseed one-shotted <goal>. Choose the strongest inspectable quality bar you can actually compare against, keep the production approach agent-owned, and continue repairing the single biggest real-output gap until the hard floors and bar are verified or an honest stop condition is reached.",
+      "$loopseed one-shotted <goal>. Choose the strongest inspectable real bar; if no meaningful real-world complement exists, freeze a synthetic target bar. Keep the production approach agent-owned. Judge the real running product first-hand, including motion when motion matters, judge generated assets in context, and keep repairing the single biggest gap until the hard floors and bar are verified or an honest stop condition is reached.",
       "$loopseed one-shotted <one natural-language game or product seed>",
-      "$loopseed Complete this scoped goal through the smallest real-output loop; use the runtime shell only when it reduces real uncertainty."
+      "$loopseed Complete this scoped goal through the smallest real-output loop; after major fan-out waves, run one fresh whole-product coherence pass before the next wave."
     ]
   }
 }
