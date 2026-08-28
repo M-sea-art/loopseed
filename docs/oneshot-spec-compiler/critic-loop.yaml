@@ -1,6 +1,6 @@
-# LOOPSEED One-Shot Gauntlet Kernel v0.8.0
+# LOOPSEED One-Shot Gauntlet Kernel v0.8.1
 
-version: "0.8.0"
+version: "0.8.1"
 
 critic:
   purpose: prevent_drift_substitution_premature_completion_and_unexamined_quality_gaps
@@ -32,13 +32,19 @@ critic:
       - named_or_repeatable_verification_state_when_available
     rules:
       - inspect_the_actual_output_not_only_source_code_or_builder_report
+      - critic_launches_plays_operates_or_views_the_real_candidate_when_capability_permits
+      - critic_prefers_critic_owned_captures_over_builder_selected_interpretation
       - compare_equivalent_states_tasks_or_conditions
       - use_blind_side_by_side_comparison_when_feasible
       - randomize_or_mirror_order_when_position_bias_is_material
-      - disclose_when_blinding_or_direct_reference_access_is_not_feasible
+      - disclose_when_blinding_direct_reference_access_or_runtime_access_is_not_feasible
       - visual_claims_require_visual_inspection
+      - game_quality_claims_that_depend_on_motion_require_motion_evidence
+      - still_image_win_cannot_prove_motion_interaction_timing_camera_or_game_feel_superiority
       - interaction_claims_require_runtime_or_playtest_inspection
       - performance_claims_require_measurement_not_impression
+      - generated_assets_are_judged_in_integrated_product_context_when_context_affects_quality
+      - isolated_render_may_support_asset_sanity_but_not_final_integrated_product_quality
 
   alignment_questions:
     - "Did the result preserve and strengthen the original seed intent rather than simplify it into an easier product?"
@@ -51,6 +57,8 @@ critic:
     - "Did we satisfy the real user goal and calibrated product outcome?"
     - "Is the core experience or job actually present?"
     - "Against the inspectable bar, does the candidate meet or beat the declared quality rule?"
+    - "When motion matters, does the candidate also hold up in motion rather than only in a selected still?"
+    - "Are generated or imported assets coherent inside the real scene, camera, scale, lighting, animation and UI rather than only in isolated renders?"
     - "Compared directly with the bar or incumbent, what is the largest material user-visible gap?"
     - "Is that gap local and independently repairable, or part of a coupled quality surface?"
 
@@ -82,11 +90,29 @@ critic:
     - stack_and_strategy_claims_require_build_or_runtime_evidence
     - quality_verdict_requires_candidate_and_reference_or_an_explicitly_declared_reference_limit
     - hard_floor_pass_cannot_inherit_authority_over_product_quality
+    - motion_claims_need_motion_evidence_when_motion_materially_changes_quality
+    - integrated_asset_quality_needs_in_product_evidence_when_context_materially_changes_quality
+    - critic_owned_runtime_evidence_is_preferred_when_the_critic_can_capture_it
 
   bar_policy:
     slogan: "Gate is the floor. Bar is the ceiling."
+    kinds:
+      real:
+        preference: first
+        definition: inspectable_real_product_reference_incumbent_benchmark_or_measurable_target
+      synthetic:
+        preference: fallback_when_no_meaningful_real_world_complement_exists
+        definition: generated_or_constructed_inspectable_representation_of_the_intended_result
+      hybrid:
+        preference: use_when_different_quality_surfaces_need_different_reference_channels
+        definition: explicitly_separated_real_and_synthetic_evidence_channels
     rules:
       - inspectable_bar_drives_quality_verdict_and_largest_gap_selection
+      - prefer_real_bar_when_a_meaningful_equivalent_real_complement_exists
+      - when_no_meaningful_real_bar_exists_synthesize_and_freeze_the_strongest_inspectable_target
+      - synthetic_bar_must_be_frozen_before_judging_the_corresponding_candidate_generation
+      - changing_a_synthetic_bar_requires_explicit_rebinding_not_silent_goalpost_motion
+      - synthetic_visual_bar_cannot_substitute_for_behavior_interaction_or_performance_evidence
       - hard_floors_define_minimum_validity_not_quality_completion
       - stage_target_may_bound_scope_but_cannot_turn_a_losing_bar_comparison_into_verified
       - the_bar_may_govern_craft_but_must_not_erase_a_locked_load_bearing_original_idea
@@ -98,6 +124,8 @@ critic:
     - at_least_one_required_quality_bar_gate_exists
     - all_required_quality_bar_gates_pass
     - quality_bar_pass_has_current_direct_evidence
+    - motion_claims_have_motion_evidence_when_applicable
+    - integrated_asset_claims_have_in_product_evidence_when_applicable
     - no_blocking_evidence_gap
 
 repair:
@@ -116,6 +144,15 @@ repair:
       - mirrored_or_fresh_verdicts_materially_conflict
       - evidence_is_too_weak_to_support_a_winner
 
+  global_coherence:
+    trigger: after_each_major_parallel_improvement_wave
+    rules:
+      - integrate_all_winning_local_changes_before_global_review
+      - use_one_fresh_whole_product_critic_across_the_integrated_result
+      - identify_the_single_largest_cross_surface_inconsistency
+      - repair_material_cross_surface_inconsistency_before_opening_another_major_parallel_wave
+      - local_component_passes_do_not_imply_whole_product_coherence_pass
+
   loop_control:
     fixed_round_count_must_not_imply_completion: true
     continue_when:
@@ -127,6 +164,7 @@ repair:
       - two_consecutive_cycles_show_no_material_progress
       - critic_identifies_wrong_decomposition_or_hidden_coupling
       - local_repairs_cannot_plausibly_close_the_bar_gap
+      - global_coherence_critic_finds_a_cross_surface_failure_that_local_owners_cannot_repair_independently
     honest_stop_when:
       - authorized_budget_exhausted
       - no_material_improvement_after_root_cause_replan
@@ -145,6 +183,7 @@ repair:
     - visual_polish_cannot_repair_wrong_project
     - runtime_success_cannot_repair_wrong_artifact
     - coupled_gap_returns_to_one_sequential_owner
+    - generated_assets_that_pass_isolated_review_can_still_fail_in_product_and_must_be_repaired_in_context
     - previously_passed_required_gates_must_be_reverified_after_cross_cutting_repairs
     - never_report_complete_after_blocking_gate
     - a_green_hard_floor_never_overrides_a_losing_quality_bar
@@ -155,6 +194,8 @@ failure_codes:
   strategy_mismatch: BLOCK_IMPLEMENTATION_STRATEGY
   missing_direct_artifact: BLOCK_CRITIC_ARTIFACT_MISSING
   missing_quality_bar: BLOCK_CRITIC_QUALITY_BAR_MISSING
+  missing_motion_evidence: BLOCK_MOTION_EVIDENCE_MISSING
+  missing_integrated_asset_evidence: BLOCK_INTEGRATED_ASSET_EVIDENCE_MISSING
   critic_independence: BLOCK_CRITIC_INDEPENDENCE
   bar_not_won: BLOCK_QUALITY_BAR_NOT_WON
   premature_completion: BLOCK_PREMATURE_COMPLETION

@@ -1,16 +1,16 @@
 # LoopSeed
 
-**Goal. Bar. Build. Compare. Close the biggest gap. Repeat.**
+**Goal. Bar. Run the real thing. Compare. Close the biggest gap. Repeat.**
 
 [简体中文](README.zh-CN.md)
 
-LoopSeed v0.8 is an explicitly invoked, **game-first AI production runtime** built around one simple idea:
+LoopSeed v0.8.1 is an explicitly invoked, **game-first AI production runtime** built around one simple idea:
 
 > **Gate is the floor. Bar is the ceiling.**
 
-Passing tests, building successfully, or satisfying a stage contract only proves that the work is not broken. It does **not** prove that the result is good enough.
+Passing tests, building successfully, or satisfying a stage contract only proves that the work is valid enough to judge. It does **not** prove that the result is good enough.
 
-LoopSeed therefore keeps a small Gauntlet-style quality loop at the center of production, while recovery, scheduling, evidence, integrity, and resume logic run underneath as a supporting shell.
+LoopSeed keeps a small Gauntlet-style quality loop at the center of production, while recovery, scheduling, evidence, integrity, and resume logic run underneath as a supporting shell.
 
 ```text
 GOAL
@@ -21,22 +21,93 @@ agent-owned decomposition
   ↓
 BUILD THE REAL THING
   ↓
-look · play · run · measure
+launch · play · look · measure
   ↓
-FRESH CRITIC
+FRESH CRITIC, FIRST-HAND
   ↓
 blind / equivalent A-B when useful
   ↓
 ONE BIGGEST REMAINING GAP
   ↓
-repair · compare again · ratchet the winner
+repair · run again · compare again · ratchet the winner
   ↺
 ```
 
-A v0.8 run cannot write `VERIFIED` from engineering gates alone. It needs current, independent evidence for both:
+A v0.8+ run cannot write `VERIFIED` from engineering gates alone. It needs current, independent evidence for both:
 
 1. **Hard floors** — the product works and satisfies non-negotiable constraints.
 2. **Quality Bar** — the real output reaches or beats the chosen inspectable standard.
+
+---
+
+## v0.8.1: judge the product people actually experience
+
+v0.8.1 tightens four production rules without adding another framework layer.
+
+### Judge games in motion when motion matters
+
+A beautiful still cannot prove superiority in:
+
+- animation;
+- camera motion;
+- battle readability;
+- timing;
+- interaction feedback;
+- scale in motion;
+- particles and dust;
+- game feel.
+
+```text
+Still-image win ≠ motion win
+```
+
+When the claim depends on motion, the evidence must include motion: runtime observation, playtest, or clips under equivalent conditions.
+
+### Critics inspect first-hand
+
+When the environment permits, a fresh critic should:
+
+```text
+launch / play / operate the real candidate
+  ↓
+capture its own screenshots + clips + measurements
+  ↓
+compare those against the frozen Bar
+```
+
+The critic should not treat the builder's selected screenshots or self-explanation as primary evidence. If runtime access is unavailable, it must disclose the limitation and judge only the surfaces directly supported by evidence.
+
+### Judge generated assets in the product
+
+An isolated sprite, model, material, animation, or effect can pass a sanity check and still fail inside the game.
+
+When context materially affects quality, final judgment happens under the real:
+
+```text
+camera + scale + lighting + UI + animation + runtime state
+```
+
+> **Asset Quality becomes Asset-in-Product Quality.**
+
+### Re-globalize after major Fan-out waves
+
+Local improvements can individually win and still produce a fragmented product.
+
+After a major parallel improvement wave:
+
+```text
+merge local winners
+  ↓
+one fresh whole-product critic
+  ↓
+find the largest cross-surface inconsistency
+  ↓
+repair coherence
+  ↓
+only then open another major parallel wave
+```
+
+Fan-out improves pieces. The whole-product critic makes sure those pieces still belong to one product.
 
 ---
 
@@ -44,7 +115,7 @@ A v0.8 run cannot write `VERIFIED` from engineering gates alone. It needs curren
 
 Modern coding agents can often produce something that runs. The harder problem is preventing them from stopping at the first plausible result.
 
-Common failure modes look like this:
+Common failure mode:
 
 ```text
 requested: finished game / polished product
@@ -59,7 +130,7 @@ agent declares completion
 LoopSeed changes the objective:
 
 ```text
-Does it run?                  → hard floor
+Does it run?                   → hard floor
 Does it satisfy the contract? → hard floor
 Does the real result hold up against the Bar? → quality decision
 ```
@@ -71,7 +142,7 @@ The runtime is deliberately split into two layers.
 The small quality optimizer that should dominate the agent's attention:
 
 ```text
-Goal → Bar → Build → Inspect → Critic → Biggest gap → Repair → Compare again
+Goal → Bar → Build → Run → Fresh Critic → Biggest gap → Repair → Compare again
 ```
 
 ### Runtime Shell
@@ -104,7 +175,7 @@ $loopseed <goal>
 Uses the cheapest useful loop:
 
 ```text
-Explore → Act → Observe → Verify → Adapt
+Explore → Act → Observe → Critique → Adapt
 ```
 
 Default topology is one main thread, one writer, and one integration path.
@@ -119,15 +190,15 @@ Example:
 
 ```text
 $loopseed one-shotted Turn the current wuxia cliff-sect prototype into a living,
-handcrafted miniature management game. Use the strongest real visual and gameplay
-bar you can inspect. Keep the production approach agent-owned. Inspect the running
-result, use a fresh critic, attack the single biggest remaining gap each round,
-and do not finalize until the hard floors and Bar are independently verified.
+handcrafted miniature management game. Choose the strongest real Bar you can
+actually inspect. If no meaningful real-world complement exists, freeze a generated
+Synthetic Bar. Keep the production approach agent-owned. Inspect the running result
+first-hand, including motion when motion matters. Judge generated assets in the real
+scene. Attack the single biggest remaining gap each round and do not finalize until
+the hard floors and Bar are independently verified.
 ```
 
 “One-Shotted” means **one production authorization**, not one model response. Once the intended shot is sufficiently clear, LoopSeed should keep producing, inspecting, repairing, and reverifying without repeatedly asking the user to say “continue.”
-
-You do not need to write a giant specification first. Give LoopSeed the product goal and, when you have one, the strongest real reference or measurable standard that represents success.
 
 ---
 
@@ -135,23 +206,52 @@ You do not need to write a giant specification first. Give LoopSeed the product 
 
 A Bar must be something an agent can actually inspect or measure.
 
-Good Bars include:
+### Real Bar
 
-- a reference screenshot compared with a fixed game camera;
-- a real product or game flow executed under equivalent conditions;
-- a deterministic playtest target;
-- a measurable latency, frame-time, quality, or accuracy threshold;
-- a blind A/B where a fresh critic prefers the candidate;
-- a repeatable task where the candidate must outperform the incumbent.
+Prefer a meaningful real-world complement when one exists:
 
-Weak Bars include:
+- a real game or product;
+- reference frames or clips;
+- an incumbent build;
+- a benchmark;
+- a measurable target.
 
-- “make it premium”;
-- “AAA quality” with no inspectable reference;
-- “looks good”;
-- a source-code claim that never checks the real output.
+### Synthetic Bar
 
-If the user does not supply a Bar, the Lead should choose the strongest concrete, inspectable standard available instead of inventing a vague adjective.
+When the intended product has no meaningful real-world complement, do not downgrade the Bar to adjectives such as “AAA” or “premium.”
+
+Generate or deliberately construct the strongest inspectable representation of the intended result, then freeze it before judging the corresponding candidate generation.
+
+For an original game, a Synthetic Bar might include:
+
+```text
+Hero View
+Gameplay State
+Crisis State
+Character-in-scene state
+```
+
+Then compare equivalent real runtime captures against those locked targets.
+
+Rules:
+
+- freeze the selected Synthetic Bar before comparison;
+- do not regenerate an easier target merely because the candidate loses;
+- rebind the Bar only when legitimate product authority changes the target;
+- a synthetic visual Bar defines visual intent, not behavioral, interaction, or performance proof.
+
+### Hybrid Bar
+
+Different quality surfaces may use different evidence channels:
+
+```text
+visual craft → real or synthetic visual reference
+motion       → reference clip / runtime sequence
+playability  → scripted playtest
+performance  → measured thresholds
+```
+
+Keep them explicit. Do not average them into one vague score.
 
 ### Gate vs Bar
 
@@ -167,10 +267,9 @@ A **hard floor** asks whether the product is valid:
 A **quality Bar** asks whether the product is actually good enough:
 
 - does the real frame beat the reference in a blind A/B?
+- does the real motion hold up against the reference clip?
 - does the interaction feel clearer and more responsive than the incumbent?
 - does the finished artifact reach the named production standard?
-
-In v0.8, both are first-class gate roles.
 
 ```bash
 # Hard floor
@@ -188,13 +287,13 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
   --root . \
   --id BAR \
   --title "Reference comparison" \
-  --criterion "In an equivalent blind A/B, the fresh critic prefers the candidate over the locked reference" \
+  --criterion "Under equivalent real-output evidence, the candidate meets or beats the frozen Bar" \
   --owner lead \
-  --verifier visual-critic \
+  --verifier fresh-critic \
   --bar
 ```
 
-`VERIFIED` requires at least one required hard-floor gate **and** one required quality-bar gate on v0.8.
+`VERIFIED` requires at least one required hard-floor gate **and** one required quality-bar gate on v0.8+.
 
 ---
 
@@ -206,8 +305,10 @@ Use the strongest evidence appropriate to the claim:
 
 | Claim | Required observation |
 |---|---|
-| Visual quality | screenshot / video / running frame |
+| Static visual quality | screenshot / running frame |
+| Motion / animation / camera / game feel | clip / runtime / playtest |
 | Interaction quality | actual playtest / runtime inspection |
+| Integrated asset quality | asset inside the real scene / camera / scale / lighting / animation |
 | Performance | measurement |
 | Build correctness | executed command |
 | Product flow | complete real flow |
@@ -215,7 +316,7 @@ Use the strongest evidence appropriate to the claim:
 
 The Critic should return the **single largest material gap** first. This keeps the repair loop focused and prevents a long review list from becoming a new planning bureaucracy.
 
-When a blind A/B is meaningful, hide builder history and self-justification from the initial critic verdict.
+When a blind A/B is meaningful, hide builder history and self-justification from the initial critic verdict. Mirror or randomize order when position bias is material. If judgments materially conflict, return `INCONCLUSIVE` rather than manufacturing a winner.
 
 ---
 
@@ -248,17 +349,7 @@ If an existing project genuinely has no likely planning source, LoopSeed records
 
 Creative Dialogue is a steering tool, not the engine.
 
-Use it only for choices that can materially change the product result. The model may:
-
-- preserve accepted identity;
-- clarify ambiguity;
-- correct contradictions;
-- amplify the strongest experience;
-- complete missing product logic;
-- continue previously accepted ideas;
-- offer 2–4 meaningfully different options with one recommendation.
-
-Do not ask the user for repository facts, reversible implementation details, or decisions that the project already settled.
+Use it only for choices that can materially change the product result. Do not ask the user for repository facts, reversible implementation details, or decisions that the project already settled.
 
 After the creative brief is locked, routine production approval returns to the autonomous loop. Weak screenshots, failed tests, or critic failures mean **repair**, not “ask the user whether to continue.”
 
@@ -268,6 +359,8 @@ After the creative brief is locked, routine production approval returns to the a
 
 Fan-out is an accelerator, not a ceremony.
 
+Parallelize only work that can be improved **and judged independently**.
+
 Good parallel targets:
 
 - isolated asset families;
@@ -275,7 +368,8 @@ Good parallel targets:
 - independent tests;
 - audio;
 - bounded UI surfaces;
-- performance profiling.
+- performance profiling;
+- independently comparable visual or effects surfaces.
 
 Keep coupled surfaces under one owner:
 
@@ -288,13 +382,9 @@ Keep coupled surfaces under one owner:
 
 > **Fan out work, not competing interpretations of the product.**
 
-For non-trivial work, `task-graph.json` distinguishes:
+After each major Fan-out wave, integrate the winners and run one fresh critic across the whole product before opening the next major wave.
 
-- `HARD_DEPENDENCY`;
-- `SOFT_ADVICE`;
-- `INDEPENDENT`.
-
-The scheduler refuses a wait while safe runnable work remains. Shared write scopes serialize; isolated worktrees may proceed concurrently.
+For non-trivial work, `task-graph.json` distinguishes `HARD_DEPENDENCY`, `SOFT_ADVICE`, and `INDEPENDENT`. The scheduler refuses a wait while safe runnable work remains.
 
 ---
 
@@ -310,7 +400,7 @@ real Git HEAD
 
 Machine gates are executed by the evidence runner. A command written into prose is not evidence.
 
-Observational PASS evidence must point to real project-local artifacts such as screenshots, recordings, or reports, which are hashed when recorded.
+Observational PASS evidence must point to real project-local artifacts such as screenshots, recordings, clips, or reports, which are hashed when recorded.
 
 If a repair changes the candidate:
 
@@ -326,9 +416,9 @@ This prevents an old screenshot or old test result from certifying a new build.
 ## Production state
 
 ```text
-CALIBRATE → BIND → PLAN → IMPLEMENT → VERIFY
-                                  FAIL ↓    ↓ PASS
-                                     REPAIR → VERIFY → FINALIZE
+CALIBRATE? → BIND → PLAN → IMPLEMENT → VERIFY
+                                   FAIL ↓    ↓ PASS hard + bar
+                                      REPAIR → VERIFY → FINALIZE
 ```
 
 Terminal states are strict:
@@ -371,23 +461,22 @@ The control plane stores compact decisions and evidence. It is not a chain-of-th
 
 ```bash
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py init \
-  --root . --goal "<goal>"
+  --root . --goal "<goal>" --dialogue off
 
-# Declare at least one hard floor and one Bar before substantial implementation.
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
   --root . --id FLOW --title "Flow" --criterion "<observable hard floor>" \
   --owner lead --verifier verifier --machine
 
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
-  --root . --id BAR --title "Quality Bar" --criterion "<direct comparison rule>" \
-  --owner lead --verifier critic --bar
+  --root . --id BAR --title "Quality Bar" --criterion "<direct real/synthetic/hybrid comparison rule>" \
+  --owner lead --verifier fresh-critic --bar
 
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition \
   --root . --phase PLAN --next "Plan the smallest route that can win"
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition \
   --root . --phase IMPLEMENT --next "Build the candidate"
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition \
-  --root . --phase VERIFY --next "Freeze and verify the real output"
+  --root . --phase VERIFY --next "Freeze and inspect the real output"
 
 head="$(git rev-parse HEAD)"
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py bind \
@@ -397,11 +486,12 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py run-evidence \
   --root . --gate FLOW --actor verifier --command "python tools/verify.py" \
   --project "my-project" --candidate "$head" --artifact build/output.zip
 
-# For an observational Bar, the independent critic records a real hashed artifact.
+# The fresh critic should inspect the real candidate first-hand and record
+# the appropriate screenshot/clip/report as hashed observational evidence.
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py record \
-  --root . --gate BAR --result PASS --actor critic \
-  --summary "Candidate wins the locked equivalent comparison" \
-  --artifact captures/blind-ab-result.png
+  --root . --gate BAR --result PASS --actor fresh-critic \
+  --summary "Candidate wins the frozen equivalent comparison" \
+  --artifact captures/bar-verdict.mp4
 
 python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py finalize --root .
 ```
@@ -419,8 +509,6 @@ A higher mode does not authorize more ceremony. It authorizes more quality ambit
 ---
 
 ## Cost discipline
-
-LoopSeed follows a simple escalation rule:
 
 ```text
 one thread is enough      → do not fan out
