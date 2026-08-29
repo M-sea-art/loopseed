@@ -1,0 +1,90 @@
+version: "0.8-exp.1"
+benchmark: reality_gate_product_effect
+status: experiment_only
+issue: 9
+purpose: >-
+  Test whether Reality Gate Lite improves first-use clarity or core-action
+  feedback under equal budget, without entering the LoopSeed runtime first.
+
+baseline:
+  loopseed_version: "0.7.1"
+  commit: "772e2961a17ddc199b25b8b2ec4f4e926c9f9615"
+
+subject:
+  seed_id: single-screen-lantern-v1
+  seed_sha256: d5e2864286f2a387e33e45d766970f71ad0a8aa351ec10bd97cf6240ff8f165e
+  prompt: >-
+    制作一个单屏浏览器街机游戏《守灯夜班》。玩家守住一盏会持续变暗的灯，
+    点击或按空格补火；阴影会逐步靠近，灯灭则失败，坚持 45 秒则胜利。
+    必须包含清楚的开始、完整核心循环、成功、失败和原地重开。不得增加第二关、
+    升级系统、剧情分支或外部资产。
+  acceptance_contract_sha256: ca19fa6a3a8769b3117aed25a93c8b5b1a5199d4e1d9789755cc2bb994bad4b4
+  acceptance:
+    - The player can start without hidden setup.
+    - Click or Space replenishes the lamp.
+    - The lamp can extinguish and produce a failure state.
+    - Surviving 45 seconds produces a success state.
+    - Success and failure both offer an in-place restart.
+    - No second level, upgrade system, story branch, or external asset is added.
+
+controls:
+  model: GPT-5.6 Pro
+  execution_surface: same fresh ChatGPT work context
+  max_wall_clock_seconds: 900
+  max_token_budget: null
+  max_tool_calls: 40
+  cost_unit: tool_calls
+  production_mode: focused
+  asset_access: repository_only_no_external_assets
+  target_platform: browser
+  playable_scope: one_screen_one_loop_success_failure_restart
+  fresh_context_per_arm: true
+
+pairs:
+  - id: P1
+    order: [A, B]
+  - id: P2
+    order: [B, A]
+  - id: P3
+    order: [A, B]
+
+arms:
+  A:
+    runtime: loopseed_v0.7.1_baseline
+    additional_gate: none
+  B:
+    runtime: loopseed_v0.7.1_baseline
+    additional_gate: reality_gate_lite
+    observations:
+      - first_meaningful_action
+      - core_action_feedback
+      - attention_path
+    repair_scope: defects_exposed_by_these_observations_only
+
+thresholds:
+  min_clarity_gain_ratio: 0.20
+  max_time_regression_ratio: 0.25
+  max_cost_regression_ratio: 0.25
+
+admission:
+  valid_pairs_required: 3
+  same_dimension_improvements_required: 2
+  forbid_scope_expansion: true
+  forbid_completion_regression: true
+  require_v0.7.1_integrity: true
+  synthetic_claims_forbidden:
+    - enjoyment
+    - retention
+    - player_preference_without_human_calibration
+
+stop_conditions:
+  - two_consecutive_valid_pairs_show_no_meaningful_effect
+  - equal_budget_control_cannot_be_restored
+  - candidate_adds_gameplay_instead_of_repairing_reality_defects
+  - exact_candidate_evidence_cannot_be_bound
+
+artifacts:
+  contract: docs/oneshot-spec-compiler/benchmarks/reality-gate-product-effect.yaml
+  operating_guide: docs/experiments/v0.8-reality-gate-ab/README.md
+  result_template: docs/experiments/v0.8-reality-gate-ab/results.template.json
+  evaluator: tools/evaluate_reality_gate_ab.py
