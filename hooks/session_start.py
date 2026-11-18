@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from common import compact, emit, load_state, read_event, state_status
+from common import compact, emit, load_state, read_event, state_status, vision_within_deadline
 
 
 def main() -> None:
@@ -21,12 +21,21 @@ def main() -> None:
             "independent verifier for gate verdicts, dispatch safe runnable tasks before waiting, and never write "
             "VERIFIED except through the finalizer."
         )
+    elif mode == "vision":
+        if not vision_within_deadline(state):
+            return
+        message = (
+            "An authorized LoopSeed vision was saved in the project-root .loopseed.md. "
+            "When continuing that vision, read the latest observation and open question and inspect the "
+            "current product. Choose what is worth doing next within the current user's instructions and "
+            "the remaining host Goal allowance. An owner stop or exhausted budget takes precedence."
+        )
     else:
         message = (
             "LoopSeed state is ACTIVE in the project-root .loopseed.md. Read it before acting, continue from "
             "the latest direct evidence, and do not treat the state label as completion proof."
         )
-    if next_action:
+    if next_action and mode != "vision":
         message += f" Current next action: {next_action}"
     emit({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": message}})
 

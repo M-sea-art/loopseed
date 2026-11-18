@@ -141,7 +141,19 @@ def _execute_command(
             timed_out = True
             if os.name == "posix":
                 os.killpg(process.pid, signal.SIGKILL)
-            else:  # pragma: no cover - Windows
+            elif os.name == "nt" and process.poll() is None:
+                # shell=True launches cmd.exe. Its children can keep running
+                # and writing to the candidate after the timeout receipt.
+                taskkill = Path(os.environ["SystemRoot"]) / "System32" / "taskkill.exe"
+                subprocess.run(
+                    [str(taskkill), "/PID", str(process.pid), "/T", "/F"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                )
+                if process.poll() is None:
+                    process.kill()
+            else:
                 process.kill()
             process.wait()
             exit_code = 124

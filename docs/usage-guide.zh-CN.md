@@ -1,18 +1,34 @@
 ---
-loopseed_version: "0.8.1"
-last_updated: "2026-08-28"
+loopseed_version: "0.9.0"
+last_updated: "2026-11-18"
 update_policy: "required-on-every-version-upgrade"
 ---
 
-# LOOPSEED 生产使用技巧
+# LoopSeed 使用指南
 
-> **Gate 是地板，Bar 是天花板。**
->
-> **游戏要在运动中判，Critic 要亲自看，资产要放进产品里判，并行之后要重新看整个产品。**
+默认技能入口接收愿景或具体任务。你可以直接输入一句话，也可以在插件或技能按钮里选择默认示例。
 
-这是 LOOPSEED v0.8.1 的生产真相页。版本、运行模式、关键命令或证据边界改变时，本页必须同步更新；CI 会检查这里声明的版本与 `.codex-plugin/plugin.json` 一致。
+```text
+$loopseed 让玩家打完第一局，就想再开一局。
+```
 
-## 1. 最短心智模型
+> 在授权范围内，把这个作品当作你负责的项目，主动发现并实现最值得追求的体验，让作品的实际表现和使用者的反馈帮助你重新审视任何既有判断，包括我和你自己的判断，并决定下一步往哪里走。
+
+在这个例子里，模型可以改变出牌的节奏，也可以在实际试玩后发现，更值得解决的是结算时玩家无法理解输赢。当前改进做完后，只要授权仍有效，就继续追求愿景。对于 `$loopseed 修好读档后丢失手牌。` 这样的具体任务，确认真实的保存和恢复结果后即交付。
+
+## 持续与恢复
+
+Codex 的原生 Goal 负责跨轮运行。支持 Goal 命令的宿主可以用 `/goal $loopseed <愿景>` 开始。跨会话时，在项目根目录的 `.loopseed.md` 保存愿景、实际观察、开放问题以及授权边界。重开项目后先看作品的现状，再决定从哪里继续。使用者叫停、额度耗尽或需要外部输入时，留下当前进度和原因。宿主关闭期间进度保存在项目里。[状态记录示例](../skills/loopseed/references/state-contract.md#vision)
+
+## 选择严格交付
+
+```text
+$loopseed one-shotted 交付可玩的切片，并独立验收它的游玩、存档和重开流程。
+```
+
+One-Shotted 适合交付物和验收条件明确的委托。若旧版严格任务仍在进行，按原状态继续。若已结束，后来明确发起的新愿景可引用它的运行编号并独立续跑。以下各节描述严格模式的质量方法、命令和正式验收条件。默认愿景可以按问题挑选其中适用的方法。
+
+## One-Shotted 的质量循环
 
 ```text
 GOAL：要做什么
@@ -38,9 +54,9 @@ Runtime Shell 在后台负责：项目上下文恢复、Artifact/Commit Binding�
 
 **Shell 不拥有产品质量裁决权。Bar 才拥有。**
 
-## 2. v0.8.1 新增的四条生产硬规则
+## One-Shotted 的四条产品评审规则
 
-### 2.1 游戏在运动中判
+### 游戏在运动中判
 
 如果质量声明涉及：
 
@@ -61,7 +77,7 @@ Still win ≠ Motion win
 
 必须用录像、实时运行、试玩或其他能够观察运动的证据。
 
-### 2.2 Critic 必须尽量第一手观察
+### Critic 必须尽量第一手观察
 
 能力允许时，Fresh Critic 自己：
 
@@ -77,7 +93,7 @@ Critic 不应把 Builder 挑选的几张“最好看截图”和 Builder 的自�
 
 如果 Critic 无法访问 Runtime，必须明确声明限制；此时不能从静态图推断 motion、interaction 或 game feel 已通过。
 
-### 2.3 生成资产必须放进产品里判
+### 生成资产必须放进产品里判
 
 角色、模型、精灵、特效、动画、材质的独立 Render 可以做 sanity check，但不能单独获得最终的产品质量 PASS。
 
@@ -94,7 +110,7 @@ Critic 不应把 Builder 挑选的几张“最好看截图”和 Builder 的自�
 
 **Asset Quality 最终要变成 Asset-in-Product Quality。**
 
-### 2.4 每轮主要 Fan-out 后重新整体化
+### 每轮主要 Fan-out 后重新整体化
 
 局部都变好，不代表整个产品变好。
 
@@ -114,33 +130,7 @@ Fresh Whole-Product Critic
 
 局部 Agent 可以分别提高地形、角色、FX、UI，但最终必须重新判断它们是不是还属于**同一个游戏**。
 
-## 3. 先选最轻的入口
-
-### 标准 LoopSeed：小而明确的任务
-
-```text
-$loopseed <目标>
-```
-
-默认：
-
-```text
-探索 → 行动 → 真实观察 → 批评 → 调整
-```
-
-能单线程闭环就不 Fan-out；机器测试足够就不建评审委员会。
-
-### One-Shotted：一次授权完成完整生产
-
-```text
-$loopseed one-shotted <一句自然语言目标>
-```
-
-适合小游戏、垂直切片、完整功能、视觉重构或需要持续自主修复的生产任务。
-
-“One-Shotted”指一次生产授权，不指一次模型回复。
-
-## 4. 新项目：默认先 Goal + Bar，不先采访
+## 新项目：默认先 Goal + Bar，不先采访
 
 如果目标已经清楚，推荐直接关闭创意访谈：
 
@@ -177,7 +167,7 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
 
 v0.8+ 不允许只有 BUILD/FLOW 等工程 Gate 全绿就写 `VERIFIED`。
 
-## 5. Bar 分三种
+## Bar 分三种
 
 ### Real Bar｜现实标杆
 
@@ -229,7 +219,7 @@ Synthetic Bar
 
 不要揉成一个模糊“总分”。
 
-## 6. 什么是好的游戏 Bar
+## 什么是好的游戏 Bar
 
 优先选择 Agent **真的能够检查和比较**的东西：
 
@@ -248,7 +238,7 @@ Still PASS ≠ Motion PASS
 能运行 ≠ 成品
 ```
 
-## 7. Critic 怎么工作
+## Critic 怎么工作
 
 Fresh Critic 看真实产物，不看 Builder 的“我做得很好”。
 
@@ -291,7 +281,7 @@ DO NOT TOUCH:
 
 适合时反转顺序再判；两次明显冲突就记 `INCONCLUSIVE`，不能平均成假精确分数。
 
-## 8. Ratchet：新版不自动赢
+## Ratchet：新版不自动赢
 
 ```text
 challenger 赢 → 晋级并冻结
@@ -303,7 +293,7 @@ challenger 输 → 回滚
 
 不要因为“这是新版”“代码更多”“花了更多时间”就给它加分。
 
-## 9. 已有项目：先恢复已定意图
+## 已有项目：先恢复已定意图
 
 至少检查：
 
@@ -326,7 +316,7 @@ challenger 输 → 回滚
 
 Context Recovery 与 Creative Dialogue 解耦。即使 `--dialogue off`，已有项目发现规划源时仍先恢复上下文。
 
-## 10. Creative Dialogue 什么时候才开
+## Creative Dialogue 什么时候才开
 
 只有一个条件：
 
@@ -336,7 +326,7 @@ Context Recovery 与 Creative Dialogue 解耦。即使 `--dialogue off`，已有
 
 不要问可逆技术细节、仓库已有答案、仅仅因为还没凑满对话轮数的问题。
 
-## 11. Fan-out 什么时候才值得
+## Fan-out 什么时候才值得
 
 只有可**独立改进并独立判断**的工作才值得拆出去。
 
@@ -356,7 +346,7 @@ Context Recovery 与 Creative Dialogue 解耦。即使 `--dialogue off`，已有
 
 > **一个 Fresh Critic 横跨整个产品，先修最大的跨模块不一致，再继续下一波。**
 
-## 12. v0.8.1 的 One-Shotted 终局
+## One-Shotted 的正式验收
 
 ```text
 CALIBRATE? → BIND → PLAN → IMPLEMENT → VERIFY
@@ -384,7 +374,7 @@ CALIBRATE? → BIND → PLAN → IMPLEMENT → VERIFY
 - 无开放 P0/P1；
 - final report 与当前 run / Gate / evidence / task / binding 一致。
 
-## 13. 诚实停止，不是假装无限循环
+## 诚实停止，不是假装无限循环
 
 Bar 不意味着无限烧预算。
 
@@ -399,7 +389,7 @@ Bar 不意味着无限烧预算。
 
 预算耗尽、Critic 仍然发现明显 Bar 差距、证据缺失，都不能伪装成 PASS。
 
-## 14. 成本纪律
+## 成本纪律
 
 ```text
 单线程够 → 不并行
@@ -418,14 +408,3 @@ Bar 不意味着无限烧预算。
 > **Every new control must replace more uncertainty than complexity it introduces.**
 >
 > 新控制消除的不确定性，必须大于它增加的复杂度。
-
-## 15. 当前版本真相
-
-- `main`：v0.8.0 Gauntlet Kernel 已发布基线。
-- `agent/v0.8.1-runtime-observation`：本轮候选，补第一手 Runtime Critic、Motion Evidence、Asset-in-Product、Synthetic Bar 与 Fan-out 后 Whole-Product Critic。
-
-v0.8.1 不改变 v0.8 的权力结构，而是把“比较”进一步变成**真正观察用户最后看到、听到、玩到的东西**：
-
-> Runtime 负责不失忆、不跑偏、不造假、不互踩。
->
-> Gauntlet 负责让真实成品不断逼近并击败可检验质量标杆。

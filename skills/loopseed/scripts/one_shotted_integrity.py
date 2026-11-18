@@ -8,6 +8,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from loopseed_relay import RELAY_FILENAME, is_vision_relay
 from one_shotted_types import OneShottedError
 
 
@@ -39,6 +40,8 @@ def resolve_artifact(root: Path, value: str) -> Path:
         raise OneShottedError(f"Artifact does not exist: {path}")
     if not path.is_file() and not path.is_dir():
         raise OneShottedError(f"Artifact must be a file or directory: {path}")
+    if relative == Path(RELAY_FILENAME) and is_vision_relay(path):
+        raise OneShottedError("A vision handoff is control data and cannot be used as verification evidence")
     if relative == Path(".") or (relative.parts and relative.parts[0] in {".git", ".loopseed"}):
         raise OneShottedError(
             "Verification artifacts must not be the project root or LoopSeed/Git control data"
@@ -170,6 +173,13 @@ def repository_identity(root: Path) -> dict[str, Any]:
             "worktree_dirty": None,
             "tracked_worktree_dirty": None,
         }
+    untracked_paths = (
+        sorted(path for path in untracked.stdout.split("\0") if path)
+        if untracked.returncode == 0
+        else None
+    )
+    if untracked_paths and RELAY_FILENAME in untracked_paths and is_vision_relay(root / RELAY_FILENAME):
+        untracked_paths.remove(RELAY_FILENAME)
     return {
         "detected": True,
         "head": head.stdout.strip() if head.returncode == 0 else None,
@@ -178,11 +188,7 @@ def repository_identity(root: Path) -> dict[str, Any]:
         "tracked_worktree_dirty": (
             bool(tracked_status.stdout.strip()) if tracked_status.returncode == 0 else None
         ),
-        "untracked_paths": (
-            sorted(path for path in untracked.stdout.split("\0") if path)
-            if untracked.returncode == 0
-            else None
-        ),
+        "untracked_paths": untracked_paths,
     }
 
 

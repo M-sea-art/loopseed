@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0
+
+- Open the plugin or invoke `$loopseed <vision>` to pursue a project experience with agent-chosen goals and methods. A bounded task finishes when its requested outcome has been checked.
+- Resume an authorized vision from `.loopseed.md` in a running Codex host. A new vision can name a finished One-Shotted run, while an active strict run retains precedence.
+- Select `$loopseed one-shotted <goal>` for the existing independent hard-floor and quality-bar acceptance contract. Comparison and criticism techniques are also available on demand.
+- Corrected the Windows hook commands for PowerShell and stopped verifier child processes when a command times out.
+
 ## 0.8.1
 
 - Made game-quality criticism motion-aware: still-image superiority cannot prove animation, camera motion, battle readability, interaction, timing, feedback, or game-feel superiority when those surfaces materially depend on motion.
