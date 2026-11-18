@@ -226,6 +226,28 @@ class IntegrityBridgeAdversarialTests(unittest.TestCase):
                     with self.assertRaises(OneShottedError):
                         finalize(root)
 
+    def test_vision_handoff_coexists_with_a_receipt_and_cannot_certify_itself(self) -> None:
+        temporary, root, head, command = self.prepare()
+        with temporary:
+            note = root / ".loopseed.md"
+            note.write_text("Ordinary project text\n", encoding="utf-8")
+            with self.assertRaisesRegex(OneShottedError, "Untracked"):
+                self.pass_machine(root, head, command)
+            note.write_text(
+                "```loopseed-state\nversion=0.9.0\nmode=vision\nstatus=ACTIVE\n```\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(self.pass_machine(root, head, command)["result"], "PASS")
+            with self.assertRaisesRegex(OneShottedError, "control data"):
+                record_gate_result(
+                    root, "BAR", "PASS", "bar-verifier", "Read a handoff", artifacts=[".loopseed.md"]
+                )
+            with self.assertRaisesRegex(OneShottedError, "control data"):
+                bind_project(root, "demo-project", head, ".loopseed.md")
+            self.git(root, "add", ".loopseed.md")
+            with self.assertRaisesRegex(OneShottedError, "Tracked"):
+                self.pass_machine(root, head, command)
+
     def test_binding_rejects_missing_control_or_external_artifact(self) -> None:
         temporary, root, head, _ = self.make_repo()
         with temporary, tempfile.TemporaryDirectory() as other:

@@ -1,7 +1,7 @@
 {
   "name": "loopseed",
-  "version": "0.8.1",
-  "description": "Gauntlet-first Seed Kernel with first-hand runtime criticism and a durable evidence, recovery, integrity, and scheduling shell.",
+  "version": "0.9.0",
+  "description": "Let a project vision guide autonomous work, or choose independently verified One-Shotted delivery.",
   "author": {
     "name": "M-sea-art",
     "url": "https://github.com/M-sea-art"
@@ -28,8 +28,8 @@
   "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "LoopSeed",
-    "shortDescription": "Set a goal and bar, judge the real running product, then close the biggest gap.",
-    "longDescription": "LoopSeed v0.8.1 keeps a small Gauntlet quality kernel at the center of a durable production runtime. The agent chooses the decomposition, judges games in motion when motion matters, uses a fresh critic that inspects the real candidate first-hand, judges generated assets inside the integrated product, and runs a fresh whole-product coherence pass after major fan-out waves. When no meaningful real-world complement exists, it can freeze a generated Synthetic Bar. Context recovery, evidence binding, safe fan-out, no-idle scheduling, repair, and fail-closed receipts remain the supporting shell. Gate is the floor; Bar is the ceiling.",
+    "shortDescription": "Give Codex a vision or a concrete outcome to deliver.",
+    "longDescription": "LoopSeed lets the agent discover what to improve, try it in the real product and revise its judgment from experience. A continuing vision can resume in Codex. A bounded request ends when the outcome works. Choose One-Shotted when the deliverable needs a formal evidence-backed receipt.",
     "developerName": "M-sea-art",
     "category": "Productivity",
     "capabilities": [
@@ -38,9 +38,9 @@
     ],
     "websiteURL": "https://github.com/M-sea-art/loopseed",
     "defaultPrompt": [
-      "$loopseed one-shotted <goal>. Choose the strongest inspectable real bar; if no meaningful real-world complement exists, freeze a synthetic target bar. Keep the production approach agent-owned. Judge the real running product first-hand, including motion when motion matters, judge generated assets in context, and keep repairing the single biggest gap until the hard floors and bar are verified or an honest stop condition is reached.",
-      "$loopseed one-shotted <one natural-language game or product seed>",
-      "$loopseed Complete this scoped goal through the smallest real-output loop; after major fan-out waves, run one fresh whole-product coherence pass before the next wave."
+      "$loopseed 让玩家打完第一局，就想再开一局。",
+      "$loopseed Fix the hand disappearing after a saved game is loaded.",
+      "$loopseed one-shotted Deliver a playable slice with independently verified acceptance."
     ]
   }
 }

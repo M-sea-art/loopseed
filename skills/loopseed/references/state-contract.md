@@ -2,9 +2,35 @@
 
 LoopSeed keeps state only when durable relay is useful. State is a control signal, never proof.
 
-## Standard mode
+## Vision
 
-Use project-root `.loopseed.md` only when work must survive a task/session, a helper needs integration state, trusted hooks will resume it, or an external wait needs a relay.
+Use `.loopseed.md` at the project root for a vision that should survive the current session. Save it early enough that an interruption leaves useful context. Keep the user's actual authorization, what changed in the product and what is still worth finding out in ordinary prose. For example:
+
+````markdown
+# LoopSeed
+
+```loopseed-state
+version=0.9.0
+mode=vision
+status=ACTIVE
+```
+
+Let a first-time player find a reason to return. In the current build, banking a catch
+ends the voyage and restarting repeats the same three draws. Does knowing the risks
+earlier make the choice to return to port more interesting?
+````
+
+If an explicit new vision follows a terminal One-Shotted run, copy that run's `run_id` from `.loopseed/one-shotted/state.json` into the fence as `after_one_shotted=<run_id>`. An active strict run retains ownership. Naming the finished run distinguishes new authorization from a stale note.
+
+An untracked, regular project-root vision note is control data. Writing it preserves the finished candidate's receipt. It cannot serve as a bound deliverable or evidence. Tracked edits and other untracked project files retain their usual integrity checks.
+
+For an explicit wall-clock limit, record the absolute end in `deadline_utc` (ISO 8601 with timezone). Preserve it across resumes. The hooks suppress continuation after expiry or if the supplied deadline cannot be interpreted. Use the host's remaining allowance for a token or spending limit. Honor the current user instruction and the host Goal's stop state at every resume.
+
+Set `ABORTED` at an owner stop. Use `BLOCKED` for an exhausted allowance or exact missing external condition and record what would permit a restart. Keep the latest observation and the reason for stopping. An interruption with authorization still active leaves the note available at the next project session. SessionStart supplies the note as context. The native Goal or equivalent running host owns continuation and its budget. The Stop hook yields for visions, so an unrelated bounded task in the same project can finish. Earlier standard notes and strict runs retain their one-continuation Stop behavior.
+
+## Bounded tasks and earlier notes
+
+A bounded request ends when the requested outcome has been checked. It normally needs no state file. Existing unmarked standard notes retain the following format for durable relay.
 
 ````markdown
 # LoopSeed State
@@ -54,7 +80,7 @@ Its state is split into:
 - `defects.jsonl` — append-only defect status events;
 - `final-report.json` — generated only by the finalizer.
 
-The One-Shotted JSON state takes precedence over legacy `.loopseed.md` for bundled hooks.
+The hooks give active One-Shotted state precedence. A vision that explicitly names a finished run can take over from that run. Earlier unmarked notes retain the original precedence.
 
 `state.json.scheduler_wait` is normally `null`. A non-null wait is valid only when the scheduler reports no safe runnable task, every named wait target is already `RUNNING`, the reason is `HARD_DEPENDENCY` or `JOIN`, and a fallback is recorded. It is a control signal, not permission to mark the project `BLOCKED`.
 

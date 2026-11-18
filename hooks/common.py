@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import json
-import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-LEGACY_STATE_FILENAME = ".loopseed.md"
+# The plugin hooks and the standalone skill CLI use the same note format.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "skills" / "loopseed" / "scripts"))
+from loopseed_relay import RELAY_FILENAME, read_relay
+
 ONE_SHOTTED_STATE = Path(".loopseed") / "one-shotted" / "state.json"
-STATE_FENCE = "loopseed-state"
 TERMINAL_STATES = {"VERIFIED", "BLOCKED", "ABORTED"}
 
 
@@ -39,52 +41,49 @@ def project_root(cwd: str | None) -> Path | None:
     return current
 
 
-def parse_legacy_state(text: str) -> dict[str, str]:
-    pattern = re.compile(
-        rf"```{re.escape(STATE_FENCE)}\s*\n(?P<body>.*?)\n```",
-        re.IGNORECASE | re.DOTALL,
-    )
-    match = pattern.search(text)
-    if not match:
-        return {}
-    result: dict[str, str] = {}
-    for raw_line in match.group("body").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        key = key.strip().lower()
-        if key:
-            result[key] = value.strip()
-    return result
-
-
 def load_state(cwd: str | None) -> tuple[Path | None, dict[str, Any], str]:
-    """Load One-Shotted JSON first, then the legacy markdown state."""
+    """Give a strict run precedence until an explicit vision names its finished run."""
     root = project_root(cwd)
     if root is None:
         return None, {}, "none"
 
     one_shotted = root / ONE_SHOTTED_STATE
+    strict_state = None
     if one_shotted.is_file():
         try:
-            value = json.loads(one_shotted.read_text(encoding="utf-8"))
+            value = json.loads(one_shotted.read_text(encoding="utf-8-sig"))
         except (OSError, UnicodeError, json.JSONDecodeError):
             value = {}
-        if isinstance(value, dict):
-            return one_shotted, value, "one-shotted"
+        strict_state = value if isinstance(value, dict) else {}
+        if state_status(strict_state) not in TERMINAL_STATES:
+            return one_shotted, strict_state, "one-shotted"
 
-    legacy = root / LEGACY_STATE_FILENAME
-    if legacy.is_file():
-        try:
-            return legacy, parse_legacy_state(legacy.read_text(encoding="utf-8")), "legacy"
-        except (OSError, UnicodeError):
-            return legacy, {}, "legacy"
+    relay = root / RELAY_FILENAME
+    if relay.is_file():
+        note = read_relay(relay)
+        mode = "vision" if note.get("mode") == "vision" else "legacy"
+        if strict_state is None:
+            return relay, note, mode
+        predecessor = note.get("after_one_shotted")
+        if mode == "vision" and predecessor and predecessor == strict_state.get("run_id"):
+            return relay, note, mode
+    if strict_state is not None:
+        return one_shotted, strict_state, "one-shotted"
     return None, {}, "none"
 
 
 def state_status(state: dict[str, Any]) -> str:
     return str(state.get("status", "")).strip().upper()
+
+
+def vision_within_deadline(state: dict[str, str]) -> bool:
+    if "deadline_utc" not in state:
+        return True
+    try:
+        deadline = datetime.fromisoformat(state["deadline_utc"].replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return deadline.tzinfo is not None and datetime.now(timezone.utc) < deadline
 
 
 def compact(value: Any, limit: int = 320) -> str:
