@@ -19,3 +19,9 @@ Two fresh Codex sessions received the same unmodified, offline game and the same
 - At approximately 122 and 198 seconds the baseline run wrote its first build and added its forecast. The candidate wrote its first build at 127 seconds, revised the route choices at 236 seconds and updated the banking affordance at 310 seconds. The baseline attempted a separate critic in the ephemeral CLI session and that worker failed to start.
 - A separate Playwright operator played the saved builds offline in clean Chrome 157 contexts. The recording uses a fixed random seed of 7 for both builds and the same first-dive and bank inputs. In the second voyage the operator takes the baseline's offered route and the candidate's risky route. Separate checks covered the safe route, losing a catch, restarting, preserving banked progress on reload and a 390-pixel-wide viewport. Both games completed these checks without a page error. The ZIP preserves the exact HTML bytes and includes file hashes.
 - This is one model run per recorded version and scripted browser input. A player's willingness to start another voyage remains unmeasured.
+
+## Recovery and scoped work
+
+A separate real Codex session fixed a save/load bug, passed a file-backed round trip and exited without creating a vision handoff. Another session received an explicit owner stop and preserved the existing observation with status `ABORTED`.
+
+The Windows Codex app server also loaded a clean installation of the plugin from a local test marketplace. A local transport captured the context passed to a fresh turn. The registered SessionStart hook delivered the saved vision when active and supplied no continuation after the stop. The plugin remained trusted on the next session. These checks exercise the host and hook commands independently of the game runs.
