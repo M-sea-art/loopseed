@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -87,6 +89,37 @@ def run_hook(name: str, cwd: Path, **extra: object) -> dict[str, object] | None:
 
 
 class HookTests(unittest.TestCase):
+    def test_manifest_commands_launch_from_an_installed_path_with_spaces(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="loopseed hook ") as tmp:
+            installed = Path(tmp) / "installed plugin"
+            project = Path(tmp) / "game"
+            project.mkdir()
+            shutil.copytree(HOOKS, installed / "hooks")
+            shutil.copytree(REPO_ROOT / "skills", installed / "skills")
+            manifest = json.loads((installed / "hooks/hooks.json").read_text(encoding="utf-8"))
+            env = {**os.environ, "PLUGIN_ROOT": str(installed)}
+            if os.name == "nt":
+                shell = [shutil.which("pwsh") or "powershell.exe", "-NoProfile", "-Command"]
+                command_key = "commandWindows"
+            else:
+                shell = ["/bin/sh", "-c"]
+                command_key = "command"
+
+            write_vision(project)
+            for event in ("SessionStart", "Stop"):
+                if event == "Stop":
+                    write_one_shotted(project, phase="REPAIR")
+                command = manifest["hooks"][event][0]["hooks"][0][command_key]
+                result = subprocess.run(
+                    [*shell, command], cwd=project, env=env, check=True, capture_output=True,
+                    input=json.dumps({"cwd": str(project), "source": "startup"}), text=True,
+                )
+                output = json.loads(result.stdout)
+                if event == "SessionStart":
+                    self.assertIn(".loopseed.md", output["hookSpecificOutput"]["additionalContext"])
+                else:
+                    self.assertIn("REPAIR", output["reason"])
+
     def test_legacy_active_requests_one_continuation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
