@@ -1,6 +1,6 @@
 interface:
   display_name: "LoopSeed"
-  short_description: "Aim game ideas, then launch autonomous verified One-Shot production"
-  default_prompt: "$loopseed one-shotted Co-direct this game idea until the product, scope, North Star and evidence contract are precise, then lock the shot and continue autonomously without routine human checkpoints. Build, play, look, critique, repair and reverify until independently verified or truly externally blocked."
+  short_description: "Let a project vision guide what to improve next"
+  default_prompt: "$loopseed 让玩家打完第一局，就想再开一局。"
 policy:
   allow_implicit_invocation: false

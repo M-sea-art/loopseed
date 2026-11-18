@@ -23,9 +23,13 @@ PASS → preserve / FAIL → repair or rollback
 final gate decides completion
 ```
 
+## Quality and acceptance
+
+Follow the [quality methods](quality-methods.md) for the frozen Bar, first-hand criticism, equivalent comparisons, integrated assets and whole-product review. All required hard floors and quality bars need current verifier evidence for the bound candidate. A minimum of one required hard gate and one required bar gate applies to runs from v0.8 onward. Only the finalizer writes the formal receipt.
+
 ## Product position
 
-LoopSeed is game-first. Its primary job is to turn a player's game idea into a coherent production brief, then rapidly organize design, engineering, assets, integration, playtesting, and verification.
+One-Shotted supports game production. Its job is to turn a player's game idea into a coherent production brief, then rapidly organize design, engineering, assets, integration, playtesting, and verification.
 
 General software projects use the same evidence-governed engine with a lighter product adapter.
 
@@ -52,7 +56,7 @@ Optional controls:
 --max-dialogue-rounds 1..8
 ```
 
-The default game route enters `CALIBRATE`. The default general route enters `BIND`. A clear game contract may explicitly skip dialogue; Moonshot always benefits from an explicit ambition and scope calibration.
+The default One-Shotted game route enters `CALIBRATE`. The default general route enters `BIND`. A clear game contract may explicitly skip dialogue; Moonshot always benefits from an explicit ambition and scope calibration.
 
 ## What the creative dialogue is for
 
@@ -359,6 +363,30 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py wait \
 
 The command refuses to wait if any safe runnable task remains. A technical director, critic, or other advisor is `SOFT_ADVICE` unless a direct consumer has a real hard dependency on its output. Delegation never transfers scheduling responsibility away from the Lead.
 
+## One-Shotted production
+
+After goal/brief authority and gates are bound:
+
+1. freeze Project Binding, Artifact Contract, and target stage;
+2. ensure at least one required hard-floor gate and one required bar gate exist;
+3. assign implementation owner and a different verifier;
+4. choose or synthesize the strongest inspectable Bar and freeze the comparison conditions;
+5. choose the smallest complete route that can plausibly beat the Bar;
+6. record non-trivial work in `task-graph.json`;
+7. classify relations as `HARD_DEPENDENCY`, `SOFT_ADVICE`, or `INDEPENDENT`;
+8. dispatch every safe runnable node before waiting;
+9. keep coupled identity, core loop, architecture, composition, and final integration under one owner;
+10. judge generated/local assets inside the integrated product before final quality PASS;
+11. merge into one candidate and observe the real output;
+12. for game/interactive claims, launch/play/operate the candidate and capture motion evidence when motion matters;
+13. compare candidate against the Bar and incumbent under equivalent conditions;
+14. let the fresh critic return one biggest gap;
+15. repair, reobserve, and recompare;
+16. after a major Fan-out wave, run a fresh whole-product critic and repair the largest cross-surface coherence gap before another major wave;
+17. bind the clean real Git HEAD and stable deliverable for verification;
+18. run machine gates with `run-evidence` and observational gates with hashed artifacts;
+19. finalize only when all required hard gates and required bar gates PASS with current bound evidence.
+
 ## Acceptance gates
 
 A gate names:
@@ -385,6 +413,46 @@ python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
 ```
 
 Choose gates close to the real product. Do not replace player experience with build-only checks.
+
+## Minimal verification flow
+
+```bash
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py init \
+  --root . --goal "<goal>" --dialogue off
+
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
+  --root . --id FLOW --title "Flow" --criterion "<observable hard floor>" \
+  --owner lead --verifier verifier --machine
+
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py add-gate \
+  --root . --id BAR --title "Quality Bar" --criterion "<direct real/synthetic/hybrid comparison rule>" \
+  --owner lead --verifier fresh-critic --bar
+
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition \
+  --root . --phase PLAN --next "Plan the smallest route that can win"
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition \
+  --root . --phase IMPLEMENT --next "Build the candidate"
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py transition \
+  --root . --phase VERIFY --next "Freeze and inspect the real output"
+
+head="$(git rev-parse HEAD)"
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py bind \
+  --root . --project "my-project" --candidate "$head" --artifact build/output.zip
+
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py run-evidence \
+  --root . --gate FLOW --actor verifier --command "python tools/verify.py" \
+  --project "my-project" --candidate "$head" --artifact build/output.zip
+
+# The fresh critic should inspect the real candidate first-hand and record
+# the appropriate screenshot/clip/report as hashed observational evidence.
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py record \
+  --root . --gate BAR --result PASS --actor fresh-critic \
+  --summary "Candidate wins the frozen equivalent comparison" \
+  --artifact captures/bar-verdict.mp4
+
+python <PLUGIN_ROOT>/skills/loopseed/scripts/one_shotted.py finalize --root .
+```
+
 
 ## Independent evidence
 

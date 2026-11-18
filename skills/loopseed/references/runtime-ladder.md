@@ -1,6 +1,6 @@
-# Runtime ladder
+# One-Shotted runtime ladder
 
-LoopSeed uses the cheapest mechanism that can still close the next verifiable gap.
+One-Shotted uses the cheapest mechanism that can still close the next verifiable gap.
 
 Creative dialogue and production runtime are separate decisions:
 
@@ -89,10 +89,10 @@ If a mechanism cannot be confirmed, fall back one level. Never replace unavailab
 $loopseed one-shotted 帮我通过有意义的选项校准并放大这个游戏设想；创意简报锁定后，按选定档位一次性生产、整合、试玩并以证据验收。
 ```
 
-## Recommended general Goal-mode seed
+## Continuing a vision in Codex
 
 ```text
-/goal $loopseed 按项目规划完成当前里程碑，以实际运行证据验收。
+/goal $loopseed 让玩家打完第一局，就想再开一局。
 ```
 
 ## Recommended scheduled recovery seed
