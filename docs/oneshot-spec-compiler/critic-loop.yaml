@@ -1,6 +1,6 @@
-# LOOPSEED One-Shot Gauntlet Kernel v0.8.1
+# LOOPSEED One-Shot Gauntlet Kernel v0.9.0
 
-version: "0.8.1"
+version: "0.9.0"
 
 critic:
   purpose: prevent_drift_substitution_premature_completion_and_unexamined_quality_gaps

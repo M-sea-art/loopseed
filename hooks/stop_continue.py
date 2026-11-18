@@ -8,7 +8,9 @@ from common import compact, emit, load_state, read_event, state_status
 def main() -> None:
     event = read_event()
     _, state, mode = load_state(event.get("cwd"))
-    if state_status(state) != "ACTIVE":
+    # Codex Goal owns continuation and budget stops for a vision. A note in
+    # this directory must also allow an unrelated bounded request to finish.
+    if mode == "vision" or state_status(state) != "ACTIVE":
         return
     if event.get("stop_hook_active") is True:
         return
