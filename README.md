@@ -20,10 +20,11 @@ $loopseed Give players a reason to start another voyage after their first trip t
 
 ## Optional intent tools
 
+- `$loopseed-elevate <intent>` (升维): find the highest-value improvement in altitude, depth, range or speed; use Reframe and Sharpen as appropriate, and return a stronger request without executing it.
 - `$loopseed-reframe <idea>`: learn verified expert vocabulary, useful adjacent-field analogies and missing considerations, then get a rewritten description.
 - `$loopseed-sharpen <task>`: identify professional methods, primary materials and independent checks, then get a deeper prompt without increasing scope.
 
-Both standalone skills return text without performing the task. In an authorized LoopSeed run, the agent can use these methods selectively when they inform a decision. No extra mandatory workflow or runtime dependency is introduced. [Attribution](ACKNOWLEDGEMENTS.md#pstack)
+All three standalone skills return text without performing the task. In an authorized LoopSeed run, the agent can use these methods selectively when they inform a decision. No extra mandatory workflow or runtime dependency is introduced. [Attribution](ACKNOWLEDGEMENTS.md#pstack)
 
 ## Continuing in Codex
 
