@@ -37,3 +37,7 @@ LOOPSEED 将这些思想泛化为面向不同项目、强调经济性与减少�
 The LoopSeed Reframe and Sharpen skills adapt [pstack's original skills](https://github.com/cursor/plugins/tree/main/pstack/skills) by Lauren Tan (Poteto), licensed under MIT. The original notice is preserved in [licenses/pstack-MIT.txt](licenses/pstack-MIT.txt). Source blob SHAs: Reframe `57a219851a939cfb1ee46ed74b20a5196a983539`, Sharpen `2a03402b704012a626e9351b4db9c05cfd3afd20`. LoopSeed adds optional integration with its own authorization and evidence rules. No upstream endorsement is implied.
 
 LoopSeed 的 Reframe 与 Sharpen 改编自 Lauren Tan (Poteto) 的 pstack 技能，保留 MIT 许可与署名，并加入 LoopSeed 自己的授权边界及证据规则。
+
+## Intent Elevation / 升维
+
+The four-dimensional framing draws on Felix Rieseberg's [How to be more ambitious: A tutorial for humans with models](https://felixrieseberg.com/how-to-be-more-ambitious-a-tutorial-for-humans-with-models/) and the owner's Intent Elevation v2 research notes dated 2026-11-04. LoopSeed integrates the ideas with pstack's methods and its existing authorization and evidence protocol. The integration is our synthesis, not an upstream implementation or endorsement.
