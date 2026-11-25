@@ -31,3 +31,9 @@ LOOPSEED 的 One‑Shotted 模式，受到公开项目 [mshumer/Claude-of-Duty](
 LOOPSEED 将这些思想泛化为面向不同项目、强调经济性与减少重复提示的 Codex 完成协议。它是一个独立实现：仓库中不包含 Claude-of-Duty 的游戏代码或资产，也不代表 Matt Shumer、Anthropic 或 Claude-of-Duty 项目的官方关联或背书。
 
 同时感谢更广泛的开源智能体、软件测试与自主编程社区，为可靠的长任务 AI 工作流提供了持续积累。
+
+## pstack
+
+The LoopSeed Reframe and Sharpen skills adapt [pstack's original skills](https://github.com/cursor/plugins/tree/main/pstack/skills) by Lauren Tan (Poteto), licensed under MIT. The original notice is preserved in [licenses/pstack-MIT.txt](licenses/pstack-MIT.txt). Source blob SHAs: Reframe `57a219851a939cfb1ee46ed74b20a5196a983539`, Sharpen `2a03402b704012a626e9351b4db9c05cfd3afd20`. LoopSeed adds optional integration with its own authorization and evidence rules. No upstream endorsement is implied.
+
+LoopSeed 的 Reframe 与 Sharpen 改编自 Lauren Tan (Poteto) 的 pstack 技能，保留 MIT 许可与署名，并加入 LoopSeed 自己的授权边界及证据规则。
