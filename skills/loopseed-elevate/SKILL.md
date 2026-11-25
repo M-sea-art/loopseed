@@ -27,6 +27,12 @@ Inside an already authorized LoopSeed vision, apply the insight directly if it f
 
 Use [LoopSeed quality methods](../loopseed/references/quality-methods.md) when an external test, fresh critic or comparison is needed. Do not mistake a proposed experiment for an executed one or an inference for a verified result. Respect existing stop rules. Revisit the framing only when feedback makes it worth revisiting.
 
+## Creative divergence (optional)
+
+When originality is material to the user's goal, explore structurally different concepts rather than merely polishing a familiar template. Identify what makes each promising concept distinctive and how that difference changes the actual experience. Test it with a small prototype or counterfactual removal where feasible; if removing a claimed distinctive feature does not change the intended experience, reconsider whether it matters. Protect genuinely load-bearing creative commitments from convergence toward generic reference products. Use external craft references without copying their identity, and the existing real/synthetic Bar policy when appropriate. Revisit commitments when evidence warrants it and authorization permits; do not rewrite a bound One-Shotted contract. Do not force a concept count, an ablation run, a new gate or a separate approval step.
+
+Adapted from the historical [Creative Divergence experiment #26](https://github.com/M-sea-art/loopseed/pull/26), whose runtime changes are not adopted.
+
 ## Sources
 
 - Felix Rieseberg, [How to be more ambitious: A tutorial for humans with models](https://felixrieseberg.com/how-to-be-more-ambitious-a-tutorial-for-humans-with-models/), 2026-10-13, as documented in the owner's Intent Elevation v2 research notes (2026-11-04). The four dimensions come from that research; the optional integration, authority rules and evidence linkage are LoopSeed's synthesis.
