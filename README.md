@@ -18,6 +18,14 @@ $loopseed Give players a reason to start another voyage after their first trip t
 | A bounded change | `$loopseed Fix the hand disappearing after a saved game is loaded.` | The agent delivers after checking that the hand survives a real save and reload. |
 | Formal acceptance of a deliverable | `$loopseed one-shotted Deliver a playable slice with verified save, reload and restart.` | The strict runtime issues a receipt for the bound candidate after its required hard floors and quality bars pass independent verification. |
 
+## Optional intent tools
+
+- `$loopseed-elevate <intent>` (升维): find the highest-value improvement in altitude, depth, range or speed; use Reframe and Sharpen as appropriate, and return a stronger request without executing it.
+- `$loopseed-reframe <idea>`: learn verified expert vocabulary, useful adjacent-field analogies and missing considerations, then get a rewritten description.
+- `$loopseed-sharpen <task>`: identify professional methods, primary materials and independent checks, then get a deeper prompt without increasing scope.
+
+All three standalone skills return text without performing the task. In an authorized LoopSeed run, the agent can use these methods selectively when they inform a decision. No extra mandatory workflow or runtime dependency is introduced. [Attribution](ACKNOWLEDGEMENTS.md#pstack)
+
 ## Continuing in Codex
 
 A running Codex Goal can carry a vision across turns. On a surface with the Goal command, start it directly with `/goal $loopseed <vision>`. When a session needs a handoff, the agent keeps the vision, latest observed change and open question in the project's `.loopseed.md`. Reopening the project provides that context for a fresh look at the actual work. A stop request or exhausted allowance takes priority. [State and recovery](skills/loopseed/references/state-contract.md#vision)
